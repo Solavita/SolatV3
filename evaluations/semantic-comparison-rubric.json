@@ -1,0 +1,14 @@
+{
+  "schema_version": "solat.semantic-comparison-rubric.v1",
+  "purpose": "Manual, evidence-backed comparison of a SOLAT visible response against a context-isolated reference response. This rubric does not authorize automatic semantic scoring.",
+  "scale": { "min": 0, "max": 4, "required_evidence": "A short quote or precise observation from both visible responses is required for every non-null score." },
+  "dimensions": [
+    { "id": "task_fulfillment", "label": "ตอบโจทย์ผู้ใช้", "weight": 0.25, "anchors": { "0": "ไม่ตอบหรือเข้าใจผิดร้ายแรง", "2": "ตอบแกนหลักได้บางส่วน", "4": "ตอบครบ ตรง และเหมาะกับคำขอ" } },
+    { "id": "context_and_ambiguity", "label": "ใช้บริบทและจัดการคำกำกวม", "weight": 0.2, "anchors": { "0": "ละเลยบริบทหรือเดาชื่อผิด", "2": "รับรู้ความกำกวมแต่ช่วยต่อได้น้อย", "4": "ใช้บริบทถูก ต้องถามต่อเมื่อจำเป็น" } },
+    { "id": "tool_and_scope_choice", "label": "เลือกเครื่องมือและขอบเขตแหล่ง", "weight": 0.15, "anchors": { "0": "ใช้/ไม่ใช้เครื่องมือผิดจนคำตอบเสีย", "2": "เส้นทางพอใช้แต่กว้างหรือไม่ครบ", "4": "เลือกเส้นทางและขอบเขตแหล่งตรงคำขอ" } },
+    { "id": "grounding_and_sources", "label": "หลักฐานและแหล่งอ้างอิง", "weight": 0.2, "anchors": { "0": "แต่งข้อมูลหรืออ้างอิงไม่เกี่ยวข้อง", "2": "มีหลักฐานแต่ยังไม่ครบหรือไม่ตรงนัก", "4": "ทุกข้อเท็จจริงสำคัญอิงหลักฐานที่เกี่ยวข้อง" } },
+    { "id": "uncertainty_and_safety", "label": "ยอมรับข้อจำกัดอย่างซื่อตรง", "weight": 0.1, "anchors": { "0": "มั่นใจเกินหลักฐาน", "2": "บอกข้อจำกัดบางส่วน", "4": "บอกสิ่งที่ยืนยันไม่ได้และเสนอทางไปต่อ" } },
+    { "id": "language_and_tone", "label": "ความชัดเจนและน้ำเสียง", "weight": 0.1, "anchors": { "0": "ไม่สุภาพหรืออ่านยาก", "2": "เข้าใจได้แต่ยังไม่เป็นธรรมชาติ", "4": "ชัดเจน สุภาพ และเหมาะภาษา" } }
+  ],
+  "decision_rule": "Do not calculate or publish an overall parity percentage until every dimension has an evidence-backed reviewer score for the same context-isolated case."
+}

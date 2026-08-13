@@ -1,0 +1,352 @@
+const HINTS_SCHEMA_VERSION = 'solat.intent-hints.v1';
+const THAI_SEARCH_TERMS = /(?:\u0e04\u0e49\u0e19\u0e2b\u0e32|\u0e40\u0e2a\u0e34\u0e23\u0e4c\u0e0a|\u0e2b\u0e32\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25|\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14|\u0e41\u0e2b\u0e25\u0e48\u0e07\u0e17\u0e35\u0e48\u0e21\u0e32|\u0e27\u0e34\u0e01\u0e34|\u0e15\u0e34\u0e4a\u0e01\u0e15\u0e47\u0e2d\u0e01|\u0e1e\u0e34\u0e19\u0e40\u0e17\u0e2d\u0e40\u0e23\u0e2a\u0e15\u0e4c)/u;
+const THAI_SOCIAL_TERMS = /(?:\u0e15\u0e34\u0e4a\u0e01\u0e15\u0e47\u0e2d\u0e01|\u0e1e\u0e34\u0e19\u0e40\u0e17\u0e2d\u0e40\u0e23\u0e2a\u0e15\u0e4c|\u0e2d\u0e34\u0e19\u0e2a\u0e15\u0e32\u0e41\u0e01\u0e23\u0e21|\u0e40\u0e1f\u0e0b\u0e1a\u0e38\u0e4a\u0e01)/u;
+const THAI_VIDEO_TERMS = /\u0e22\u0e39\u0e17\u0e39\u0e1a/u;
+const THAI_MANHWA_CONTEXT = /(?:\u0e21\u0e31\u0e07\u0e2e\u0e27\u0e32|\u0e15\u0e31\u0e27\u0e25\u0e30\u0e04\u0e23)/u;
+const THAI_MUSIC_CONTEXT = /(?:\u0e19\u0e31\u0e01\u0e23\u0e49\u0e2d\u0e07|\u0e40\u0e1e\u0e25\u0e07|\u0e2d\u0e31\u0e25\u0e1a\u0e31\u0e49\u0e21)/u;
+const THAI_INTERROGATIVE_TERMS = /(?:\u0e04\u0e37\u0e2d|\u0e2d\u0e30\u0e44\u0e23|\u0e43\u0e04\u0e23|\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23|\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e44\u0e23|\u0e17\u0e33\u0e44\u0e21|\u0e17\u0e35\u0e48\u0e44\u0e2b\u0e19)/u;
+const THAI_LATEST_TERMS = /(?:\u0e23\u0e32\u0e04\u0e32|\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49|\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49|\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14|\u0e02\u0e48\u0e32\u0e27|\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14)/u;
+const GEMINI_TERMS = /\b(?:gemini|ai\s+overview|google\s+ai)\b/iu;
+const FACTUAL_QUERY_TERMS = /\b(?:who|what|where|when)\s+(?:is|are|was|were)\b|\btell\s+me\s+about\b|\bexplain\b|(?:\u0e43\u0e04\u0e23\u0e04\u0e37\u0e2d|\u0e2d\u0e30\u0e44\u0e23\u0e04\u0e37\u0e2d|\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a)/iu;
+const NAMED_LOOKUP_STOPWORDS = new Set(['hi', 'hello', 'hey', 'thanks', 'thank', 'ok', 'okay', 'yes', 'no', 'please', 'help', 'solat']);
+
+const SEARCH_TERMS = /\b(search|find|look\s*up|latest|current|news|source|wikipedia|tiktok|pinterest|instagram|youtube|facebook)\b|ค้นหา|เสิร์ช|ล่าสุด|แหล่งที่มา|วิกิ|ติ๊กต็อก|พินเทอเรสต์/iu;
+const FILE_TERMS = /\b(file|pdf|document|attachment|image|screenshot|spreadsheet)\b|ไฟล์|เอกสาร|รูปภาพ|ภาพหน้าจอ/iu;
+const CREATIVE_TERMS = /\b(slide|slides|deck|presentation|design|creative|image generation)\b|สไลด์|พรีเซ็น|ออกแบบ|สร้างภาพ/iu;
+const ACTION_TERMS = /\b(delete|send|publish|buy|pay|upload|change|install|run)\b|ลบ|ส่ง|เผยแพร่|ซื้อ|จ่าย|อัปโหลด|เปลี่ยน|ติดตั้ง/iu;
+const CLARIFICATION_TERMS = /\b(what do you mean|which one|unclear|ambiguous|compare)\b|หมายถึงอะไร|อันไหน|กำกวม|เปรียบเทียบ/iu;
+
+function countWords(value) {
+  return String(value || '').trim().split(/\s+/u).filter(Boolean).length;
+}
+
+function score(signals, name) {
+  return signals.includes(name) ? 0.78 : 0.18;
+}
+
+function unique(values) {
+  return [...new Set(values)];
+}
+
+function looksLikeNamedLookup(value) {
+  const text = String(value || '').trim().replace(/[?!.]+$/u, '').replace(/\s+/gu, ' ');
+  if (!text || text.length > 80) return false;
+  const tokens = text.split(' ').filter(Boolean);
+  if (tokens.length < 1 || tokens.length > 4) return false;
+  if (tokens.some(token => NAMED_LOOKUP_STOPWORDS.has(token.toLocaleLowerCase()))) return false;
+  if (tokens.some(token => /^(?:search|find|look|lookup|what|who|how|why|when|where|compare|tell|explain)$/iu.test(token))) return false;
+  return tokens.some(token => /^[A-Z][\p{L}\p{N}'-]{2,}$/u.test(token))
+    || tokens.some(token => /[\u0e00-\u0e7f]/u.test(token) && token.length >= 3);
+}
+
+const CONTEXT_SUBJECT_STOPWORDS = new Set([
+  'about', 'and', 'current', 'find', 'for', 'from', 'info', 'information',
+  'latest', 'look', 'lookup', 'news', 'on', 'search', 'source', 'sources',
+  'the', 'this', 'today', 'up', 'what', 'with', 'wikipedia', 'youtube',
+]);
+
+function bareContextSubject(value) {
+  const text = String(value || '').trim().replace(/[.?!]+$/u, '').replace(/\s+/gu, ' ');
+  if (!text || text.length > 120 || !text.includes(' ')) return null;
+  const tokens = text.split(' ').filter(Boolean);
+  if (tokens.length < 2 || tokens.length > 4) return null;
+  if (tokens.some(token => CONTEXT_SUBJECT_STOPWORDS.has(token.toLocaleLowerCase()))) return null;
+  if (!tokens.every(token => /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(token))) return null;
+  return text;
+}
+
+function contextSubjectFromUserTurn(value) {
+  const text = String(value || '').trim();
+  const direct = bareContextSubject(text);
+  if (direct) return direct;
+  const match = text.match(/^(?:search|find|look\s*up|lookup|query)\s+(.+)$/iu);
+  if (!match) return null;
+  const subject = match[1]
+    .replace(/^(?:for\s+)?(?:a\s+)?(?:reliable\s+)?(?:source|information|info)\s+(?:about|on)\s+/iu, '')
+    .replace(/\s+(?:on|from)\s+(?:wikipedia|tiktok|pinterest|instagram|facebook|youtube)\b.*$/iu, '')
+    .trim();
+  return bareContextSubject(subject);
+}
+
+function comparisonEntities(value) {
+  const original = String(value || '').trim();
+  const hasComparisonSignal = /^\s*compare\b/iu.test(original)
+    || /^\s*เปรียบ/iu.test(original)
+    || /\b(?:vs\.?|versus)\b/iu.test(original)
+    || /เปรียบเทียบกับ/iu.test(original);
+  // Plain "A and B" often enumerates platforms or topics; it is not enough
+  // to treat the message as an entity comparison without a comparison cue.
+  const thaiConnector = original.match(/^\s*(.+?)\s+\u0e01\u0e31\u0e1a\s+(.+?)\s*$/u);
+  const excludedThaiSubjects = /^(?:\u0e09\u0e31\u0e19|\u0e04\u0e38\u0e13|\u0e40\u0e23\u0e32|\u0e40\u0e02\u0e32|\u0e40\u0e18\u0e2d|\u0e21\u0e31\u0e19|\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07|\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25|\u0e01\u0e32\u0e23)/u;
+  const looksLikeThaiEntityPair = Boolean(thaiConnector
+    && thaiConnector[1].trim().length >= 2
+    && thaiConnector[2].trim().length >= 2
+    && !excludedThaiSubjects.test(thaiConnector[1].trim())
+    && !excludedThaiSubjects.test(thaiConnector[2].trim()));
+  const hasThaiComparisonSignal = /^\s*\u0e40\u0e1b\u0e23\u0e35\u0e22\u0e1a/u.test(original) || looksLikeThaiEntityPair;
+  if (!(hasComparisonSignal || hasThaiComparisonSignal)) return { detected: false, entities: [] };
+  const thaiMatch = original.match(/^\s*(?:\u0e40\u0e1b\u0e23\u0e35\u0e22\u0e1a\u0e40\u0e17\u0e35\u0e22\u0e1a\s*)?(.+?)\s+(?:\u0e01\u0e31\u0e1a|\u0e41\u0e25\u0e30)\s+(.+)$/u);
+  const match = String(value || '').trim().match(/^(.+?)\s+(?:and|&|vs\.?|versus|กับ|และ|เทียบกับ|เปรียบเทียบกับ)\s+(.+)$/iu);
+  const selectedMatch = thaiMatch || match;
+  if (!selectedMatch) return { detected: false, entities: [] };
+  const entities = [selectedMatch[1], selectedMatch[2]].map(raw => {
+    // A follow-up question can begin after the comparison sentence. Keep the
+    // candidate name clean for downstream evidence alignment rather than
+    // treating "Han Nari. Are they ..." as a literal entity name.
+    const firstSentence = String(raw || '').replace(/\s*[.?!]\s+.*$/u, '');
+    raw = firstSentence;
+    const clean = raw.trim().replace(/^(?:compare|เปรียบเทียบ)\s+/iu, '').replace(/^['"“”]+|['"“”]+$/gu, '').trim();
+    const canonical = clean.replace(/^\u0e40\u0e1b\u0e23\u0e35\u0e22\u0e1a\u0e40\u0e17\u0e35\u0e22\u0e1a\s*/u, '').trim();
+    const compact = canonical.replace(/[\s-]+/gu, '').toLowerCase();
+    return { raw: canonical, normalized: canonical.toLowerCase(), variants: unique([canonical, compact]) };
+  }).filter(entity => entity.raw);
+  return { detected: entities.length === 2, entities };
+}
+
+function contextEntities(history) {
+  const found = [];
+  const seen = new Set();
+  const add = value => {
+    const entity = String(value || '').trim();
+    const key = entity.toLocaleLowerCase();
+    if (!entity || seen.has(key)) return;
+    seen.add(key);
+    found.push(entity);
+  };
+  // Read turns chronologically so ordinal references such as “the first one”
+  // retain the order in which the user introduced comparison candidates.
+  for (const turn of (Array.isArray(history) ? history : []).slice(-4)) {
+    const text = String(turn?.content || '');
+    for (const entity of comparisonEntities(text).entities) add(entity.raw);
+    for (const match of text.matchAll(/\b([A-Z][\p{L}\p{N}'-]{1,50}\s+[A-Z][\p{L}\p{N}'-]{1,50})\b/gu)) {
+      const entity = match[1].trim();
+      // Sentence openers are not entity candidates. This makes “We were
+      // discussing …” yield the person/topic rather than “We were”.
+      if (/^(?:We Were|I Can|It Was|The User|This Is)$/u.test(entity)) continue;
+      add(entity);
+    }
+    // Preserve a short, user-entered lowercase subject such as
+    // "park dayoung" for a pronoun follow-up. This is intentionally limited
+    // to two-to-four lexical tokens and user turns so ordinary assistant
+    // prose or long queries cannot become hidden context.
+    if (turn?.role === 'user') add(contextSubjectFromUserTurn(text));
+    if (found.length >= 4) return found.slice(0, 4);
+  }
+  return found.slice(0, 4);
+}
+
+function referenceOrdinal(value) {
+  const text = String(value || '');
+  if (/\b(?:first|former|1st)\b/iu.test(text) || /(?:\u0e04\u0e19\u0e41\u0e23\u0e01|\u0e2d\u0e31\u0e19\u0e41\u0e23\u0e01|\u0e15\u0e31\u0e27\u0e41\u0e23\u0e01)/u.test(text)) return 0;
+  if (/\b(?:second|latter|2nd)\b/iu.test(text) || /(?:\u0e04\u0e19\u0e17\u0e35\u0e48?\u0e2a\u0e2d\u0e07|\u0e2d\u0e31\u0e19\u0e17\u0e35\u0e48?\u0e2a\u0e2d\u0e07|\u0e15\u0e31\u0e27\u0e17\u0e35\u0e48?\u0e2a\u0e2d\u0e07)/u.test(text)) return 1;
+  return null;
+}
+
+function referenceResolution(value, history) {
+  // Keep the user text intact, but recognize common Thai follow-up forms as
+  // well as English pronouns. The resolution is advisory and only succeeds
+  // when a single recent named entity is available.
+  const hasReference = /\b(it|this|that|these|those|they|them|he|she|her|him|his|its|there|one|former|latter)\b/iu.test(String(value || ''))
+    || /(?:\u0e21\u0e31\u0e19|\u0e2d\u0e31\u0e19\u0e19\u0e35\u0e49|\u0e2d\u0e31\u0e19\u0e19\u0e31\u0e49\u0e19|\u0e40\u0e02\u0e32|\u0e40\u0e18\u0e2d|\u0e2a\u0e34\u0e48\u0e07\u0e19\u0e35\u0e49|\u0e04\u0e19\u0e19\u0e35\u0e49|\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e19\u0e35\u0e49|\u0e15\u0e31\u0e27\u0e19\u0e35\u0e49)/u.test(String(value || ''));
+  const candidates = contextEntities(history);
+  const ordinal = referenceOrdinal(value);
+  const resolvedOrdinal = ordinal !== null && Boolean(candidates[ordinal]);
+  return {
+    has_reference: hasReference,
+    candidates,
+    ordinal,
+    recommended_query: resolvedOrdinal ? candidates[ordinal] : hasReference && candidates.length === 1 ? candidates[0] : null,
+    status: resolvedOrdinal ? 'resolved_ordinal_context' : hasReference ? (candidates.length === 1 ? 'resolved_from_context' : candidates.length ? 'ambiguous_context' : 'unresolved') : 'not_applicable',
+  };
+}
+
+function contextQualifiers(history) {
+  const recent = (Array.isArray(history) ? history : []).slice(-4).map(turn => String(turn?.content || '')).join(' ').toLocaleLowerCase();
+  const qualifiers = [];
+  if (/\b(?:manhwa|manga|webtoon|character|anime)\b/iu.test(recent) || THAI_MANHWA_CONTEXT.test(recent)) qualifiers.push('manhwa character');
+  if (/\b(?:singer|song|album|music|artist)\b/iu.test(recent) || THAI_MUSIC_CONTEXT.test(recent)) qualifiers.push('music artist');
+  return qualifiers;
+}
+
+function disambiguationHints(value, history) {
+  const comparison = comparisonEntities(value);
+  const compact = String(value || '').trim().replace(/[\s-]+/gu, '').toLowerCase();
+  // A bare name may need clarification, but an explicit search/source
+  // request already tells us the user's action. Do not mistake a complete
+  // request such as “find a current source about Ada Lovelace” for a bare
+  // ambiguous label and suppress the bounded search recovery path.
+  const hasExplicitSearchLanguage = SEARCH_TERMS.test(String(value || '')) || THAI_SEARCH_TERMS.test(String(value || ''));
+  const explicitClarification = CLARIFICATION_TERMS.test(String(value || ''));
+  const likelyAmbiguous = !comparison.detected && !hasExplicitSearchLanguage && compact.length > 0 && compact.length < 80
+    && (explicitClarification || (!/\b(what|who|how|why|when|where|is|are)\b/iu.test(String(value || ''))
+      && !THAI_INTERROGATIVE_TERMS.test(String(value || ''))));
+  const prior = Array.isArray(history) ? history.slice(-4).map(turn => String(turn?.content || '').trim()).filter(Boolean) : [];
+  return {
+    comparison: comparison.detected,
+    candidate_entities: comparison.entities,
+    likely_ambiguous: likelyAmbiguous,
+    context_candidates: prior.slice(-2),
+    policy: comparison.detected ? 'compare_candidates_before_answering' : likelyAmbiguous ? 'ask_if_search_evidence_cannot_resolve' : 'answer_or_search_normally',
+    clarification_question: likelyAmbiguous ? 'Which person, character, work, or topic do you mean? I can search the approved sources after you specify.' : null,
+  };
+}
+
+function searchQueryVariants(value, disambiguation, reference, qualifiers = []) {
+  const original = String(value || '').trim();
+  const variants = [];
+  const add = (query, reason) => {
+    const normalized = String(query || '').trim().replace(/\s+/gu, ' ');
+    if (!normalized || variants.some(item => item.query.toLocaleLowerCase() === normalized.toLocaleLowerCase())) return;
+    variants.push({ query: normalized, reason });
+  };
+  add(original, 'original_user_message');
+  if (disambiguation.comparison) {
+    for (const entity of disambiguation.candidate_entities) {
+      add(entity.raw, 'comparison_candidate');
+      const dehyphenatedEntity = entity.raw.replace(/(?<=\p{L})-(?=\p{L})/gu, ' ');
+      if (dehyphenatedEntity !== entity.raw) add(dehyphenatedEntity, 'comparison_candidate_hyphen_spacing_variant');
+    }
+    for (const qualifier of qualifiers) {
+      for (const entity of disambiguation.candidate_entities) {
+        add(`${entity.raw} ${qualifier}`, 'comparison_candidate_with_context');
+        const dehyphenatedEntity = entity.raw.replace(/(?<=\p{L})-(?=\p{L})/gu, ' ');
+        if (dehyphenatedEntity !== entity.raw) add(`${dehyphenatedEntity} ${qualifier}`, 'comparison_candidate_hyphen_spacing_with_context');
+      }
+    }
+  }
+  const dehyphenated = original.replace(/(?<=\p{L})-(?=\p{L})/gu, ' ');
+  if (dehyphenated !== original) add(dehyphenated, 'hyphen_spacing_variant');
+  // Preserve the original spelling, but make a conservative query variant for
+  // a commonly pasted TitleCase name such as "ParkDayoung". We never invent
+  // a spelling correction for a fully lowercase unknown word.
+  const splitTitleCase = original.replace(/([\p{Ll}])([\p{Lu}])/gu, '$1 $2');
+  if (splitTitleCase !== original) add(splitTitleCase, 'titlecase_spacing_variant');
+  if (disambiguation.likely_ambiguous && /^[\p{L}\p{N} ]{3,80}$/u.test(original) && original.includes(' ')) {
+    add(original.replace(/\s+/gu, '-'), 'hyphenated_name_variant');
+  }
+  if (reference?.recommended_query) add(reference.recommended_query, 'resolved_context_reference');
+  // Keep the list bounded, but preserve one context-qualified variant for
+  // each comparison candidate. Five slots are not enough when a name also
+  // needs a hyphen-spacing variant; eight keeps the router advisory without
+  // creating an unbounded search plan.
+  return variants.slice(0, 8);
+}
+
+function analyzeIntent({ content, history = [], attachments = [] } = {}) {
+  const original = String(content ?? '');
+  const normalized = original.trim();
+  const prior = Array.isArray(history) ? history : [];
+  let disambiguation = disambiguationHints(normalized, prior);
+  const reference = referenceResolution(normalized, prior);
+  // A pronoun-only follow-up is ambiguous only until the recent context
+  // resolves it. Keep the original message unchanged, but tell the model that
+  // it may use the resolved entity instead of asking the user to repeat it.
+  if (reference.status === 'resolved_from_context' || reference.status === 'resolved_ordinal_context') {
+    disambiguation = Object.freeze({
+      ...disambiguation,
+      likely_ambiguous: false,
+      policy: 'use_resolved_context_reference',
+      clarification_question: null,
+    });
+  }
+  const unresolvedReference = reference.has_reference
+    && !['resolved_from_context', 'resolved_ordinal_context', 'not_applicable'].includes(reference.status);
+  const qualifiers = contextQualifiers(prior);
+  const signals = [];
+  const selfReferential = /\b(?:you|your|we|our|i|my)\b/iu.test(normalized);
+  if (SEARCH_TERMS.test(normalized) || THAI_SEARCH_TERMS.test(normalized) || (FACTUAL_QUERY_TERMS.test(normalized) && !selfReferential)) signals.push('web_search');
+  if (looksLikeNamedLookup(normalized)) signals.push('web_search', 'named_lookup');
+  if (disambiguation.comparison) signals.push('web_search', 'clarification_candidate');
+  if (FILE_TERMS.test(normalized) || attachments.length) signals.push('file_analysis');
+  if (CREATIVE_TERMS.test(normalized)) signals.push('creative_workflow');
+  if (ACTION_TERMS.test(normalized)) signals.push('external_action');
+  if (CLARIFICATION_TERMS.test(normalized) || countWords(normalized) <= 3) signals.push('clarification_candidate');
+
+  const candidates = [];
+  if (signals.includes('web_search')) candidates.push({ intent: 'web_search', confidence: score(signals, 'web_search'), reason: 'The message contains a current-information, source, or search signal.' });
+  if (signals.includes('file_analysis')) candidates.push({ intent: 'file_analysis', confidence: score(signals, 'file_analysis'), reason: 'The message refers to an attached or file-like input.' });
+  if (signals.includes('creative_workflow')) candidates.push({ intent: 'creative_workflow', confidence: score(signals, 'creative_workflow'), reason: 'The message asks for a creative or presentation workflow.' });
+  if (signals.includes('external_action')) candidates.push({ intent: 'external_action', confidence: score(signals, 'external_action'), reason: 'The message may request a state-changing action.' });
+  if (signals.includes('clarification_candidate')) candidates.push({ intent: 'clarification', confidence: 0.62, reason: 'The message may be short, ambiguous, or comparison-oriented.' });
+  if (!candidates.length) candidates.push({ intent: 'general_chat', confidence: 0.78, reason: 'No reliable tool signal was found; let the model answer directly.' });
+  candidates.sort((left, right) => right.confidence - left.confidence);
+
+  const top = candidates[0];
+  const ambiguous = candidates.length > 1 && Math.abs(candidates[0].confidence - candidates[1].confidence) < 0.18;
+  const needsLatest = /\b(latest|today|now|current|recent)\b/iu.test(normalized) || THAI_LATEST_TERMS.test(normalized);
+  const lower = normalized.toLowerCase();
+  const visualDiscoveryContext = /\b(?:manhwa|manga|webtoon|character|fanart|fandom)\b/iu.test(normalized) || THAI_MANHWA_CONTEXT.test(normalized);
+  const hasExplicitSourceScope = /\bwikipedia\b|\bencyclopedi|\bpinterest\b|\btiktok\b|\binstagram\b|\bfacebook\b|\byoutube\b|\bvideo\b/iu.test(lower) || GEMINI_TERMS.test(normalized) || THAI_SOCIAL_TERMS.test(normalized) || THAI_VIDEO_TERMS.test(normalized);
+  const sourceScopeCandidates = unique([
+    /\bwikipedia\b|encyclopedi/iu.test(lower) ? 'encyclopedic' : null,
+    /\bpinterest\b|\btiktok\b|\binstagram\b|\bfacebook\b/iu.test(lower) || THAI_SOCIAL_TERMS.test(normalized) || visualDiscoveryContext || qualifiers.includes('manhwa character') ? 'social' : null,
+    /\byoutube\b|\bvideo\b/iu.test(lower) || THAI_VIDEO_TERMS.test(normalized) ? 'video' : null,
+    GEMINI_TERMS.test(normalized) ? 'ai_summary' : null,
+    (disambiguation.comparison || signals.includes('named_lookup')) && !hasExplicitSourceScope ? 'encyclopedic' : null,
+    'auto',
+  ].filter(Boolean));
+  // Candidate scopes are advisory. Only an explicit platform/source request
+  // becomes a required scope; contextual hints such as "manhwa" must not
+  // silently force the model into a social-only search.
+  const requestedSourceScopes = unique([
+    /\bwikipedia\b|encyclopedi/iu.test(lower) ? 'encyclopedic' : null,
+    /\bpinterest\b|\btiktok\b|\binstagram\b|\bfacebook\b/iu.test(lower) || THAI_SOCIAL_TERMS.test(normalized) ? 'social' : null,
+    /\byoutube\b|\bvideo\b/iu.test(lower) || THAI_VIDEO_TERMS.test(normalized) ? 'video' : null,
+    GEMINI_TERMS.test(normalized) ? 'ai_summary' : null,
+  ].filter(Boolean));
+  const sourceScopePriority = unique([
+    ...requestedSourceScopes,
+    (visualDiscoveryContext || qualifiers.includes('manhwa character')) ? 'social' : null,
+    (disambiguation.comparison || signals.includes('named_lookup') || visualDiscoveryContext || qualifiers.includes('manhwa character')) && requestedSourceScopes.length === 0 ? 'encyclopedic' : null,
+    ...sourceScopeCandidates,
+  ].filter(Boolean));
+  const allowedTools = [];
+  if (signals.includes('web_search')) {
+    // Page reading is a dependent follow-up tool: the model may use it only
+    // after an approved search result supplies a URL. Expose that capability
+    // in the advisory hints so tool selection can distinguish discovery from
+    // evidence reading without making either one a hard gate.
+    allowedTools.push('web_search', 'web_read_page');
+  }
+  if (signals.includes('file_analysis')) allowedTools.push('file_reader');
+  if (signals.includes('creative_workflow')) allowedTools.push('creative_planner');
+  const safetyConstraints = ['do_not_expose_secrets', 'do_not_claim_unverified_facts', 'require_confirmation_for_state_change'];
+  if (signals.includes('external_action')) safetyConstraints.push('external_action_requires_explicit_confirmation');
+
+  return Object.freeze({
+    schema_version: HINTS_SCHEMA_VERSION,
+    original_message: original,
+    candidate_intents: candidates,
+    top_intent: top.intent,
+    confidence: top.confidence,
+    ambiguous,
+    conversational_context: {
+      prior_turn_count: prior.length,
+      has_follow_up_context: prior.length > 0,
+      preserve_full_history: true,
+    },
+    task: {
+      needs_latest_information: needsLatest,
+      goals: unique(signals),
+      sequence: signals.includes('web_search') ? [disambiguation.comparison ? 'compare_candidates' : 'understand_intent', disambiguation.likely_ambiguous || unresolvedReference ? 'resolve_ambiguity' : 'search_if_needed', 'let_model_synthesize'] : ['understand_intent', 'let_model_respond'],
+      source_scope_candidates: sourceScopeCandidates,
+      source_scope_priority: sourceScopePriority,
+      requested_source_scopes: requestedSourceScopes,
+      search_query_variants: searchQueryVariants(normalized, disambiguation, reference, qualifiers),
+      context_entity_candidates: reference.candidates,
+      context_qualifiers: qualifiers,
+    },
+    allowed_tools: allowedTools,
+    disambiguation,
+    reference_resolution: reference,
+    safety_constraints: safetyConstraints,
+    routing: {
+      mode: ambiguous || top.intent === 'general_chat' || top.intent === 'clarification' ? 'model_first' : 'model_first_with_tool_hints',
+      hard_gate: false,
+      model_may_choose_tools: true,
+      ask_clarification_if_unresolved: disambiguation.likely_ambiguous || unresolvedReference,
+    },
+  });
+}
+
+module.exports = { HINTS_SCHEMA_VERSION, analyzeIntent, contextEntities, contextQualifiers, referenceOrdinal, referenceResolution, searchQueryVariants };

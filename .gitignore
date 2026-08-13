@@ -1,0 +1,9 @@
+node_modules/
+dist/
+release/
+.env
+.env.*
+!.env.example
+*.log
+artifacts/live-search-smoke/
+.DS_Store

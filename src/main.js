@@ -1,0 +1,242 @@
+const path = require('node:path');
+const fs = require('node:fs');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { readConfig } = require('./core/config');
+const { ConversationCore } = require('./core/conversation-core');
+const { CreativeWorkflow } = require('./core/creative-workflow');
+const { CreativePersistence } = require('./core/creative-persistence');
+const { ConversationPersistence } = require('./core/conversation-persistence');
+const { AssetStore } = require('./core/asset-store');
+const { exportEditableHtml, inspectEditableHtml } = require('./core/exporter');
+const { WebSearchService } = require('./core/web-search');
+
+let mainWindow;
+let core;
+let creativeWorkflow;
+let creativePersistence;
+let conversationPersistence;
+let assetStore;
+let searchService;
+
+function resolveOwnedExportPath(requestedPath) {
+  const candidate = String(requestedPath || '').trim();
+  if (!candidate) throw Object.assign(new Error('An exported HTML path is required.'), { code: 'invalid_export_path' });
+  const resolved = path.resolve(candidate);
+  const exportRoot = path.resolve(path.join(app.getPath('userData'), 'exports'));
+  const relative = path.relative(exportRoot, resolved);
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative) || path.basename(resolved).toLowerCase() !== 'index.html') {
+    throw Object.assign(new Error('Only an exported SOLAT HTML file can be opened.'), { code: 'invalid_export_path' });
+  }
+  return resolved;
+}
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1180,
+    height: 820,
+    minWidth: 760,
+    minHeight: 560,
+    backgroundColor: '#f7f6f2',
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+  mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+  if (process.env.SOLAT_DEVTOOLS === '1') mainWindow.webContents.openDevTools();
+}
+
+function registerIpc() {
+  ipcMain.handle('solat:status', () => core.status());
+  ipcMain.handle('solat:send', async (_event, request) => {
+    try {
+      return { ok: true, value: await core.send(request) };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: typeof error?.code === 'string' ? error.code : 'provider_error',
+          message: typeof error?.message === 'string' ? error.message : 'The request failed.',
+        },
+      };
+    }
+  });
+  ipcMain.handle('solat:save-conversation', async (_event, request) => {
+    try {
+      return { ok: true, value: await conversationPersistence.save(request) };
+    } catch (error) {
+      return { ok: false, error: { code: typeof error?.code === 'string' ? error.code : 'persistence_write_failed', message: typeof error?.message === 'string' ? error.message : 'Conversation could not be saved.' } };
+    }
+  });
+  ipcMain.handle('solat:load-conversation', async (_event, request) => {
+    try {
+      return { ok: true, value: await conversationPersistence.load(request) };
+    } catch (error) {
+      return { ok: false, error: { code: typeof error?.code === 'string' ? error.code : 'persistence_read_failed', message: typeof error?.message === 'string' ? error.message : 'Conversation could not be loaded.' } };
+    }
+  });
+  ipcMain.handle('solat:create-deck', async (_event, request) => {
+    try {
+      const value = await creativeWorkflow.createDeck(request);
+      await creativePersistence.saveResult({ sessionId: request?.sessionId, result: value });
+      return { ok: true, value };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: typeof error?.code === 'string' ? error.code : 'workflow_error',
+          message: typeof error?.message === 'string' ? error.message : 'The creative workflow failed.',
+        },
+      };
+    }
+  });
+  ipcMain.handle('solat:load-creative-history', async (_event, request) => {
+    try {
+      return { ok: true, value: await creativePersistence.loadHistory({ sessionId: request?.sessionId }) };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: typeof error?.code === 'string' ? error.code : 'persistence_read_failed',
+          message: typeof error?.message === 'string' ? error.message : 'Creative history could not be loaded.',
+        },
+      };
+    }
+  });
+  ipcMain.handle('solat:store-original-asset', async (_event, request) => {
+    try {
+      const sessionId = String(request?.sessionId || '').trim();
+      const project = core.workspace.getProject(sessionId);
+      const asset = await assetStore.storeOriginal({
+        ownerId: sessionId,
+        projectId: project.project_id,
+        fileName: request?.fileName,
+        mimeType: request?.mimeType,
+        bytes: request?.bytes,
+      });
+      core.workspace.linkProject({ sessionId, assetIds: [asset.asset_id] });
+      return { ok: true, value: { assetId: asset.asset_id, projectId: asset.project_id, hash: asset.hash, sizeBytes: asset.size_bytes } };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: typeof error?.code === 'string' ? error.code : 'asset_storage_error',
+          message: typeof error?.message === 'string' ? error.message : 'The original asset could not be stored.',
+        },
+      };
+    }
+  });
+  ipcMain.handle('solat:export-html', async (_event, request) => {
+    try {
+      const sessionId = String(request?.sessionId || '').trim();
+      const creativeId = String(request?.creativeId || '').trim();
+      if (!sessionId || !creativeId) throw Object.assign(new Error('A session and creative result are required.'), { code: 'invalid_request' });
+      const result = core.workspace.getArtifact({ sessionId, kind: 'creative_result', artifactId: creativeId });
+      const project = core.workspace.getProject(sessionId);
+      const storedAssets = Array.isArray(result.artifacts?.assets) ? [...result.artifacts.assets] : [];
+      for (const assetId of project.asset_ids || []) {
+        try {
+          const stored = await assetStore.readOriginal({ ownerId: sessionId, projectId: project.project_id, assetId });
+          if (!storedAssets.some(asset => asset.asset_id === stored.asset.asset_id)) storedAssets.push(stored.asset);
+        } catch (error) {
+          if (error?.code !== 'asset_not_found') throw error;
+        }
+      }
+      const exported = await exportEditableHtml({
+        document: result.artifacts?.document,
+        designSystem: result.artifacts?.design,
+        assets: storedAssets,
+        userLocks: result.artifacts?.document?.user_locks || [],
+        provenance: { creative_result_id: creativeId, revision_of: result.revisionOf || null, provider: result.provider, model: result.model },
+        outputRoot: path.join(app.getPath('userData'), 'exports'),
+      });
+      await creativePersistence.recordExport({ sessionId, creativeId, exported: { htmlPath: exported.html_path, manifestPath: exported.manifest_path, revision: exported.revision } });
+      return { ok: true, value: { format: exported.format, outputDir: exported.output_dir, htmlPath: exported.html_path, manifestPath: exported.manifest_path, documentId: exported.document_id, revision: exported.revision } };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: typeof error?.code === 'string' ? error.code : 'export_error',
+          message: typeof error?.message === 'string' ? error.message : 'The editable export failed.',
+        },
+      };
+    }
+  });
+  ipcMain.handle('solat:open-export', async (_event, request) => {
+    try {
+      const requestedPath = resolveOwnedExportPath(request?.htmlPath);
+      const stat = await fs.promises.stat(requestedPath);
+      if (!stat.isFile()) throw Object.assign(new Error('The exported HTML file is not available.'), { code: 'export_not_found' });
+      const openError = await shell.openPath(requestedPath);
+      if (openError) throw Object.assign(new Error(openError), { code: 'export_open_failed' });
+      return { ok: true, value: { htmlPath: requestedPath } };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: typeof error?.code === 'string' ? error.code : 'export_open_failed',
+          message: typeof error?.message === 'string' ? error.message : 'The exported HTML could not be opened.',
+        },
+      };
+    }
+  });
+  ipcMain.handle('solat:inspect-export', async (_event, request) => {
+    try {
+      const htmlPath = resolveOwnedExportPath(request?.htmlPath);
+      const manifestPath = path.join(path.dirname(htmlPath), 'manifest.json');
+      const [html, manifestText] = await Promise.all([
+        fs.promises.readFile(htmlPath, 'utf8'),
+        fs.promises.readFile(manifestPath, 'utf8'),
+      ]);
+      const manifest = JSON.parse(manifestText);
+      const inspection = inspectEditableHtml({ html, manifest });
+      const sessionId = String(request?.sessionId || '').trim();
+      const creativeId = String(request?.creativeId || '').trim();
+      if (!sessionId || !creativeId) throw Object.assign(new Error('A session and creative result are required.'), { code: 'invalid_request' });
+      await creativePersistence.recordInspection({ sessionId, creativeId, inspection });
+      return { ok: true, value: { htmlPath, manifestPath, inspection } };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: typeof error?.code === 'string' ? error.code : 'export_inspection_failed',
+          message: typeof error?.message === 'string' ? error.message : 'The exported HTML could not be inspected.',
+        },
+      };
+    }
+  });
+}
+
+app.whenReady().then(() => {
+  const executableDir = path.dirname(process.execPath);
+  const userDataEnv = path.join(app.getPath('userData'), '.env');
+  const config = readConfig({
+      cwd: app.getAppPath(),
+      envFiles: [path.join(executableDir, '.env'), userDataEnv],
+    });
+  searchService = new WebSearchService({
+    provider: config.searchProvider,
+    baseUrl: config.searchBaseUrl,
+    apiKey: config.searchApiKey,
+    timeoutMs: config.searchTimeoutMs,
+    resultLimit: config.searchResultLimit,
+    wikipediaFallback: config.searchWikipediaFallback,
+    engines: config.searchEngines,
+  });
+  core = new ConversationCore({ config, searchService });
+  assetStore = new AssetStore({ rootDir: path.join(app.getPath('userData'), 'assets') });
+  creativePersistence = new CreativePersistence({ rootDir: path.join(app.getPath('userData'), 'creative-history') });
+  conversationPersistence = new ConversationPersistence({ rootDir: path.join(app.getPath('userData'), 'conversation-history') });
+  creativeWorkflow = new CreativeWorkflow({ provider: core.provider, workspace: core.workspace });
+  registerIpc();
+  createWindow();
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});

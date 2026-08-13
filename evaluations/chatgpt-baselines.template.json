@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "kind": "owner_captured_chatgpt_baselines",
+  "instructions": "Paste a real ChatGPT answer for each matching corpus id. Use context_mode temporary_chat for an isolated prompt, or matched_history only when the captured prior turns exactly match the corpus. Do not put credentials, cookies, or private conversation links here.",
+  "cases": [
+    { "id": "general_chat_en", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] },
+    { "id": "latest_info_en", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] },
+    { "id": "latest_info_th", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] },
+    { "id": "follow_up_context", "model": "", "captured_at": "", "context_mode": "matched_history", "response": "", "sources": [] },
+    { "id": "hyphenated_name", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] },
+    { "id": "comparison_candidates", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] },
+    { "id": "encyclopedic_scope", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] },
+    { "id": "social_scope", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] },
+    { "id": "video_scope", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] },
+    { "id": "empty_evidence", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] },
+    { "id": "degraded_evidence", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] },
+    { "id": "citation_disclosure", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] },
+    { "id": "live_semantic_parity", "model": "", "captured_at": "", "context_mode": "temporary_chat", "response": "", "sources": [] }
+  ]
+}
