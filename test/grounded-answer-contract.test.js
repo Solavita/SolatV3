@@ -6,6 +6,7 @@ const {
   createGroundedAnswerContract,
   groundedAnswerInstruction,
 } = require('../src/core/grounded-answer-contract');
+const { runtimeGroundingEvidenceState } = require('../src/core/conversation-core');
 
 test('grounded-answer policy is versioned and separates fact, inference, and unknown', () => {
   const contract = createGroundedAnswerContract({ evidenceState: 'partial' });
@@ -27,4 +28,13 @@ test('grounded-answer policy accepts only declared evidence states', () => {
     () => createGroundedAnswerContract({ evidenceState: 'probably_enough' }),
     error => error.code === 'invalid_grounded_answer_contract',
   );
+});
+
+test('runtime grounding state reflects visible evidence instead of model confidence', () => {
+  assert.equal(runtimeGroundingEvidenceState({ searchRequested: false }), 'not_requested');
+  assert.equal(runtimeGroundingEvidenceState({ searchRequested: true, webSearchStatus: 'unavailable', sources: [] }), 'unavailable');
+  assert.equal(runtimeGroundingEvidenceState({ searchRequested: true, webSearchStatus: 'empty', sources: [] }), 'insufficient');
+  assert.equal(runtimeGroundingEvidenceState({ searchRequested: true, webSearchStatus: 'degraded', sources: [{ url: 'https://example.test' }] }), 'partial');
+  assert.equal(runtimeGroundingEvidenceState({ searchRequested: true, webSearchStatus: 'ready', sources: [{ url: 'https://example.test' }], comparisonStatus: 'complete', requestedScopeStatus: 'complete' }), 'available');
+  assert.equal(runtimeGroundingEvidenceState({ searchRequested: true, webSearchStatus: 'ready', sources: [{ url: 'https://example.test' }], comparisonStatus: 'incomplete' }), 'partial');
 });

@@ -1198,6 +1198,8 @@ test('conversation core offers search as a model-selected tool only when the rou
   assert.match(result.assistant, /grounded by 1 source/);
   assert.equal(result.mode, 'search_and_model');
   assert.equal(result.webSearchStatus, 'ready');
+  assert.equal(result.grounding.schema_version, 'solat.grounded-answer-policy.v1');
+  assert.equal(result.grounding.evidence_state, 'available');
   assert.match(calls[0].messages[0].content, /Do not invent URLs, sources, names, or facts/);
   assert.deepEqual(result.searchEvidence, [{ status: 'ready', query: 'latest SOLAT', source_scope: 'encyclopedic', allowed_hosts: ['wikipedia.org'], result_count: 1, error_count: 0, quality: { status: 'sufficient', ambiguity: 'none', dropped_unrelated_count: 0, matched_entities: [] }, comparison_target: null }]);
   assert.deepEqual(result.searchSummary, { source_count: 1, search_requested: true, search_used: true, source_scopes: ['encyclopedic'], source_hosts: ['en.wikipedia.org'], source_corroboration: 'single_host', source_agreement_status: 'single_source', source_authority_level: 'encyclopedic', statuses: ['ready'], requested_source_scopes: [], source_scope_priority: ['auto'], candidate_source_scopes: ['auto'], scope_adjusted_count: 0, query_adjusted_count: 0, rejected_tool_call_count: 0, comparison_entities: [], comparison_entities_with_evidence: [], requested_source_scopes_with_evidence: [], candidate_source_scopes_used: [], candidate_source_scope_status: 'not_used', comparison_evidence_status: 'not_applicable', requested_source_scope_status: 'not_applicable' });
@@ -1856,6 +1858,7 @@ test('conversation core removes comparison results that only contain unrelated p
   const result = await new ConversationCore({ config: {}, provider, searchService }).send({ sessionId: 'comparison-filter', content: 'compare Park-Dayoung and Han Nari', requestId: 'comparison-filter-1' });
   assert.equal(result.webSearchStatus, 'empty');
   assert.deepEqual(result.sources, []);
+  assert.equal(result.grounding.evidence_state, 'insufficient');
   assert.equal(result.searchEvidence[0].quality.ambiguity, 'comparison_target_not_found');
 });
 
@@ -1873,6 +1876,7 @@ test('conversation core rejects an event snippet that mentions a comparison name
   };
   const result = await new ConversationCore({ config: {}, provider, searchService }).send({ sessionId: 'comparison-event-filter', content: 'compare Park-Dayoung and Han Nari', requestId: 'comparison-event-filter-1' });
   assert.equal(result.webSearchStatus, 'empty');
+  assert.equal(result.grounding.evidence_state, 'insufficient');
   assert.equal(result.searchEvidence[0].quality.ambiguity, 'comparison_target_not_found');
   assert.equal(result.searchEvidence[0].quality.dropped_unrelated_count, 1);
 });

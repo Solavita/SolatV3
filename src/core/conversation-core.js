@@ -41,6 +41,15 @@ function platformCoverageForMessage(userMessage, sources) {
   });
 }
 
+function runtimeGroundingEvidenceState({ searchRequested, webSearchStatus, sources, comparisonStatus, requestedScopeStatus } = {}) {
+  if (!searchRequested) return 'not_requested';
+  if (['unavailable', 'disabled'].includes(String(webSearchStatus || ''))) return 'unavailable';
+  const visibleSourceCount = Array.isArray(sources) ? sources.length : 0;
+  if (!visibleSourceCount) return 'insufficient';
+  if (webSearchStatus === 'degraded' || comparisonStatus === 'incomplete' || requestedScopeStatus === 'incomplete') return 'partial';
+  return 'available';
+}
+
 function modelContextWindow(history, currentMessage, maxChars = MAX_MODEL_CONTEXT_CHARS) {
   const prior = (Array.isArray(history) ? history : [])
     .filter(message => ['user', 'assistant'].includes(message?.role) && typeof message?.content === 'string' && message.content.trim())
@@ -751,6 +760,15 @@ class ConversationCore {
       searchSummary.source_agreement_status = 'none';
       searchSummary.source_authority_level = 'none';
     }
+    const grounding = createGroundedAnswerContract({
+      evidenceState: runtimeGroundingEvidenceState({
+        searchRequested,
+        webSearchStatus,
+        sources,
+        comparisonStatus: searchSummary.comparison_evidence_status,
+        requestedScopeStatus: searchSummary.requested_source_scope_status,
+      }),
+    });
     const response = {
       id: crypto.randomUUID(),
       sessionId: normalizedSession,
@@ -774,6 +792,7 @@ class ConversationCore {
       sources,
       searchEvidence,
       searchSummary,
+      grounding,
       ...(pageReadRuns.length ? { pageReads: pageReadRuns.map(page => ({ status: page.status, tool: page.tool, url: page.url || null, text: typeof page.text === 'string' ? page.text.slice(0, 12000) : null, truncated: Boolean(page.truncated), error: page.error || null })), pageReadUsed: true } : {}),
       contextWindow: {
         available_message_count: contextWindow.available_message_count,
@@ -787,4 +806,4 @@ class ConversationCore {
   }
 }
 
-module.exports = { alignComparisonQuery, buildConversationSystemPrompt, buildResolvedReferenceInstruction, comparisonTargetForQuery, directlyIdentifiesComparisonTarget, filterComparisonOutcome, mergeScopedOutcomes, modelContextWindow, preserveContextQualifierQuery, preserveRequestedPlatformQuery, unavailableSearchOutcome, ConversationCore, CONVERSATION_PROMPT_VERSION, MAX_MESSAGE_LENGTH, MAX_MODEL_CONTEXT_CHARS };
+module.exports = { alignComparisonQuery, buildConversationSystemPrompt, buildResolvedReferenceInstruction, comparisonTargetForQuery, directlyIdentifiesComparisonTarget, filterComparisonOutcome, mergeScopedOutcomes, modelContextWindow, preserveContextQualifierQuery, preserveRequestedPlatformQuery, runtimeGroundingEvidenceState, unavailableSearchOutcome, ConversationCore, CONVERSATION_PROMPT_VERSION, MAX_MESSAGE_LENGTH, MAX_MODEL_CONTEXT_CHARS };
