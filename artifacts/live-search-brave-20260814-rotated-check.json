@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "kind": "solat_live_search_smoke",
+  "started_at": "2026-08-14T07:11:38.924Z",
+  "finished_at": "2026-08-14T07:11:41.805Z",
+  "duration_ms": 2881,
+  "outcome": "PASS",
+  "reason": "model_used_search_and_returned_visible_sources",
+  "readiness": {
+    "model": {
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "configured": true
+    },
+    "search": {
+      "provider": "brave",
+      "configured": true,
+      "enabled": true,
+      "source_scopes": [
+        "auto",
+        "encyclopedic",
+        "social",
+        "video",
+        "ai_summary",
+        "approved"
+      ],
+      "result_limit": 5
+    }
+  },
+  "request": {
+    "prompt": "Use the web_search tool now. Find reliable approved sources for Ada Lovelace. Then give one short, source-backed sentence. Do not answer from memory before searching.",
+    "provider_request_count": 2
+  },
+  "result": {
+    "mode": "search_and_model",
+    "provider": "deepseek_api",
+    "model": "deepseek-v4-flash",
+    "tool_rounds": 1,
+    "web_search_status": "ready",
+    "source_count": 1,
+    "sources": [
+      {
+        "title": "Ada Lovelace",
+        "url": "https://en.wikipedia.org/wiki/Ada_Lovelace",
+        "host": "en.wikipedia.org"
+      }
+    ],
+    "search_evidence": [
+      {
+        "status": "ready",
+        "source_scope": "encyclopedic",
+        "result_count": 1,
+        "error_count": 0,
+        "agreement_status": "not_assessed"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1844,
+      "completion_tokens": 78,
+      "total_tokens": 1922,
+      "prompt_tokens_details": {
+        "cached_tokens": 1408
+      },
+      "prompt_cache_hit_tokens": 1408,
+      "prompt_cache_miss_tokens": 436
+    },
+    "usage_scope": "final_provider_response_only",
+    "visible_response": "Based on the source-backed search result:\n\nAda Lovelace (Augusta Ada King, Countess of Lovelace, née Byron; 1815–1852) was an English mathematician and writer, widely recognized for her work on Charles Babbage's early mechanical general-purpose computer, the Analytical Engine, and often regarded as the first to recognize its full potential beyond mere calculation."
+  },
+  "error": null
+}

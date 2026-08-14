@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "kind": "solat_live_search_smoke",
+  "started_at": "2026-08-14T00:20:23.462Z",
+  "finished_at": "2026-08-14T00:20:31.976Z",
+  "duration_ms": 8514,
+  "outcome": "PASS",
+  "reason": "model_used_search_and_returned_visible_sources",
+  "readiness": {
+    "model": {
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "configured": true
+    },
+    "search": {
+      "provider": "brave",
+      "configured": true,
+      "enabled": true,
+      "source_scopes": [
+        "auto",
+        "encyclopedic",
+        "social",
+        "video",
+        "ai_summary",
+        "approved"
+      ],
+      "result_limit": 5
+    }
+  },
+  "request": {
+    "prompt": "Use the web_search tool now. Find reliable approved sources for Ada Lovelace. Then give one short, source-backed sentence. Do not answer from memory before searching.",
+    "provider_request_count": 3
+  },
+  "result": {
+    "mode": "search_and_model",
+    "provider": "deepseek_api",
+    "model": "deepseek-v4-flash",
+    "tool_rounds": 2,
+    "web_search_status": "ready",
+    "source_count": 2,
+    "sources": [
+      {
+        "title": "Ada Lovelace - Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Ada_Lovelace",
+        "host": "en.wikipedia.org"
+      },
+      {
+        "title": "Ada Lovelace | Biography, Computer, Day, & Facts | Britannica",
+        "url": "https://www.britannica.com/biography/Ada-Lovelace",
+        "host": "www.britannica.com"
+      }
+    ],
+    "search_evidence": [
+      {
+        "status": "empty",
+        "source_scope": "encyclopedic",
+        "result_count": 0,
+        "error_count": 0,
+        "agreement_status": "not_assessed"
+      },
+      {
+        "status": "ready",
+        "source_scope": "auto",
+        "result_count": 2,
+        "error_count": 0,
+        "agreement_status": "not_assessed"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 2442,
+      "completion_tokens": 73,
+      "total_tokens": 2515,
+      "prompt_tokens_details": {
+        "cached_tokens": 1664
+      },
+      "prompt_cache_hit_tokens": 1664,
+      "prompt_cache_miss_tokens": 778
+    },
+    "usage_scope": "final_provider_response_only",
+    "visible_response": "I found reliable encyclopedic sources from Wikipedia and Britannica. Here is my short, source-backed sentence:\n\n---\n\nAda Lovelace was an English mathematician and writer, best known for her work on Charles Babbage's Analytical Engine, a prototype mechanical general-purpose computer, for which she created a program in 1843 and has consequently been called the first computer programmer."
+  },
+  "error": null
+}

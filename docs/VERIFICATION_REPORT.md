@@ -2402,3 +2402,26 @@ Milestone 192 status: `IMPLEMENTED BUT NOT FULLY VERIFIED`.
 | Desktop regression and package build | PASS | `npm.cmd test`; `npm.cmd run check`; `npm.cmd run build` | `98/98` tests passed, syntax check passed, Windows `dist/win-unpacked/SOLAT.exe` produced | No installer signing or paid-provider evaluation was performed |
 
 Milestone 193 status: `IMPLEMENTED BUT NOT FULLY VERIFIED`.
+## Live DeepSeek key replacement check (2026-08-14)
+
+| criterion | status | exact command/action | exact input/output | files/evidence | limitation |
+|---|---|---|---|---|---|
+| SOLAT V3 reads the newly configured DeepSeek key | PASS | Ran one live smoke request from the `SOLAT_V3` workspace: `node scripts/live-search-smoke.js --output artifacts/live-search-brave-20260814-keycheck.json` | `outcome=PASS`; provider `deepseek_api`; model `deepseek-v4-flash`; `provider_request_count=2`; final response returned; `web_search_status=ready`; 2 approved sources | `SOLAT_V3/.env`; `SOLAT_V3/artifacts/live-search-brave-20260814-keycheck.json` | This confirms transport/configuration and one search-backed response, not broad semantic quality or account billing amount |
+## Verification after V3 Brave configuration review (2026-08-14)
+
+| criterion | status | exact command/action | exact input/output | files/evidence | limitation |
+|---|---|---|---|---|---|
+| V3 configuration parsing and search/model contracts | PASS | `npm.cmd test` | `98 passed, 0 failed`; tests cover DeepSeek V4 Flash defaults, Brave configuration parsing, source allowlist/fallback, tool loops, session isolation, and visible source disclosure | `src/core/config.js`; `src/core/web-search.js`; `test/core.test.js`; `test/ui.test.js` | This is deterministic local evidence; live API execution is intentionally paused until exposed keys are revoked and replaced |
+| Secret handling | PASS | Inspected `.gitignore` and config/status paths | `.env` and `.env.*` are ignored; provider status exposes configured/boolean state without key values | `SOLAT_V3/.gitignore`; `src/core/config.js`; `src/main.js` | Any key shown in the supplied screenshot must be revoked by the owner; this repository does not revoke external credentials |
+
+## Bounded live Brave + DeepSeek verification (2026-08-14)
+
+| criterion | status | exact command/action | exact input/output | files/evidence | limitation |
+|---|---|---|---|---|---|
+| Brave search and DeepSeek synthesis are connected in V3 | PASS | `npm.cmd run smoke:live-search -- --output artifacts/live-search-brave-20260814-rotated-check.json` | `outcome=PASS`; provider `deepseek_api/deepseek-v4-flash`; search provider `brave`; `provider_request_count=2`; one bounded tool round; `web_search_status=ready`; 1 approved Wikipedia source; 2,881 ms | `artifacts/live-search-brave-20260814-rotated-check.json`; `src/core/web-search.js`; `src/core/conversation-core.js` | One bounded Ada Lovelace query proves connectivity and visible source wiring, not broad semantic quality or source recall; no retry was used |
+
+## Deterministic conversation/search evaluation after Brave verification (2026-08-14)
+
+| criterion | status | exact command/action | exact input/output | files/evidence | limitation |
+|---|---|---|---|---|---|
+| Conversation, follow-up, ambiguity, source scope and disclosure corpus | PASS | `npm.cmd run evaluate:conversation` | `24 PASS, 0 FAIL, 1 NOT VERIFIED`; the remaining case is live semantic parity and explicitly cannot be proven by a deterministic evaluator | `scripts/evaluate-conversation.js`; evaluation output; `src/core/intent-router.js`; `src/core/conversation-core.js` | This does not establish ChatGPT semantic parity |
