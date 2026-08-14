@@ -6,6 +6,7 @@ const THAI_MANHWA_CONTEXT = /(?:\u0e21\u0e31\u0e07\u0e2e\u0e27\u0e32|\u0e15\u0e3
 const THAI_MUSIC_CONTEXT = /(?:\u0e19\u0e31\u0e01\u0e23\u0e49\u0e2d\u0e07|\u0e40\u0e1e\u0e25\u0e07|\u0e2d\u0e31\u0e25\u0e1a\u0e31\u0e49\u0e21)/u;
 const THAI_INTERROGATIVE_TERMS = /(?:\u0e04\u0e37\u0e2d|\u0e2d\u0e30\u0e44\u0e23|\u0e43\u0e04\u0e23|\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23|\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e44\u0e23|\u0e17\u0e33\u0e44\u0e21|\u0e17\u0e35\u0e48\u0e44\u0e2b\u0e19)/u;
 const THAI_LATEST_TERMS = /(?:\u0e23\u0e32\u0e04\u0e32|\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49|\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49|\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14|\u0e02\u0e48\u0e32\u0e27|\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14)/u;
+const THAI_GENERAL_CONVERSATION_TERMS = /(?:\u0e2a\u0e27\u0e31\u0e2a\u0e14\u0e35|\u0e02\u0e2d\u0e1a\u0e04\u0e38\u0e13|\u0e0a\u0e48\u0e27\u0e22|\u0e04\u0e34\u0e14|\u0e44\u0e2d\u0e40\u0e14\u0e35\u0e22|\u0e04\u0e38\u0e22|\u0e44\u0e14\u0e49\u0e44\u0e2b\u0e21)/u;
 const GEMINI_TERMS = /\b(?:gemini|ai\s+overview|google\s+ai)\b/iu;
 const FACTUAL_QUERY_TERMS = /\b(?:who|what|where|when)\s+(?:is|are|was|were)\b|\btell\s+me\s+about\b|\bexplain\b|(?:\u0e43\u0e04\u0e23\u0e04\u0e37\u0e2d|\u0e2d\u0e30\u0e44\u0e23\u0e04\u0e37\u0e2d|\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a)/iu;
 const NAMED_LOOKUP_STOPWORDS = new Set(['hi', 'hello', 'hey', 'thanks', 'thank', 'ok', 'okay', 'yes', 'no', 'please', 'help', 'solat']);
@@ -34,6 +35,7 @@ function unique(values) {
 function looksLikeNamedLookup(value) {
   const text = String(value || '').trim().replace(/[?!.]+$/u, '').replace(/\s+/gu, ' ');
   if (!text || text.length > 80) return false;
+  if (THAI_GENERAL_CONVERSATION_TERMS.test(text)) return false;
   const tokens = text.split(' ').filter(Boolean);
   if (tokens.length < 1 || tokens.length > 4) return false;
   if (tokens.some(token => NAMED_LOOKUP_STOPWORDS.has(token.toLocaleLowerCase()))) return false;
@@ -46,6 +48,7 @@ const CONTEXT_SUBJECT_STOPWORDS = new Set([
   'about', 'and', 'current', 'find', 'for', 'from', 'info', 'information',
   'latest', 'look', 'lookup', 'news', 'on', 'search', 'source', 'sources',
   'the', 'this', 'today', 'up', 'what', 'with', 'wikipedia', 'youtube',
+  '\u0e04\u0e49\u0e19\u0e2b\u0e32', '\u0e40\u0e2a\u0e34\u0e23\u0e4c\u0e0a', '\u0e2b\u0e32',
 ]);
 
 function bareContextSubject(value) {
@@ -54,21 +57,37 @@ function bareContextSubject(value) {
   const tokens = text.split(' ').filter(Boolean);
   if (tokens.length < 2 || tokens.length > 4) return null;
   if (tokens.some(token => CONTEXT_SUBJECT_STOPWORDS.has(token.toLocaleLowerCase()))) return null;
-  if (!tokens.every(token => /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(token))) return null;
+  // Thai vowels and tone marks are Unicode marks (\p{M}), not letters. Without
+  // them a valid Thai name would be rejected before reference resolution.
+  if (!tokens.every(token => /^[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N}'-]*$/u.test(token))) return null;
   return text;
 }
 
 function contextSubjectFromUserTurn(value) {
   const text = String(value || '').trim();
-  const direct = bareContextSubject(text);
-  if (direct) return direct;
-  const match = text.match(/^(?:search|find|look\s*up|lookup|query)\s+(.+)$/iu);
-  if (!match) return null;
+  // Thai search verbs are frequently followed directly by a mixed-language
+  // name, so \s* is intentional here. The extracted subject remains bounded
+  // by bareContextSubject below; this only makes the command syntax visible.
+  const match = text.match(/^(?:(?:search|find|look\s*up|lookup|query)\s+|(?:\u0e04\u0e49\u0e19\u0e2b\u0e32|\u0e40\u0e2a\u0e34\u0e23\u0e4c\u0e0a|\u0e2b\u0e32)\s*)(.+)$/iu);
+  if (!match) {
+    const direct = bareContextSubject(text);
+    if (direct) return direct;
+    // A pasted romanized name is often written without a space (for example
+    // "ParkDayoung"). It is still safe to retain as a *candidate* only when it
+    // already satisfies the conservative named-lookup check. We never guess a
+    // correction or turn ordinary prose into a hidden subject.
+    return looksLikeNamedLookup(text) && /^[\p{L}\p{M}\p{N}'-]{3,80}$/u.test(text) ? text : null;
+  }
   const subject = match[1]
     .replace(/^(?:for\s+)?(?:a\s+)?(?:reliable\s+)?(?:source|information|info)\s+(?:about|on)\s+/iu, '')
     .replace(/\s+(?:on|from)\s+(?:wikipedia|tiktok|pinterest|instagram|facebook|youtube)\b.*$/iu, '')
+    // Keep a Thai lookup subject separate from its search location/domain.
+    // This lets "ค้นหา ฮัน นารี จากมังฮวา" resolve a later "เขา" to
+    // "ฮัน นารี", not to the whole search instruction.
+    .replace(/\s+(?:\u0e08\u0e32\u0e01|\u0e43\u0e19|\u0e1a\u0e19)\s*(?:\u0e21\u0e31\u0e07\u0e2e\u0e27\u0e32|\u0e40\u0e27\u0e47\u0e1a\u0e15\u0e39\u0e19|\u0e15\u0e34\u0e4a\u0e01\u0e15\u0e47\u0e2d\u0e01|\u0e22\u0e39\u0e17\u0e39\u0e1a|\u0e1e\u0e34\u0e19\u0e40\u0e17\u0e2d\u0e40\u0e23\u0e2a\u0e15\u0e4c).*$/iu, '')
     .trim();
-  return bareContextSubject(subject);
+  return bareContextSubject(subject)
+    || (looksLikeNamedLookup(subject) && /^[\p{L}\p{M}\p{N}'-]{3,80}$/u.test(subject) ? subject : null);
 }
 
 function comparisonEntities(value) {
@@ -109,9 +128,17 @@ function comparisonEntities(value) {
 function contextEntities(history) {
   const found = [];
   const seen = new Set();
+  const canonicalEntityKey = value => String(value || '')
+    .normalize('NFKC')
+    .toLocaleLowerCase()
+    .replace(/[\s\u002D\u2010-\u2015]+/gu, '');
   const add = value => {
     const entity = String(value || '').trim();
-    const key = entity.toLocaleLowerCase();
+    // Treat harmless punctuation/spacing variants as the same context entity
+    // while retaining the first user-visible spelling for the query. This
+    // prevents "Park-Dayoung" and "Park Dayoung" from becoming two competing
+    // pronoun candidates in a follow-up turn.
+    const key = canonicalEntityKey(entity);
     if (!entity || seen.has(key)) return;
     seen.add(key);
     found.push(entity);

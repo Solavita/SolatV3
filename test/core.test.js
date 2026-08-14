@@ -14,7 +14,7 @@ const {
   extractToolCalls,
   parseStructuredJson,
 } = require('../src/core/provider');
-const { ConversationCore, mergeScopedOutcomes, modelContextWindow } = require('../src/core/conversation-core');
+const { buildConversationSystemPrompt, CONVERSATION_PROMPT_VERSION, ConversationCore, mergeScopedOutcomes, modelContextWindow } = require('../src/core/conversation-core');
 const {
   ContractError,
   createAsset,
@@ -35,7 +35,7 @@ const { SessionWorkspace } = require('../src/core/session-workspace');
 const { CreativeWorkflow, buildStructuredPrompt, removeModelGeometry } = require('../src/core/creative-workflow');
 const { composeDocument } = require('../src/core/layout-engine');
 const { AssetStore } = require('../src/core/asset-store');
-const { analyzeIntent } = require('../src/core/intent-router');
+const { analyzeIntent, contextEntities } = require('../src/core/intent-router');
 const { WebSearchService, analyzeSearchQuery, directlyIdentifiesQuery, evidenceAuthorityLevel, isAllowedUrl, minimumRelevance, namedEntityInQuery, providerCapability, rankResults, relevanceFor } = require('../src/core/web-search');
 const { createReport, runLiveSearchSmoke, safeReadiness } = require('../src/core/live-search-smoke');
 const { evaluateCorpus } = require('../src/core/conversation-evaluator');
@@ -513,6 +513,20 @@ test('conversation core tells the model when a follow-up reference is already re
   assert.match(messages[0].content, /do not ask the user to repeat the subject/i);
 });
 
+test('conversation system prompt is versioned and keeps structured hints separate from user text', () => {
+  const intentHints = { schema_version: 'solat.intent-hints.v1', original_message: 'ค้นหา Ada Lovelace', routing: { hard_gate: false } };
+  const prompt = buildConversationSystemPrompt({
+    intentHints,
+    resolvedReferenceInstruction: 'The reference is unresolved; ask before guessing.',
+    assetIds: ['asset-1', '  '],
+  });
+  assert.equal(CONVERSATION_PROMPT_VERSION, 'solat.conversation-system.v1');
+  assert.match(prompt, /^Prompt version: solat\.conversation-system\.v1\./u);
+  assert.match(prompt, /"original_message":"ค้นหา Ada Lovelace"/u);
+  assert.match(prompt, /Attached asset_ids available for analysis: \["asset-1"\]/u);
+  assert.doesNotMatch(prompt, /Attached asset_ids available for analysis: \["asset-1",""\]/u);
+});
+
 test('intent router keeps ambiguous/general chat model-first and exposes non-authoritative tool hints', () => {
   const general = analyzeIntent({ content: 'hi' });
   assert.equal(general.routing.hard_gate, false);
@@ -542,6 +556,11 @@ test('intent router keeps ambiguous/general chat model-first and exposes non-aut
     history: [{ role: 'user', content: 'find park dayoung on Pinterest' }, { role: 'assistant', content: 'I found a result.' }],
   });
   assert.equal(explicitLowercaseFollowUp.reference_resolution.recommended_query, 'park dayoung');
+  const punctuationVariantEntities = contextEntities([
+    { role: 'user', content: 'compare Park-Dayoung and Han Nari' },
+    { role: 'user', content: 'Park Dayoung' },
+  ]);
+  assert.deepEqual(punctuationVariantEntities, ['Park-Dayoung', 'Han Nari']);
   const ambiguousPronounFollowUp = analyzeIntent({
     content: 'find a source about her',
     history: [{ role: 'user', content: 'compare Park Dayoung and Han Nari' }],

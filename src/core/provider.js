@@ -23,7 +23,19 @@ function extractMessage(payload) {
 function extractToolCalls(message) {
   if (message.tool_calls !== undefined && message.tool_calls !== null) {
     if (!Array.isArray(message.tool_calls)) throw new ProviderError('malformed_response', 'The model tool_calls field is not an array.');
-    return message.tool_calls.map((call, index) => normalizeToolCall(call, index));
+    const calls = message.tool_calls.map((call, index) => normalizeToolCall(call, index));
+    const ids = new Set();
+    for (const call of calls) {
+      // Tool result messages are joined to their assistant request by id. A
+      // duplicate id would make that protocol ambiguous and could execute two
+      // distinct requests under one result identity, so reject it before the
+      // executor receives any call.
+      if (ids.has(call.id)) {
+        throw new ProviderError('malformed_response', 'The model returned duplicate tool call ids.');
+      }
+      ids.add(call.id);
+    }
+    return calls;
   }
   return extractDsmlToolCalls(message);
 }

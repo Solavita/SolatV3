@@ -2,6 +2,25 @@
 
 Last checked: 2026-08-12 12:05:00 +07:00
 
+## Model Foundation checkpoint (2026-08-14)
+
+| Criterion | Status | Exact action | Evidence | Limitation |
+|---|---|---|---|---|
+| Reproducible foundation benchmark | PASS | `npm.cmd test` from `D:\SOLAT_V3` | `test/model-foundation.test.js` validates the 10-case `evaluations/model-foundation-benchmark-v1.json` contract and a deterministic sample report of `PASS 4 / FAIL 0 / NOT VERIFIED 1` | The harness checks routing/context/evidence contracts; it does not score answer quality |
+| Regression suite after checkpoint | PASS | `npm.cmd test` | 107/107 local tests passed | No live provider was called |
+| Syntax and source checks | PASS | `npm.cmd run check` and `git diff --check` | all Node syntax checks pass; no whitespace errors | Does not prove packaged runtime parity |
+| Existing conversation/search corpus | PASS with explicit boundary | `npm.cmd run evaluate:conversation` | 24 PASS, 0 FAIL, 1 NOT VERIFIED (`live_semantic_parity`) | The remaining semantic comparison requires real paired responses and manual evidence |
+| Paid/provider execution | NOT VERIFIED | intentionally not run | no DeepSeek/Qwen/RunPod/Brave request was made | This checkpoint is local/free only |
+
+| Context entity canonicalization | PASS | `npm.cmd test` | `contextEntities` now deduplicates Unicode-normalized spacing and hyphen variants while retaining the first visible spelling; regression covers `Park-Dayoung`/`Park Dayoung` | This is conservative punctuation normalization, not a transliteration or semantic identity proof |
+| Thai/compact follow-up extraction | PASS | `npm.cmd test` | Thai lookup subjects with tone marks, Thai search commands, compact `ParkDayoung`, ordinal references and ordinary Thai general chat have local regressions | Cross-script identity equivalence remains `NOT VERIFIED` without semantic evidence |
+| Versioned conversation prompt | PASS | `npm.cmd test` | `solat.conversation-system.v1` is emitted by a dedicated prompt builder while the original message remains in structured hints | Semantic wording quality remains model-dependent |
+| Duplicate tool-call identity rejection | PASS | `npm.cmd test` | repeated tool-call IDs fail as `malformed_response` before any executor call | Provider-specific behavior beyond the local contract is `NOT VERIFIED` |
+| Model Foundation 25-case harness | PASS with explicit boundary | `npm.cmd run evaluate:model-foundation` | 10 local contracts PASS, 0 FAIL, 15 NOT VERIFIED | The 15 model/semantic cases require real traces; no GPT score is computed |
+
+The benchmark and checkpoint report are additive. No Phase 0–4, Business Context,
+Commerce MVP, or Google Classroom implementation was expanded in this checkpoint.
+
 ## Current checkpoint (2026-08-12)
 
 | Check | Status | Evidence | Boundary |
