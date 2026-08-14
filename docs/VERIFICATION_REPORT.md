@@ -2425,3 +2425,10 @@ Milestone 193 status: `IMPLEMENTED BUT NOT FULLY VERIFIED`.
 | criterion | status | exact command/action | exact input/output | files/evidence | limitation |
 |---|---|---|---|---|---|
 | Conversation, follow-up, ambiguity, source scope and disclosure corpus | PASS | `npm.cmd run evaluate:conversation` | `24 PASS, 0 FAIL, 1 NOT VERIFIED`; the remaining case is live semantic parity and explicitly cannot be proven by a deterministic evaluator | `scripts/evaluate-conversation.js`; evaluation output; `src/core/intent-router.js`; `src/core/conversation-core.js` | This does not establish ChatGPT semantic parity |
+
+## Phase 0-4 branch and Windows package (2026-08-14)
+
+| criterion | status | exact command/action | exact input/output | files/evidence | limitation |
+|---|---|---|---|---|---|
+| Phase 0-4 source/evidence branch is published | PASS | Created and pushed Git branch `phase-0-4` to `origin` | Remote branch available at `https://github.com/Solavita/SolatV3/tree/phase-0-4` | Git commit `c838b48`; branch push output | Build output remains a local artifact because the unpacked Windows binary exceeds normal Git blob limits and `dist/` is intentionally ignored |
+| Windows desktop package builds without embedding local secrets | PASS | `npm.cmd ci`; `npm.cmd test`; `npm.cmd run check`; `npm.cmd exec electron-builder -- --dir` | `98/98` tests passed; syntax checks passed; `SOLAT_V3/dist/win-unpacked/SOLAT.exe` created (225,441,792 bytes); packaged `.env` absent | `package.json`; `dist/win-unpacked/SOLAT.exe`; `.gitignore` | Executable is unsigned/default-icon and has not been published as a GitHub Release; provider config must be supplied separately at runtime |
