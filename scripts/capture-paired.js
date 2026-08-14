@@ -4,7 +4,14 @@ const path = require('node:path');
 const { readConfig } = require('../src/core/config');
 const { ConversationCore } = require('../src/core/conversation-core');
 const { WebSearchService } = require('../src/core/web-search');
-const { captureFromExternal, captureSolat, evaluationCase, indexExternalBaselines, safeHistory } = require('../src/core/three-way-evaluator');
+const { captureFromExternal, captureSolat, evaluationCase, indexExternalBaselines } = require('../src/core/three-way-evaluator');
+
+function boundedHistory(history) {
+  return (Array.isArray(history) ? history : []).slice(-8).flatMap(message => {
+    const content = String(message?.content || '').replace(/\u0000/gu, '').trim().slice(0, 12000);
+    return content ? [{ role: message?.role === 'assistant' ? 'assistant' : 'user', content }] : [];
+  });
+}
 
 function argument(name, argv = process.argv.slice(2)) {
   const index = argv.indexOf(name);
@@ -42,7 +49,7 @@ async function main() {
     rows.push({
       id: testCase.id,
       prompt: String(testCase.content || ''),
-      evaluation_history: safeHistory(effectiveCase.history),
+      evaluation_history: boundedHistory(effectiveCase.history),
       captures,
       comparison: { status: 'NOT VERIFIED', manual_review_required: true, reason: captures.chatgpt.status === 'PASS' && captures.solat.status === 'PASS' ? 'semantic_quality_requires_manual_review' : 'capture_incomplete' },
     });
