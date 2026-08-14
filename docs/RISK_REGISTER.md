@@ -11,3 +11,8 @@
 | MF-05 | External GitHub code/license/dependency risk | legal/security/maintenance debt | matrix review; no unverified code copied or installed | MITIGATED |
 | MF-06 | Thai romanization/typo normalization may over-correct | wrong entity or lost user wording | preserve original message; only bounded spacing/hyphen variants; no invented correction | OPEN |
 | MF-07 | Local tests do not cover provider-specific semantics | false confidence | paid/live provider tests intentionally marked `NOT VERIFIED` | OPEN |
+
+## Live-evaluation update (2026-08-14)
+
+- MF-01 is mitigated for the four bounded semantic categories exercised by the authorized live DeepSeek run; broader semantic quality and GPT parity remain open.
+- MF-07 is mitigated for those same four cases by six provider requests with zero retries and preserved provider/model/latency/usage/raw-response evidence; this does not generalize beyond the captured run.

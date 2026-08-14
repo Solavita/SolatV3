@@ -3,6 +3,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { validatedLiveCases } = require('../scripts/evaluate-model-foundation');
+const { CASES: liveCases } = require('../scripts/evaluate-model-foundation-live');
 
 const root = path.join(__dirname, '..');
 const benchmarkPath = path.join(root, 'evaluations', 'model-foundation-benchmark-v1.json');
@@ -62,4 +64,34 @@ test('model foundation evaluator records local passes and keeps semantic cases N
     assert.equal(item.evidence[0].kind, 'local_production_contract');
   }
   assert.match(report.scoring_note, /no GPT parity score/iu);
+});
+
+test('live semantic evidence import enforces bounded provenance and complete case coverage', () => {
+  const ids = liveCases.map(item => item.id);
+  const report = {
+    schema_version: 'solat.model-foundation-live-report.v1',
+    request_count: 6,
+    retry_count: 0,
+    cases: liveCases.map(testCase => {
+      const run = {
+        data: {
+          case_id: testCase.id,
+          final_status: testCase.allowedFinalStatuses?.[0] || 'partial',
+          verdicts: Object.entries(testCase.expected).map(([claim_id, expected]) => ({
+            claim_id,
+            ...expected,
+            rationale: 'bounded fixture rationale',
+          })),
+        },
+      };
+      return {
+        case_id: testCase.id,
+        status: 'PASS',
+        runs: Array.from({ length: testCase.repeats || 1 }, () => structuredClone(run)),
+      };
+    }),
+  };
+  assert.deepEqual([...validatedLiveCases(report).keys()], ids);
+  assert.throws(() => validatedLiveCases({ ...report, retry_count: 1 }), /validation/iu);
+  assert.throws(() => validatedLiveCases({ ...report, cases: report.cases.slice(1) }), /all semantic cases/iu);
 });
