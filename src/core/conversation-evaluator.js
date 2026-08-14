@@ -29,6 +29,29 @@ function evaluateCase(testCase) {
   if (Number.isInteger(expectation.reference_ordinal)) checks.push(check(hints.reference_resolution.ordinal === expectation.reference_ordinal, 'reference_ordinal'));
   if (expectation.query_variant) checks.push(check(hints.task.search_query_variants.some(item => item.query === expectation.query_variant), 'context_query_variant'));
   if (expectation.context_qualifier) checks.push(check(hints.task.context_qualifiers.includes(expectation.context_qualifier), 'context_qualifier'));
+  if (Array.isArray(expectation.entity_alias_forms)) {
+    const aliases = hints.task.entity_alias_candidates || [];
+    checks.push(check(
+      aliases.some(alias => JSON.stringify(alias.forms) === JSON.stringify(expectation.entity_alias_forms)
+        && alias.equivalence_status === 'unverified_candidate'),
+      'explicit_cross_script_alias_candidate',
+    ));
+  }
+  if (Number.isInteger(expectation.exact_bullet_count)) {
+    checks.push(check(
+      hints.task.instruction_plan?.response_constraints?.exact_bullet_count === expectation.exact_bullet_count,
+      'exact_bullet_count_constraint',
+    ));
+  }
+  if (Array.isArray(expectation.instruction_steps)) {
+    checks.push(check(
+      JSON.stringify(hints.task.instruction_plan?.steps?.map(step => step.text)) === JSON.stringify(expectation.instruction_steps),
+      'ordered_explicit_instruction_plan',
+    ));
+  }
+  if (typeof expectation.evidence_required === 'boolean') {
+    checks.push(check(hints.task.instruction_plan?.evidence_required === expectation.evidence_required, 'instruction_evidence_policy'));
+  }
   if (testCase.simulated_search) {
     const status = String(testCase.simulated_search.status || 'unknown');
     const safeSources = (testCase.simulated_search.sources || []).filter(source => isAllowedUrl(source?.url));

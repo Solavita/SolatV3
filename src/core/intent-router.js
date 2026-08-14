@@ -1,4 +1,5 @@
 const HINTS_SCHEMA_VERSION = 'solat.intent-hints.v1';
+const { buildInstructionPlan } = require('./instruction-plan-contract');
 const THAI_SEARCH_TERMS = /(?:\u0e04\u0e49\u0e19\u0e2b\u0e32|\u0e40\u0e2a\u0e34\u0e23\u0e4c\u0e0a|\u0e2b\u0e32\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25|\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14|\u0e41\u0e2b\u0e25\u0e48\u0e07\u0e17\u0e35\u0e48\u0e21\u0e32|\u0e27\u0e34\u0e01\u0e34|\u0e15\u0e34\u0e4a\u0e01\u0e15\u0e47\u0e2d\u0e01|\u0e1e\u0e34\u0e19\u0e40\u0e17\u0e2d\u0e40\u0e23\u0e2a\u0e15\u0e4c)/u;
 const THAI_SOCIAL_TERMS = /(?:\u0e15\u0e34\u0e4a\u0e01\u0e15\u0e47\u0e2d\u0e01|\u0e1e\u0e34\u0e19\u0e40\u0e17\u0e2d\u0e40\u0e23\u0e2a\u0e15\u0e4c|\u0e2d\u0e34\u0e19\u0e2a\u0e15\u0e32\u0e41\u0e01\u0e23\u0e21|\u0e40\u0e1f\u0e0b\u0e1a\u0e38\u0e4a\u0e01)/u;
 const THAI_VIDEO_TERMS = /\u0e22\u0e39\u0e17\u0e39\u0e1a/u;
@@ -31,6 +32,38 @@ function score(signals, name) {
 
 function unique(values) {
   return [...new Set(values)];
+}
+
+function explicitEntityAliases(value) {
+  const text = String(value || '');
+  const aliases = [];
+  const seen = new Set();
+  const add = (left, right, syntax) => {
+    const forms = [left, right].map(item => String(item || '').trim().replace(/\s+/gu, ' '));
+    if (forms.some(item => item.length < 2 || item.length > 80) || forms[0] === forms[1]) return;
+    const hasThai = forms.some(item => /[\u0e00-\u0e7f]/u.test(item));
+    const hasLatin = forms.some(item => /[A-Za-z]/u.test(item));
+    if (!hasThai || !hasLatin) return;
+    const key = forms.map(item => item.normalize('NFKC').toLocaleLowerCase()).sort().join('\u0000');
+    if (seen.has(key)) return;
+    seen.add(key);
+    aliases.push({
+      forms,
+      source: 'explicit_user_alias',
+      syntax,
+      equivalence_status: 'unverified_candidate',
+      policy: 'retain_both_forms_and_verify_before_merging',
+    });
+  };
+  // Only retain cross-script forms that the user visibly placed together.
+  // SOLAT does not transliterate or assert identity from spelling similarity.
+  for (const match of text.matchAll(/([\p{L}\p{M}][\p{L}\p{M}\p{N}' .-]{1,78}?)\s*\(([\p{L}\p{M}][\p{L}\p{M}\p{N}' .-]{1,78})\)/gu)) {
+    add(match[1], match[2], 'parenthetical');
+  }
+  for (const match of text.matchAll(/([\p{L}\p{M}][\p{L}\p{M}\p{N}' .-]{1,78}?)\s*\/\s*([\p{L}\p{M}][\p{L}\p{M}\p{N}' .-]{1,78})/gu)) {
+    add(match[1], match[2], 'slash');
+  }
+  return aliases.slice(0, 4);
 }
 
 function looksLikeNamedLookup(value) {
@@ -316,6 +349,7 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
   const normalized = original.trim();
   const prior = Array.isArray(history) ? history : [];
   const correctionDetected = CORRECTION_TERMS.test(normalized);
+  const entityAliases = explicitEntityAliases(normalized);
   let disambiguation = disambiguationHints(normalized, prior);
   const reference = referenceResolution(normalized, prior);
   // A pronoun-only follow-up is ambiguous only until the recent context
@@ -413,6 +447,7 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
       correction_policy: correctionDetected ? 'prefer_latest_user_correction' : 'not_applicable',
     },
     task: {
+      instruction_plan: buildInstructionPlan(original),
       needs_latest_information: needsLatest,
       goals: unique(signals),
       sequence: signals.includes('web_search') ? [disambiguation.comparison ? 'compare_candidates' : 'understand_intent', disambiguation.likely_ambiguous || unresolvedReference ? 'resolve_ambiguity' : 'search_if_needed', 'let_model_synthesize'] : ['understand_intent', 'let_model_respond'],
@@ -421,6 +456,7 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
       requested_source_scopes: requestedSourceScopes,
       search_query_variants: searchQueryVariants(normalized, disambiguation, reference, qualifiers),
       context_entity_candidates: reference.candidates,
+      entity_alias_candidates: entityAliases,
       context_qualifiers: qualifiers,
     },
     allowed_tools: allowedTools,
@@ -436,4 +472,4 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
   });
 }
 
-module.exports = { HINTS_SCHEMA_VERSION, analyzeIntent, contextEntities, contextQualifiers, referenceOrdinal, referenceResolution, searchQueryVariants };
+module.exports = { HINTS_SCHEMA_VERSION, analyzeIntent, contextEntities, contextQualifiers, explicitEntityAliases, referenceOrdinal, referenceResolution, searchQueryVariants };

@@ -44,12 +44,15 @@ test('model foundation evaluator records local passes and keeps semantic cases N
   assert.equal(result.status, 0, result.stderr || result.stdout);
   const report = JSON.parse(result.stdout);
   assert.equal(report.schema_version, 'solat.model-foundation-report.v1');
-  assert.deepEqual(report.counts, { PASS: 16, FAIL: 0, 'NOT VERIFIED': 9 });
+  assert.deepEqual(report.counts, { PASS: 19, FAIL: 0, 'NOT VERIFIED': 6 });
   assert.equal(report.results.length, 25);
   assert.ok(report.results.filter(item => item.status === 'PASS').every(item => item.actual_output));
   assert.ok(report.results.filter(item => item.status === 'FAIL').every(item => item.actual_output));
   assert.ok(report.results.filter(item => item.status === 'NOT VERIFIED').every(item => item.actual_output === null));
   assert.equal(report.results.find(item => item.id === 'thai_conversation').status, 'PASS');
+  assert.equal(report.results.find(item => item.id === 'instruction_following').status, 'PASS');
+  assert.equal(report.results.find(item => item.id === 'multi_step_instruction').status, 'PASS');
+  assert.equal(report.results.find(item => item.id === 'romanization').status, 'PASS');
   for (const id of ['malformed_tool_response', 'timeout', 'retry_limit', 'duplicate_request', 'prompt_injection_resistance', 'output_schema_validity']) {
     const item = report.results.find(resultItem => resultItem.id === id);
     assert.equal(item.status, 'PASS');

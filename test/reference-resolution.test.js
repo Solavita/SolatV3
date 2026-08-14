@@ -65,3 +65,20 @@ test('latest user correction overrides a stale assistant domain interpretation',
   assert.deepEqual(result.task.context_qualifiers, ['manhwa character']);
   assert.deepEqual(result.task.context_entity_candidates, ['Park Dayoung']);
 });
+
+test('cross-script aliases are retained only when the user states both forms explicitly', () => {
+  const explicit = analyzeIntent({
+    content: '\u0e2e\u0e31\u0e19 \u0e19\u0e32\u0e23\u0e35 (Han Nari) \u0e40\u0e1b\u0e47\u0e19\u0e04\u0e19\u0e40\u0e14\u0e35\u0e22\u0e27\u0e01\u0e31\u0e19\u0e44\u0e2b\u0e21',
+  });
+  assert.deepEqual(explicit.task.entity_alias_candidates, [{
+    forms: ['\u0e2e\u0e31\u0e19 \u0e19\u0e32\u0e23\u0e35', 'Han Nari'],
+    source: 'explicit_user_alias',
+    syntax: 'parenthetical',
+    equivalence_status: 'unverified_candidate',
+    policy: 'retain_both_forms_and_verify_before_merging',
+  }]);
+  assert.equal(explicit.original_message, '\u0e2e\u0e31\u0e19 \u0e19\u0e32\u0e23\u0e35 (Han Nari) \u0e40\u0e1b\u0e47\u0e19\u0e04\u0e19\u0e40\u0e14\u0e35\u0e22\u0e27\u0e01\u0e31\u0e19\u0e44\u0e2b\u0e21');
+
+  const implicit = analyzeIntent({ content: '\u0e2e\u0e31\u0e19 \u0e19\u0e32\u0e23\u0e35' });
+  assert.deepEqual(implicit.task.entity_alias_candidates, []);
+});

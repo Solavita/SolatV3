@@ -83,6 +83,14 @@ ${attachedAssetIds.length ? `Attached asset_ids available for analysis: ${JSON.s
 ${JSON.stringify(intentHints || {})}`;
 }
 
+function buildResolvedReferenceInstruction(intentHints) {
+  const resolvedReference = intentHints?.reference_resolution?.status === 'resolved_from_context'
+    || intentHints?.reference_resolution?.status === 'resolved_ordinal_context';
+  return resolvedReference
+    ? `A recent conversation reference has been resolved to ${JSON.stringify(intentHints.reference_resolution.recommended_query || intentHints.reference_resolution.candidates?.[0] || '')}. Treat that reference as the user's intended subject, use it for a source search when the latest message asks for sources, and do not ask the user to repeat the subject unless the visible history contains a conflict. The prior turns below are available to you.`
+    : 'If a reference is unresolved or conflicts with the visible history, ask a concise clarification question instead of guessing.';
+}
+
 function preserveRequestedPlatformQuery(query, userMessage, sourceScope) {
   const original = String(query || '').trim();
   const userText = String(userMessage || '');
@@ -316,11 +324,7 @@ class ConversationCore {
     if (assetIds.length) this.workspace.linkProject({ sessionId: normalizedSession, assetIds });
     const history = this.sessions.get(normalizedSession) || [];
     const intentHints = this.router.analyze({ content: normalizedContent, history, attachments: assetIds });
-    const resolvedReference = intentHints?.reference_resolution?.status === 'resolved_from_context'
-      || intentHints?.reference_resolution?.status === 'resolved_ordinal_context';
-    const resolvedReferenceInstruction = resolvedReference
-      ? `A recent conversation reference has been resolved to ${JSON.stringify(intentHints.reference_resolution.recommended_query || intentHints.reference_resolution.candidates?.[0] || '')}. Treat that reference as the user's intended subject, use it for a source search when the latest message asks for sources, and do not ask the user to repeat the subject unless the visible history contains a conflict. The prior turns below are available to you.`
-      : 'If a reference is unresolved or conflicts with the visible history, ask a concise clarification question instead of guessing.';
+    const resolvedReferenceInstruction = buildResolvedReferenceInstruction(intentHints);
     const hintMessage = {
       role: 'system',
       content: buildConversationSystemPrompt({ intentHints, resolvedReferenceInstruction, assetIds }),
@@ -783,4 +787,4 @@ class ConversationCore {
   }
 }
 
-module.exports = { alignComparisonQuery, buildConversationSystemPrompt, comparisonTargetForQuery, directlyIdentifiesComparisonTarget, filterComparisonOutcome, mergeScopedOutcomes, modelContextWindow, preserveContextQualifierQuery, preserveRequestedPlatformQuery, unavailableSearchOutcome, ConversationCore, CONVERSATION_PROMPT_VERSION, MAX_MESSAGE_LENGTH, MAX_MODEL_CONTEXT_CHARS };
+module.exports = { alignComparisonQuery, buildConversationSystemPrompt, buildResolvedReferenceInstruction, comparisonTargetForQuery, directlyIdentifiesComparisonTarget, filterComparisonOutcome, mergeScopedOutcomes, modelContextWindow, preserveContextQualifierQuery, preserveRequestedPlatformQuery, unavailableSearchOutcome, ConversationCore, CONVERSATION_PROMPT_VERSION, MAX_MESSAGE_LENGTH, MAX_MODEL_CONTEXT_CHARS };

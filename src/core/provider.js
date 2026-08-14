@@ -342,6 +342,28 @@ function validateStructuredData(data, schema, path = '$', depth = 0) {
   return data;
 }
 
+// Keep the provider request shape in one deterministic, side-effect-free
+// builder. This is the exact body used by complete(), so local regression
+// tests can verify prompt/message/tool ordering without calling a provider or
+// exposing authorization headers.
+function buildCompletionRequestBody(config, messages, { responseFormat, tools, toolChoice = 'auto' } = {}) {
+  const body = {
+    model: config?.model,
+    messages,
+    stream: false,
+  };
+  if (safeHost(config?.baseUrl) === 'api.deepseek.com') {
+    body.thinking = { type: config?.thinkingMode === 'enabled' ? 'enabled' : 'disabled' };
+  }
+  if (responseFormat) body.response_format = responseFormat;
+  if (tools !== undefined) {
+    if (!Array.isArray(tools)) throw new ProviderError('invalid_tools', 'Provider tools must be an array.');
+    body.tools = tools;
+    body.tool_choice = toolChoice;
+  }
+  return body;
+}
+
 class OpenAICompatibleProvider {
   constructor(config, fetchImpl = globalThis.fetch) {
     this.config = config;
@@ -369,23 +391,7 @@ class OpenAICompatibleProvider {
     try {
       let response;
       try {
-        const body = {
-          model: this.config.model,
-          messages,
-          stream: false,
-        };
-        // DeepSeek V4 requires an explicit thinking mode for a reliable
-        // non-streaming conversational path.  Keep it provider-local so other
-        // OpenAI-compatible endpoints still receive only portable fields.
-        if (safeHost(this.config.baseUrl) === 'api.deepseek.com') {
-          body.thinking = { type: this.config.thinkingMode === 'enabled' ? 'enabled' : 'disabled' };
-        }
-        if (responseFormat) body.response_format = responseFormat;
-        if (tools !== undefined) {
-          if (!Array.isArray(tools)) throw new ProviderError('invalid_tools', 'Provider tools must be an array.');
-          body.tools = tools;
-          body.tool_choice = toolChoice;
-        }
+        const body = buildCompletionRequestBody(this.config, messages, { responseFormat, tools, toolChoice });
         response = await this.fetchImpl(completionUrl(this.config.baseUrl), {
           method: 'POST',
           headers: {
@@ -551,6 +557,7 @@ module.exports = {
   TOOL_RESULT_SCHEMA_VERSION,
   OpenAICompatibleProvider,
   ProviderError,
+  buildCompletionRequestBody,
   completionUrl,
   extractMessage,
   extractToolCalls,

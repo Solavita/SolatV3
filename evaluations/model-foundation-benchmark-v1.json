@@ -6,28 +6,28 @@
     {
       "id": "instruction_following",
       "category": "instruction_following",
-      "input": "Answer with exactly two short bullet points.",
+      "input": "Answer with exactly 2 short bullet points.",
       "context": [],
       "expected_behavior": ["follow_format_and_scope"],
       "forbidden_behavior": ["invent_completion", "ignore_requested_format"],
-      "evaluation": { "mode": "manual_model_trace" },
+      "evaluation": { "mode": "intent_contract", "expect": { "exact_bullet_count": 2 } },
       "actual_output": null,
       "status": "NOT VERIFIED",
       "evidence": [],
-      "limitation": "Requires a real model response; paid/external providers are disabled for this run."
+      "limitation": "PASS verifies extraction of the explicit response constraint; live model compliance remains unverified."
     },
     {
       "id": "multi_step_instruction",
       "category": "multi_step_instruction",
-      "input": "Identify the topic, decide whether a tool is needed, then answer using only verified evidence.",
+      "input": "1. Identify the topic\n2. Decide whether a tool is needed\n3. Answer using only verified evidence",
       "context": [],
       "expected_behavior": ["preserve_step_order", "use_tool_only_when_needed"],
       "forbidden_behavior": ["skip_required_step", "claim_unverified_success"],
-      "evaluation": { "mode": "manual_model_trace" },
+      "evaluation": { "mode": "intent_contract", "expect": { "instruction_steps": ["Identify the topic", "Decide whether a tool is needed", "Answer using only verified evidence"], "evidence_required": true } },
       "actual_output": null,
       "status": "NOT VERIFIED",
       "evidence": [],
-      "limitation": "Requires a real model execution trace."
+      "limitation": "PASS verifies ordered explicit-step extraction and evidence policy; live execution quality remains unverified."
     },
     {
       "id": "thai_conversation",
@@ -97,15 +97,15 @@
     {
       "id": "romanization",
       "category": "romanization",
-      "input": "พัคดายอง กับ Park Dayoung หมายถึงคนเดียวกันไหม",
+      "input": "พัคดายอง (Park Dayoung) หมายถึงคนเดียวกันไหม",
       "context": [],
       "expected_behavior": ["retain_both_forms", "request_or_find_evidence_before_merging"],
       "forbidden_behavior": ["merge_entities_without_evidence"],
-      "evaluation": { "mode": "manual_model_trace" },
+      "evaluation": { "mode": "intent_contract", "expect": { "entity_alias_forms": ["พัคดายอง", "Park Dayoung"] } },
       "actual_output": null,
       "status": "NOT VERIFIED",
       "evidence": [],
-      "limitation": "Cross-script entity equivalence needs semantic evidence."
+      "limitation": "PASS retains an explicit user-stated alias pair as unverified; actual identity equivalence still needs evidence."
     },
     {
       "id": "ambiguous_references",
