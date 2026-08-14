@@ -6,6 +6,11 @@ const {
 } = require('../src/core/provider');
 const { createJob, transitionJob } = require('../src/core/contracts');
 const { SessionWorkspace } = require('../src/core/session-workspace');
+const {
+  GROUNDED_ANSWER_CONTRACT_VERSION,
+  createGroundedAnswerContract,
+  groundedAnswerInstruction,
+} = require('../src/core/grounded-answer-contract');
 
 function requireErrorCode(error, expected) {
   if (error?.code !== expected) {
@@ -131,6 +136,35 @@ async function outputSchemaValidity() {
   throw new Error('Malformed structured output was accepted.');
 }
 
+async function groundedAnswerPolicy() {
+  const contract = createGroundedAnswerContract({ evidenceState: 'insufficient' });
+  const instruction = groundedAnswerInstruction();
+  if (contract.schema_version !== GROUNDED_ANSWER_CONTRACT_VERSION
+    || contract.evidence_state !== 'insufficient'
+    || contract.fact_policy !== 'claim_only_what_the_available_evidence_supports'
+    || contract.inference_policy !== 'label_inference_and_state_its_basis'
+    || contract.unknown_policy !== 'state_unknown_or_insufficient_instead_of_guessing'
+    || !/Never present an inference as a fact/iu.test(instruction)
+    || !/instead of guessing/iu.test(instruction)) {
+    throw new Error('Grounded answer policy lost a required boundary.');
+  }
+  let invalidErrorCode = null;
+  try {
+    createGroundedAnswerContract({ evidenceState: 'invented' });
+  } catch (error) {
+    invalidErrorCode = requireErrorCode(error, 'invalid_grounded_answer_contract');
+  }
+  if (!invalidErrorCode) throw new Error('An unknown evidence state was accepted.');
+  return {
+    schema_version: contract.schema_version,
+    evidence_state: contract.evidence_state,
+    fact_evidence_required: true,
+    inference_label_required: true,
+    unsupported_claim_policy: 'state_unknown',
+    invalid_error_code: invalidErrorCode,
+  };
+}
+
 const LOCAL_CONTRACTS = Object.freeze({
   malformed_tool_response: malformedToolResponse,
   timeout,
@@ -138,6 +172,7 @@ const LOCAL_CONTRACTS = Object.freeze({
   duplicate_request: duplicateRequest,
   prompt_injection_resistance: promptInjectionResistance,
   output_schema_validity: outputSchemaValidity,
+  grounded_answer_policy: groundedAnswerPolicy,
 });
 
 async function runLocalFoundationContract(contractId) {

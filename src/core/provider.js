@@ -145,6 +145,82 @@ function stableJson(value) {
   return JSON.stringify(value);
 }
 
+function toolArgumentError(call, path, detail) {
+  return new ProviderError(
+    'malformed_response',
+    `The model returned invalid arguments for tool call ${call.id} (${call.name}) at ${path}: ${detail}`,
+    { tool: call.name, tool_call_id: call.id, path },
+  );
+}
+
+// Validate model-authored arguments at the provider boundary, before any tool
+// executor can observe them. Tool definitions already expose a JSON-Schema
+// subset to compatible models; treating that schema as advisory only would let
+// unknown fields, invalid enums, and out-of-range values reach side-effecting
+// adapters. This intentionally supports only the keywords SOLAT emits.
+function validateToolArgumentValue(value, schema, call, path = '$', depth = 0) {
+  if (depth > 24) throw toolArgumentError(call, path, 'argument nesting exceeds the supported limit.');
+  if (!schema || typeof schema !== 'object' || Array.isArray(schema)) {
+    throw new ProviderError('invalid_tools', `Tool ${call.name} has an invalid parameter schema.`, { tool: call.name, path });
+  }
+  if (schema.type) {
+    const matches = matchesJsonType(value, schema.type);
+    if (matches === null) throw new ProviderError('invalid_tools', `Tool ${call.name} uses unsupported parameter type ${schema.type}.`, { tool: call.name, path });
+    if (!matches) throw toolArgumentError(call, path, `expected ${schema.type}.`);
+  }
+  if (Array.isArray(schema.enum) && !schema.enum.some(item => stableJson(item) === stableJson(value))) {
+    throw toolArgumentError(call, path, 'value is outside the allowed enum.');
+  }
+  if (typeof value === 'number') {
+    if (typeof schema.minimum === 'number' && value < schema.minimum) throw toolArgumentError(call, path, `must be at least ${schema.minimum}.`);
+    if (typeof schema.maximum === 'number' && value > schema.maximum) throw toolArgumentError(call, path, `must be at most ${schema.maximum}.`);
+  }
+  if (typeof value === 'string') {
+    if (typeof schema.minLength === 'number' && value.length < schema.minLength) throw toolArgumentError(call, path, `must contain at least ${schema.minLength} characters.`);
+    if (typeof schema.maxLength === 'number' && value.length > schema.maxLength) throw toolArgumentError(call, path, `must contain at most ${schema.maxLength} characters.`);
+  }
+  if (isRecord(value)) {
+    const properties = isRecord(schema.properties) ? schema.properties : {};
+    if (schema.required !== undefined) {
+      if (!Array.isArray(schema.required) || schema.required.some(key => typeof key !== 'string' || !key)) {
+        throw new ProviderError('invalid_tools', `Tool ${call.name} has an invalid required list.`, { tool: call.name, path });
+      }
+      for (const key of schema.required) {
+        if (!Object.hasOwn(value, key)) throw toolArgumentError(call, `${path}.${key}`, 'required property is missing.');
+      }
+    }
+    for (const [key, item] of Object.entries(value)) {
+      if (Object.hasOwn(properties, key)) {
+        validateToolArgumentValue(item, properties[key], call, `${path}.${key}`, depth + 1);
+      } else if (schema.additionalProperties === false) {
+        throw toolArgumentError(call, `${path}.${key}`, 'additional property is not allowed.');
+      } else if (isRecord(schema.additionalProperties)) {
+        validateToolArgumentValue(item, schema.additionalProperties, call, `${path}.${key}`, depth + 1);
+      }
+    }
+  }
+  if (Array.isArray(value) && schema.items) {
+    value.forEach((item, index) => validateToolArgumentValue(item, schema.items, call, `${path}[${index}]`, depth + 1));
+  }
+  return value;
+}
+
+function validateToolCallsAgainstDefinitions(calls, tools) {
+  if (!Array.isArray(tools) || !tools.length || !calls.length) return calls;
+  const definitions = new Map();
+  for (const tool of tools) {
+    const name = typeof tool?.function?.name === 'string' ? tool.function.name.trim() : '';
+    if (!name || definitions.has(name)) throw new ProviderError('invalid_tools', 'Provider tools must have unique function names.');
+    definitions.set(name, tool.function.parameters || { type: 'object' });
+  }
+  for (const call of calls) {
+    const schema = definitions.get(call.name);
+    if (!schema) throw toolArgumentError(call, '$', 'tool name is not present in the allowed tool definitions.');
+    validateToolArgumentValue(call.arguments, schema, call);
+  }
+  return calls;
+}
+
 function extractContent(payload) {
   const message = extractMessage(payload);
   const content = message.content;
@@ -344,6 +420,7 @@ class OpenAICompatibleProvider {
       }
       const message = extractMessage(payload);
       const toolCalls = extractToolCalls(message);
+      validateToolCallsAgainstDefinitions(toolCalls, tools);
       let content = '';
       try {
         content = extractContent(payload);
@@ -482,4 +559,5 @@ module.exports = {
   parseStructuredJson,
   serializeToolOutcome,
   validateStructuredData,
+  validateToolCallsAgainstDefinitions,
 };

@@ -559,12 +559,16 @@ test('conversation system prompt is versioned and keeps structured hints separat
     resolvedReferenceInstruction: 'The reference is unresolved; ask before guessing.',
     assetIds: ['asset-1', '  '],
   });
-  assert.equal(CONVERSATION_PROMPT_VERSION, 'solat.conversation-system.v2');
-  assert.match(prompt, /^Prompt version: solat\.conversation-system\.v2\./u);
+  assert.equal(CONVERSATION_PROMPT_VERSION, 'solat.conversation-system.v3');
+  assert.match(prompt, /^Prompt version: solat\.conversation-system\.v3\./u);
   assert.match(prompt, /"original_message":"ค้นหา Ada Lovelace"/u);
   assert.match(prompt, /Attached asset_ids available for analysis: \["asset-1"\]/u);
   assert.doesNotMatch(prompt, /Attached asset_ids available for analysis: \["asset-1",""\]/u);
   assert.match(prompt, /prefer the user's latest correction/u);
+  assert.match(prompt, /Never present an inference as a fact/u);
+  assert.match(prompt, /"schema_version":"solat\.grounded-answer-policy\.v1"/u);
+  assert.match(prompt, /"evidence_state":"runtime_determined"/u);
+  assert.match(prompt, /"unknown_policy":"state_unknown_or_insufficient_instead_of_guessing"/u);
 });
 
 test('intent router keeps ambiguous/general chat model-first and exposes non-authoritative tool hints', () => {
@@ -1158,6 +1162,19 @@ test('model context window preserves complete latest input while bounding only p
   assert.equal(windowed.sent_message_count, 1);
   assert.equal(windowed.omitted_message_count, 4);
   assert.equal(history.length, 4, 'the stored conversation must not be mutated');
+});
+
+test('model context window skips one oversized turn without losing smaller recent context', () => {
+  const history = [
+    { role: 'user', content: 'Park Dayoung is the manhwa character' },
+    { role: 'assistant', content: 'x'.repeat(200) },
+  ];
+  const windowed = modelContextWindow(history, 'tell me more about her', 80);
+  assert.deepEqual(windowed.messages.map(message => message.content), [
+    'Park Dayoung is the manhwa character',
+    'tell me more about her',
+  ]);
+  assert.equal(windowed.omitted_message_count, 1);
 });
 
 test('conversation core offers search as a model-selected tool only when the router signals it', async () => {

@@ -133,6 +133,7 @@ function contextEntities(history) {
     .normalize('NFKC')
     .toLocaleLowerCase()
     .replace(/[\s\u002D\u2010-\u2015]+/gu, '');
+  const firstVisible = new Map();
   const add = value => {
     const entity = String(value || '').trim();
     // Treat harmless punctuation/spacing variants as the same context entity
@@ -142,11 +143,42 @@ function contextEntities(history) {
     const key = canonicalEntityKey(entity);
     if (!entity || seen.has(key)) return;
     seen.add(key);
-    found.push(entity);
+    found.push(firstVisible.get(key) || entity);
   };
-  // Read turns chronologically so ordinal references such as “the first one”
-  // retain the order in which the user introduced comparison candidates.
-  for (const turn of (Array.isArray(history) ? history : []).slice(-4)) {
+  const recent = [];
+  let scannedCharacters = 0;
+  // Search a bounded long-context window instead of only four turns. User
+  // turns are considered before assistant prose so a model-mentioned name
+  // cannot displace the user's own subject. Turns themselves are newest-first,
+  // while entity order inside a comparison remains unchanged for ordinals.
+  for (let index = (Array.isArray(history) ? history.length : 0) - 1; index >= 0 && recent.length < 24; index -= 1) {
+    const turn = history[index];
+    const text = String(turn?.content || '');
+    if (!text.trim()) continue;
+    if (scannedCharacters + text.length > 24000) continue;
+    recent.push(turn);
+    scannedCharacters += text.length;
+  }
+  const ordered = [
+    ...recent.filter(turn => turn?.role === 'user'),
+    ...recent.filter(turn => turn?.role !== 'user'),
+  ];
+  // Keep the first user-visible spelling even though relevance is evaluated
+  // newest-first. This avoids silently rewriting Park-Dayoung to a later
+  // spacing variant while still preferring the latest subject.
+  for (const turn of [...recent].reverse()) {
+    const text = String(turn?.content || '');
+    const candidates = [
+      ...comparisonEntities(text).entities.map(entity => entity.raw),
+      ...[...text.matchAll(/\b([A-Z][\p{L}\p{N}'-]{1,50}\s+[A-Z][\p{L}\p{N}'-]{1,50})\b/gu)].map(match => match[1].trim()),
+      ...(turn?.role === 'user' ? [contextSubjectFromUserTurn(text)] : []),
+    ].filter(Boolean);
+    for (const candidate of candidates) {
+      const key = canonicalEntityKey(candidate);
+      if (key && !firstVisible.has(key)) firstVisible.set(key, candidate);
+    }
+  }
+  for (const turn of ordered) {
     const text = String(turn?.content || '');
     for (const entity of comparisonEntities(text).entities) add(entity.raw);
     for (const match of text.matchAll(/\b([A-Z][\p{L}\p{N}'-]{1,50}\s+[A-Z][\p{L}\p{N}'-]{1,50})\b/gu)) {
@@ -192,11 +224,27 @@ function referenceResolution(value, history) {
 }
 
 function contextQualifiers(history) {
-  const recent = (Array.isArray(history) ? history : []).slice(-4).map(turn => String(turn?.content || '')).join(' ').toLocaleLowerCase();
-  const qualifiers = [];
-  if (/\b(?:manhwa|manga|webtoon|character|anime)\b/iu.test(recent) || THAI_MANHWA_CONTEXT.test(recent)) qualifiers.push('manhwa character');
-  if (/\b(?:singer|song|album|music|artist)\b/iu.test(recent) || THAI_MUSIC_CONTEXT.test(recent)) qualifiers.push('music artist');
-  return qualifiers;
+  const turns = Array.isArray(history) ? history : [];
+  const recent = turns.slice(-24).reverse();
+  // Prefer the latest user-stated domain, especially after a correction. An
+  // assistant's earlier interpretation is only a fallback when the user has
+  // never supplied a domain qualifier.
+  const ordered = [
+    ...recent.filter(turn => turn?.role === 'user'),
+    ...recent.filter(turn => turn?.role !== 'user'),
+  ];
+  for (const turn of ordered) {
+    const text = String(turn?.content || '').toLocaleLowerCase();
+    const qualifiers = [];
+    const rejectsManhwa = /\b(?:not|isn't|isnt)\s+(?:the\s+|an?\s+)?(?:manhwa|manga|webtoon|character|anime)\b/iu.test(text)
+      || /\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\s*(?:\u0e40\u0e1b\u0e47\u0e19\s*)?(?:\u0e21\u0e31\u0e07\u0e2e\u0e27\u0e32|\u0e15\u0e31\u0e27\u0e25\u0e30\u0e04\u0e23)/u.test(text);
+    const rejectsMusic = /\b(?:not|isn't|isnt)\s+(?:the\s+|an?\s+)?(?:singer|song|album|music|artist)\b/iu.test(text)
+      || /\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\s*(?:\u0e40\u0e1b\u0e47\u0e19\s*)?(?:\u0e19\u0e31\u0e01\u0e23\u0e49\u0e2d\u0e07|\u0e40\u0e1e\u0e25\u0e07|\u0e28\u0e34\u0e25\u0e1b\u0e34\u0e19)/u.test(text);
+    if (!rejectsManhwa && (/\b(?:manhwa|manga|webtoon|character|anime)\b/iu.test(text) || THAI_MANHWA_CONTEXT.test(text))) qualifiers.push('manhwa character');
+    if (!rejectsMusic && (/\b(?:singer|song|album|music|artist)\b/iu.test(text) || THAI_MUSIC_CONTEXT.test(text))) qualifiers.push('music artist');
+    if (qualifiers.length) return qualifiers;
+  }
+  return [];
 }
 
 function disambiguationHints(value, history) {
@@ -283,7 +331,9 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
   }
   const unresolvedReference = reference.has_reference
     && !['resolved_from_context', 'resolved_ordinal_context', 'not_applicable'].includes(reference.status);
-  const qualifiers = contextQualifiers(prior);
+  // Include the current user turn so a correction such as "not the singer,
+  // the manhwa character" immediately overrides stale domain context.
+  const qualifiers = contextQualifiers([...prior, { role: 'user', content: normalized }]);
   const signals = [];
   const selfReferential = /\b(?:you|your|we|our|i|my)\b/iu.test(normalized);
   if (SEARCH_TERMS.test(normalized) || THAI_SEARCH_TERMS.test(normalized) || (FACTUAL_QUERY_TERMS.test(normalized) && !selfReferential)) signals.push('web_search');
