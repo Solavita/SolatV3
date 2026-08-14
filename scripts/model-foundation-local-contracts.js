@@ -6,6 +6,8 @@ const {
 } = require('../src/core/provider');
 const { createJob, transitionJob } = require('../src/core/contracts');
 const { SessionWorkspace } = require('../src/core/session-workspace');
+const { modelContextWindow } = require('../src/core/conversation-core');
+const { analyzeIntent } = require('../src/core/intent-router');
 const {
   GROUNDED_ANSWER_CONTRACT_VERSION,
   createGroundedAnswerContract,
@@ -165,6 +167,53 @@ async function groundedAnswerPolicy() {
   };
 }
 
+async function correctionHandling() {
+  const hints = analyzeIntent({
+    content: '\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e19\u0e31\u0e01\u0e23\u0e49\u0e2d\u0e07 \u0e09\u0e31\u0e19\u0e2b\u0e21\u0e32\u0e22\u0e16\u0e36\u0e07\u0e15\u0e31\u0e27\u0e25\u0e30\u0e04\u0e23\u0e21\u0e31\u0e07\u0e2e\u0e27\u0e32',
+    history: [
+      { role: 'user', content: 'Park Dayoung' },
+      { role: 'assistant', content: 'She is a singer.' },
+    ],
+  });
+  if (!hints.conversational_context.correction_detected
+    || hints.conversational_context.correction_policy !== 'prefer_latest_user_correction'
+    || !hints.task.context_qualifiers.includes('manhwa character')
+    || hints.task.context_qualifiers.includes('music artist')) {
+    throw new Error('Latest user correction did not override stale assistant context.');
+  }
+  return {
+    correction_detected: true,
+    correction_policy: hints.conversational_context.correction_policy,
+    accepted_context_qualifier: 'manhwa character',
+    rejected_context_qualifier: 'music artist',
+  };
+}
+
+async function longContext() {
+  const latest = { role: 'user', content: 'keep this latest instruction complete' };
+  const history = [
+    { role: 'user', content: 'Ada Lovelace' },
+    { role: 'assistant', content: 'x'.repeat(80_000) },
+    ...Array.from({ length: 10 }, (_, index) => ({ role: 'assistant', content: `bounded turn ${index}` })),
+    latest,
+  ];
+  const contextWindow = modelContextWindow(history.slice(0, -1), latest.content);
+  const window = contextWindow.messages;
+  const hints = analyzeIntent({ content: 'find a reliable source about it', history: history.slice(0, -1) });
+  if (window.at(-1)?.content !== latest.content
+    || window.some(turn => turn.content.length === 80_000)
+    || !window.some(turn => turn.content === 'Ada Lovelace')
+    || hints.reference_resolution.recommended_query !== 'Ada Lovelace') {
+    throw new Error('Bounded long context lost the latest input or relevant subject.');
+  }
+  return {
+    latest_input_complete: true,
+    oversized_prior_turn_skipped: true,
+    relevant_subject_retained: hints.reference_resolution.recommended_query,
+    bounded_window_turns: window.length,
+  };
+}
+
 const LOCAL_CONTRACTS = Object.freeze({
   malformed_tool_response: malformedToolResponse,
   timeout,
@@ -173,6 +222,8 @@ const LOCAL_CONTRACTS = Object.freeze({
   prompt_injection_resistance: promptInjectionResistance,
   output_schema_validity: outputSchemaValidity,
   grounded_answer_policy: groundedAnswerPolicy,
+  correction_handling: correctionHandling,
+  long_context: longContext,
 });
 
 async function runLocalFoundationContract(contractId) {

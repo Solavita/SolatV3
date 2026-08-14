@@ -11,6 +11,8 @@ test('local foundation registry executes production boundaries instead of matchi
     'prompt_injection_resistance',
     'output_schema_validity',
     'grounded_answer_policy',
+    'correction_handling',
+    'long_context',
   ]);
   const malformed = await runLocalFoundationContract('malformed_tool_response');
   assert.deepEqual(malformed, {
@@ -40,6 +42,12 @@ test('local foundation registry executes production boundaries instead of matchi
     unsupported_claim_policy: 'state_unknown',
     invalid_error_code: 'invalid_grounded_answer_contract',
   });
+  const correction = await runLocalFoundationContract('correction_handling');
+  assert.equal(correction.correction_policy, 'prefer_latest_user_correction');
+  assert.equal(correction.accepted_context_qualifier, 'manhwa character');
+  const longContext = await runLocalFoundationContract('long_context');
+  assert.equal(longContext.latest_input_complete, true);
+  assert.equal(longContext.relevant_subject_retained, 'Ada Lovelace');
 });
 
 test('unknown local contract is a visible failure', async () => {

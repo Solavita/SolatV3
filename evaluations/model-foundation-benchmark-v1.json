@@ -147,11 +147,11 @@
       ],
       "expected_behavior": ["prefer_latest_user_correction", "retain_entity"],
       "forbidden_behavior": ["repeat_rejected_interpretation"],
-      "evaluation": { "mode": "manual_model_trace" },
+      "evaluation": { "mode": "unit_test_evidence", "contract_id": "correction_handling" },
       "actual_output": null,
       "status": "NOT VERIFIED",
       "evidence": [],
-      "limitation": "Requires a model trace that shows correction precedence."
+      "limitation": "PASS verifies deterministic correction precedence in context hints; final model wording remains unverified."
     },
     {
       "id": "long_context",
@@ -160,11 +160,11 @@
       "context": [],
       "expected_behavior": ["retain_relevant_constraints", "avoid_context_overflow"],
       "forbidden_behavior": ["silently_drop_critical_constraint"],
-      "evaluation": { "mode": "manual_model_trace" },
+      "evaluation": { "mode": "unit_test_evidence", "contract_id": "long_context" },
       "actual_output": null,
       "status": "NOT VERIFIED",
       "evidence": [],
-      "limitation": "A representative long model context is required."
+      "limitation": "PASS verifies bounded context selection and reference retention; live-model comprehension remains unverified."
     },
     {
       "id": "fact_vs_inference",
