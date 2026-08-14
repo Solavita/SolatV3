@@ -2435,6 +2435,15 @@ Milestone 193 status: `IMPLEMENTED BUT NOT FULLY VERIFIED`.
 
 ## Desktop business/commerce bridge (2026-08-14)
 
+## Phase 0-4 runtime recheck (2026-08-14)
+
+| criterion | status | exact command/action | exact input/output | files/evidence | limitation |
+|---|---|---|---|---|---|
+| Desktop general conversation through packaged IPC | PASS | Opened the packaged executable and sent `hi` through the visible composer | Visible response completed: `Hi! How can I help you today?`; provider line showed `deepseek-v4-flash · deepseek_api` | Computer Use inspection; packaged executable | Transport only; not semantic parity |
+| Business read recovery when the model skips commerce | PASS (source/package rebuilt) | Added advisory commerce intent plus bounded `business_profile_get` recovery; ran `npm.cmd test` and rebuilt `dist-phase-0-4-fix` | `100/100` tests pass; recovery regression executes the owner-scoped read and synthesizes only returned data | `src/core/intent-router.js`; `src/core/conversation-core.js`; `test/core.test.js`; packaged fix output | Initial packaged run correctly returned `backend_unavailable` while backend `127.0.0.1:8000` was stopped; after restart, health/profile/summary responded |
+| Commerce provider readiness is truthful | PASS | Queried `/api/v1/commerce/provider-readiness` after backend restart | `status=not_configured`; payment, shipping, notification and slip OCR adapters all `false` | Local backend response | External adapters are not configured; no success is claimed |
+| Search + DeepSeek live path | PASS | Ran `npm.cmd run smoke:live-search -- --output ..\\artifacts\\solat-v3-live-search-20260814.json` | Brave + DeepSeek V4 Flash; 2 tool rounds; 3 approved sources; visible source-backed answer | `artifacts/solat-v3-live-search-20260814.json` | One bounded query does not prove every ambiguous/multi-turn search case |
+
 | criterion | status | exact command/action | exact input/output | files/evidence | limitation |
 |---|---|---|---|---|---|
 | Desktop exposes owner-scoped business/commerce tools to the model | PASS | Added `CommerceClient`, configuration fields, and ConversationCore tool wiring; `npm.cmd test`; `npm.cmd run check` | `99/99` tests passed; commerce tool is available when `SOLAT_BACKEND_BASE_URL` and owner identity are configured; read actions are allowed without confirmation and writes return `confirmation_required` | `src/core/commerce-client.js`; `src/core/config.js`; `src/core/conversation-core.js`; `src/main.js`; `test/core.test.js` | Backend must be reachable and credentials/owner identity must be supplied locally; no payment/shipping side effect is performed without provider evidence and confirmation |

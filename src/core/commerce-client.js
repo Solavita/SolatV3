@@ -10,7 +10,7 @@ class CommerceClientError extends Error {
 const READ_ACTIONS = new Set([
   'business_profile_get', 'business_audit', 'commerce_summary', 'commerce_alerts',
   'commerce_customers', 'commerce_products', 'commerce_orders', 'commerce_audit',
-  'commerce_follow_ups', 'commerce_provider_readiness',
+  'commerce_follow_ups', 'commerce_repeat_purchase_candidates', 'commerce_provider_readiness',
 ]);
 
 const ACTION_PATHS = Object.freeze({
@@ -23,6 +23,7 @@ const ACTION_PATHS = Object.freeze({
   commerce_orders: ['GET', '/api/v1/commerce/orders'],
   commerce_audit: ['GET', '/api/v1/commerce/audit'],
   commerce_follow_ups: ['GET', '/api/v1/commerce/follow-ups'],
+  commerce_repeat_purchase_candidates: ['GET', '/api/v1/commerce/repeat-purchase-candidates'],
   commerce_provider_readiness: ['GET', '/api/v1/commerce/provider-readiness'],
   business_profile_save: ['PUT', '/api/v1/business/profile'],
   commerce_intake_text: ['POST', '/api/v1/commerce/intake/text'],
@@ -31,6 +32,15 @@ const ACTION_PATHS = Object.freeze({
   commerce_create_order: ['POST', '/api/v1/commerce/orders'],
   commerce_create_draft: ['POST', '/api/v1/commerce/drafts'],
   commerce_approve_draft: ['POST', '/api/v1/commerce/drafts/{id}/approve'],
+  commerce_order_update: ['PATCH', '/api/v1/commerce/orders/{id}'],
+  commerce_order_transition: ['POST', '/api/v1/commerce/orders/{id}/transition'],
+  commerce_verify_payment: ['POST', '/api/v1/commerce/orders/{id}/verify-payment'],
+  commerce_create_shipment: ['POST', '/api/v1/commerce/orders/{id}/shipment'],
+  commerce_create_follow_up: ['POST', '/api/v1/commerce/follow-ups'],
+  commerce_complete_follow_up: ['POST', '/api/v1/commerce/follow-ups/{id}/complete'],
+  commerce_create_quote: ['POST', '/api/v1/commerce/drafts/quote'],
+  commerce_create_invoice: ['POST', '/api/v1/commerce/drafts/invoice'],
+  commerce_send_draft: ['POST', '/api/v1/commerce/drafts/{id}/send'],
 });
 
 const WRITE_ACTIONS = new Set(Object.keys(ACTION_PATHS).filter(action => !READ_ACTIONS.has(action)));

@@ -107,6 +107,8 @@ test('commerce client exposes owner-scoped tools and fails writes closed without
   });
   assert.equal(client.status().configured, true);
   assert.equal(client.toolDefinition().function.name, 'commerce');
+  assert.ok(client.toolDefinition().function.parameters.properties.action.enum.includes('commerce_verify_payment'));
+  assert.ok(client.toolDefinition().function.parameters.properties.action.enum.includes('commerce_create_shipment'));
   const blocked = await client.execute({ name: 'commerce', arguments: { action: 'commerce_create_customer', payload: { name: 'A' } } });
   assert.equal(blocked.status, 'confirmation_required');
   assert.equal(calls.length, 0);
@@ -114,6 +116,33 @@ test('commerce client exposes owner-scoped tools and fails writes closed without
   assert.equal(result.status, 'ready');
   assert.equal(calls[0].options.headers['X-User-ID'], 'owner-1');
   assert.equal(calls[0].options.method, 'GET');
+});
+
+test('conversation core recovers a clear business read when the model skips commerce', async () => {
+  const calls = [];
+  const provider = {
+    status: () => ({ provider: 'test', model: 'tool-model', configured: true, baseHost: 'test.local' }),
+    async completeWithTools(messages, options) {
+      assert.equal(options.tools[0].function.name, 'commerce');
+      return { content: 'I need more business details.', provider: 'test', model: 'tool-model', usage: null, toolRounds: 0 };
+    },
+    async complete(messages) {
+      assert.match(messages[1].content, /business_profile_get/u);
+      return { content: 'โปรไฟล์ธุรกิจของคุณยังว่างอยู่', provider: 'test', model: 'tool-model', usage: null };
+    },
+  };
+  const commerceService = {
+    status: () => ({ enabled: true, configured: true }),
+    toolDefinition: () => ({ type: 'function', function: { name: 'commerce' } }),
+    async execute(call) {
+      calls.push(call);
+      return { status: 'ready', tool: 'commerce', action: call.arguments.action, data: { profile: null } };
+    },
+  };
+  const result = await new ConversationCore({ config: {}, provider, commerceService }).send({ sessionId: 'commerce-recovery', content: 'แสดงโปรไฟล์ธุรกิจของฉัน', requestId: 'commerce-recovery-1' });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].arguments.action, 'business_profile_get');
+  assert.match(result.assistant, /โปรไฟล์ธุรกิจ/u);
 });
 
 test('readConfig can load a packaged-app env file without requiring a writable app directory', () => {

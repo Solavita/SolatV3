@@ -339,6 +339,7 @@ When web_search returns evidence, ground factual claims only in that tool output
     const commerceEnabled = this.commerceService?.status?.().enabled && this.commerceService?.status?.().configured;
     let executeSearchTool;
     let searchRecoveryUsed = false;
+    const commerceRuns = [];
     try {
       const modelMessages = [hintMessage, ...contextWindow.messages];
       if ((searchEnabled || commerceEnabled) && typeof this.provider.completeWithTools === 'function') {
@@ -352,8 +353,15 @@ When web_search returns evidence, ground factual claims only in that tool output
           tools: toolDefinitions,
           toolExecutor: executeSearchTool = async call => {
             if (call?.name === 'commerce') {
-              try { return await this.commerceService.execute(call); }
-              catch (error) { return { status: 'unavailable', tool: 'commerce', error: { code: error?.code || 'commerce_failed', message: error?.message || 'The business workspace could not complete this action.' } }; }
+              try {
+                const outcome = await this.commerceService.execute(call);
+                commerceRuns.push({ action: String(call?.arguments?.action || ''), outcome });
+                return outcome;
+              } catch (error) {
+                const outcome = { status: 'unavailable', tool: 'commerce', action: String(call?.arguments?.action || ''), error: { code: error?.code || 'commerce_failed', message: error?.message || 'The business workspace could not complete this action.' } };
+                commerceRuns.push({ action: outcome.action, outcome });
+                return outcome;
+              }
             }
             if (call?.name === 'web_read_page') {
               let requestedPageUrl = '';
@@ -437,6 +445,33 @@ When web_search returns evidence, ground factual claims only in that tool output
           // two calls per round only for an explicit two-entity comparison.
           maxToolCalls: comparisonEntities.length === 2 ? 6 : 3,
         });
+        // Some compatible models answer a clear business read request as
+        // ordinary chat instead of selecting the commerce function. Recover
+        // only when the router marked an explicit commerce intent; this is
+        // bounded tool completion, not a hard gate for general conversation.
+        if (commerceEnabled && intentHints.allowed_tools.includes('commerce') && commerceRuns.length === 0 && typeof executeSearchTool === 'function') {
+          const commerceAction = /(?:profile|โปรไฟล์|ข้อมูลธุรกิจ|business\s+info|company\s+info|business\s+details)/iu.test(normalizedContent)
+            ? 'business_profile_get'
+            : /(?:customer|ลูกค้า)/iu.test(normalizedContent)
+              ? 'commerce_customers'
+              : /(?:product|สินค้า|inventory|stock|สต็อก|สต็อค)/iu.test(normalizedContent)
+                ? 'commerce_products'
+                : /(?:order|ออเดอร์|คำสั่งซื้อ)/iu.test(normalizedContent)
+                  ? 'commerce_orders'
+                  : /(?:alert|แจ้งเตือน|งานค้าง|ค้าง)/iu.test(normalizedContent)
+                    ? 'commerce_alerts'
+                    : 'commerce_summary';
+          const commerceOutcome = await executeSearchTool({ name: 'commerce', recovery: true, arguments: { action: commerceAction } });
+          const boundedCommerce = JSON.stringify(commerceOutcome).slice(0, 14000);
+          if (typeof this.provider.complete === 'function') {
+            result = await this.provider.complete([
+              hintMessage,
+              { role: 'system', content: `SOLAT executed the explicit business read action ${commerceAction} because the model did not select the commerce tool. Use only the returned owner-scoped data; if it is unavailable or empty, say so plainly and do not ask the owner to repeat the request.\n${boundedCommerce}` },
+              ...contextWindow.messages,
+              { role: 'assistant', content: String(result?.content || '') },
+            ]);
+          }
+        }
         // Comparisons need evidence coverage for each named candidate. If the
         // model used the tool but one side was empty (common with hyphenated
         // names), perform a bounded per-candidate recovery and ask for one

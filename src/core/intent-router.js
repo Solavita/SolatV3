@@ -9,6 +9,7 @@ const THAI_LATEST_TERMS = /(?:\u0e23\u0e32\u0e04\u0e32|\u0e27\u0e31\u0e19\u0e19\
 const GEMINI_TERMS = /\b(?:gemini|ai\s+overview|google\s+ai)\b/iu;
 const FACTUAL_QUERY_TERMS = /\b(?:who|what|where|when)\s+(?:is|are|was|were)\b|\btell\s+me\s+about\b|\bexplain\b|(?:\u0e43\u0e04\u0e23\u0e04\u0e37\u0e2d|\u0e2d\u0e30\u0e44\u0e23\u0e04\u0e37\u0e2d|\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a)/iu;
 const NAMED_LOOKUP_STOPWORDS = new Set(['hi', 'hello', 'hey', 'thanks', 'thank', 'ok', 'okay', 'yes', 'no', 'please', 'help', 'solat']);
+const COMMERCE_TERMS = /(?:business|company|store|shop|customer|product|inventory|stock|order|sales|payment|shipping|follow[- ]?up|crm|ธุรกิจ|บริษัท|ร้านค้า|ร้าน|ลูกค้า|สินค้า|สต็อก|สต็อค|ออเดอร์|คำสั่งซื้อ|ยอดขาย|ชำระเงิน|จัดส่ง|ติดตามลูกค้า|โปรไฟล์ธุรกิจ|ข้อมูลธุรกิจ)/iu;
 
 const SEARCH_TERMS = /\b(search|find|look\s*up|latest|current|news|source|wikipedia|tiktok|pinterest|instagram|youtube|facebook)\b|ค้นหา|เสิร์ช|ล่าสุด|แหล่งที่มา|วิกิ|ติ๊กต็อก|พินเทอเรสต์/iu;
 const FILE_TERMS = /\b(file|pdf|document|attachment|image|screenshot|spreadsheet)\b|ไฟล์|เอกสาร|รูปภาพ|ภาพหน้าจอ/iu;
@@ -255,6 +256,7 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
   const signals = [];
   const selfReferential = /\b(?:you|your|we|our|i|my)\b/iu.test(normalized);
   if (SEARCH_TERMS.test(normalized) || THAI_SEARCH_TERMS.test(normalized) || (FACTUAL_QUERY_TERMS.test(normalized) && !selfReferential)) signals.push('web_search');
+  if (COMMERCE_TERMS.test(normalized)) signals.push('commerce');
   if (looksLikeNamedLookup(normalized)) signals.push('web_search', 'named_lookup');
   if (disambiguation.comparison) signals.push('web_search', 'clarification_candidate');
   if (FILE_TERMS.test(normalized) || attachments.length) signals.push('file_analysis');
@@ -267,6 +269,7 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
   if (signals.includes('file_analysis')) candidates.push({ intent: 'file_analysis', confidence: score(signals, 'file_analysis'), reason: 'The message refers to an attached or file-like input.' });
   if (signals.includes('creative_workflow')) candidates.push({ intent: 'creative_workflow', confidence: score(signals, 'creative_workflow'), reason: 'The message asks for a creative or presentation workflow.' });
   if (signals.includes('external_action')) candidates.push({ intent: 'external_action', confidence: score(signals, 'external_action'), reason: 'The message may request a state-changing action.' });
+  if (signals.includes('commerce')) candidates.push({ intent: 'commerce', confidence: 0.9, reason: 'The message asks about the owner-scoped business workspace or commerce data.' });
   if (signals.includes('clarification_candidate')) candidates.push({ intent: 'clarification', confidence: 0.62, reason: 'The message may be short, ambiguous, or comparison-oriented.' });
   if (!candidates.length) candidates.push({ intent: 'general_chat', confidence: 0.78, reason: 'No reliable tool signal was found; let the model answer directly.' });
   candidates.sort((left, right) => right.confidence - left.confidence);
@@ -310,6 +313,7 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
   }
   if (signals.includes('file_analysis')) allowedTools.push('file_reader');
   if (signals.includes('creative_workflow')) allowedTools.push('creative_planner');
+  if (signals.includes('commerce')) allowedTools.push('commerce');
   const safetyConstraints = ['do_not_expose_secrets', 'do_not_claim_unverified_facts', 'require_confirmation_for_state_change'];
   if (signals.includes('external_action')) safetyConstraints.push('external_action_requires_explicit_confirmation');
 
