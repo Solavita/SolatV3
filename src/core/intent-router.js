@@ -9,7 +9,9 @@ const THAI_LATEST_TERMS = /(?:\u0e23\u0e32\u0e04\u0e32|\u0e27\u0e31\u0e19\u0e19\
 const GEMINI_TERMS = /\b(?:gemini|ai\s+overview|google\s+ai)\b/iu;
 const FACTUAL_QUERY_TERMS = /\b(?:who|what|where|when)\s+(?:is|are|was|were)\b|\btell\s+me\s+about\b|\bexplain\b|(?:\u0e43\u0e04\u0e23\u0e04\u0e37\u0e2d|\u0e2d\u0e30\u0e44\u0e23\u0e04\u0e37\u0e2d|\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a)/iu;
 const NAMED_LOOKUP_STOPWORDS = new Set(['hi', 'hello', 'hey', 'thanks', 'thank', 'ok', 'okay', 'yes', 'no', 'please', 'help', 'solat']);
-const COMMERCE_TERMS = /(?:business|company|store|shop|customer|product|inventory|stock|order|sales|payment|shipping|follow[- ]?up|crm|ธุรกิจ|บริษัท|ร้านค้า|ร้าน|ลูกค้า|สินค้า|สต็อก|สต็อค|ออเดอร์|คำสั่งซื้อ|ยอดขาย|ชำระเงิน|จัดส่ง|ติดตามลูกค้า|โปรไฟล์ธุรกิจ|ข้อมูลธุรกิจ)/iu;
+// Use Unicode escapes for Thai terms so the router is stable across Windows
+// console/file encodings; the original user message remains untouched.
+const COMMERCE_TERMS = /(?:business|company|store|shop|customer|product|inventory|stock|order|sales|payment|shipping|follow[- ]?up|crm|\u0e18\u0e38\u0e23\u0e01\u0e34\u0e08|\u0e1a\u0e23\u0e34\u0e29\u0e31\u0e17|\u0e23\u0e49\u0e32\u0e19\u0e04\u0e49\u0e32|\u0e23\u0e49\u0e32\u0e19|\u0e25\u0e39\u0e01\u0e04\u0e49\u0e32|\u0e2a\u0e34\u0e19\u0e04\u0e49\u0e32|\u0e2a\u0e15\u0e47\u0e2d\u0e01|\u0e2d\u0e2d\u0e40\u0e14\u0e2d\u0e23\u0e4c|\u0e04\u0e33\u0e2a\u0e31\u0e48\u0e07\u0e0b\u0e37\u0e49\u0e2d|\u0e22\u0e2d\u0e14\u0e02\u0e32\u0e22|\u0e0a\u0e33\u0e23\u0e30\u0e40\u0e07\u0e34\u0e19|\u0e08\u0e31\u0e14\u0e2a\u0e48\u0e07|\u0e15\u0e34\u0e14\u0e15\u0e32\u0e21\u0e25\u0e39\u0e01\u0e04\u0e49\u0e32|\u0e42\u0e1b\u0e23\u0e44\u0e1f\u0e25\u0e4c\u0e18\u0e38\u0e23\u0e01\u0e34\u0e08|\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e18\u0e38\u0e23\u0e01\u0e34\u0e08)/iu;
 
 const SEARCH_TERMS = /\b(search|find|look\s*up|latest|current|news|source|wikipedia|tiktok|pinterest|instagram|youtube|facebook)\b|ค้นหา|เสิร์ช|ล่าสุด|แหล่งที่มา|วิกิ|ติ๊กต็อก|พินเทอเรสต์/iu;
 const FILE_TERMS = /\b(file|pdf|document|attachment|image|screenshot|spreadsheet)\b|ไฟล์|เอกสาร|รูปภาพ|ภาพหน้าจอ/iu;
