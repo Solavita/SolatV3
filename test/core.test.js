@@ -40,6 +40,7 @@ const { WebSearchService, analyzeSearchQuery, directlyIdentifiesQuery, evidenceA
 const { createReport, runLiveSearchSmoke, safeReadiness } = require('../src/core/live-search-smoke');
 const { evaluateCorpus } = require('../src/core/conversation-evaluator');
 const { indexExternalBaselines, languageHint, runThreeWayCapture, validateSemanticReview } = require('../src/core/three-way-evaluator');
+const { CommerceClient } = require('../src/core/commerce-client');
 
 const fixedNow = new Date('2026-08-11T00:00:00.000Z');
 const evaluationCorpus = require('../evaluations/conversation-search-corpus.json');
@@ -84,11 +85,35 @@ test('readConfig prefers explicit environment values and never exposes a key in 
     searchResultLimit: 5,
     searchWikipediaFallback: true,
     searchEngines: '',
+    commerceBaseUrl: '',
+    commerceUserId: '',
+    commerceToken: '',
+    commerceTimeoutMs: 12000,
   });
   const status = new OpenAICompatibleProvider(config).status();
   assert.equal(status.configured, true);
   assert.equal('apiKey' in status, false);
   assert.equal(status.baseHost, 'example.test');
+});
+
+test('commerce client exposes owner-scoped tools and fails writes closed without confirmation', async () => {
+  const calls = [];
+  const client = new CommerceClient({
+    baseUrl: 'http://127.0.0.1:8000', userId: 'owner-1',
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      return { ok: true, async json() { return { id: 'customer-1' }; } };
+    },
+  });
+  assert.equal(client.status().configured, true);
+  assert.equal(client.toolDefinition().function.name, 'commerce');
+  const blocked = await client.execute({ name: 'commerce', arguments: { action: 'commerce_create_customer', payload: { name: 'A' } } });
+  assert.equal(blocked.status, 'confirmation_required');
+  assert.equal(calls.length, 0);
+  const result = await client.execute({ name: 'commerce', arguments: { action: 'commerce_customers' } });
+  assert.equal(result.status, 'ready');
+  assert.equal(calls[0].options.headers['X-User-ID'], 'owner-1');
+  assert.equal(calls[0].options.method, 'GET');
 });
 
 test('readConfig can load a packaged-app env file without requiring a writable app directory', () => {

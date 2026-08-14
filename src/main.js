@@ -9,6 +9,7 @@ const { ConversationPersistence } = require('./core/conversation-persistence');
 const { AssetStore } = require('./core/asset-store');
 const { exportEditableHtml, inspectEditableHtml } = require('./core/exporter');
 const { WebSearchService } = require('./core/web-search');
+const { CommerceClient } = require('./core/commerce-client');
 
 let mainWindow;
 let core;
@@ -17,6 +18,7 @@ let creativePersistence;
 let conversationPersistence;
 let assetStore;
 let searchService;
+let commerceService;
 
 function resolveOwnedExportPath(requestedPath) {
   const candidate = String(requestedPath || '').trim();
@@ -225,7 +227,13 @@ app.whenReady().then(() => {
     wikipediaFallback: config.searchWikipediaFallback,
     engines: config.searchEngines,
   });
-  core = new ConversationCore({ config, searchService });
+  commerceService = new CommerceClient({
+    baseUrl: config.commerceBaseUrl,
+    userId: config.commerceUserId,
+    token: config.commerceToken,
+    timeoutMs: config.commerceTimeoutMs,
+  });
+  core = new ConversationCore({ config, searchService, commerceService });
   assetStore = new AssetStore({ rootDir: path.join(app.getPath('userData'), 'assets') });
   creativePersistence = new CreativePersistence({ rootDir: path.join(app.getPath('userData'), 'creative-history') });
   conversationPersistence = new ConversationPersistence({ rootDir: path.join(app.getPath('userData'), 'conversation-history') });

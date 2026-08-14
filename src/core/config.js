@@ -52,6 +52,10 @@ function readConfig({ env = process.env, cwd = process.cwd(), envFiles = [] } = 
     searchResultLimit: Math.max(1, Math.min(Number.parseInt(value('SOLAT_SEARCH_RESULT_LIMIT', '5'), 10) || 5, 10)),
     searchWikipediaFallback: !/^(?:0|false|off)$/iu.test(String(value('SOLAT_SEARCH_WIKIPEDIA_FALLBACK', 'true'))),
     searchEngines: String(value('SOLAT_SEARCH_ENGINES', '')),
+    commerceBaseUrl: String(value('SOLAT_BACKEND_BASE_URL', '')).replace(/\/+$/u, ''),
+    commerceUserId: String(value('SOLAT_BACKEND_USER_ID', '')),
+    commerceToken: String(value('SOLAT_BACKEND_TOKEN', '')),
+    commerceTimeoutMs: Number.parseInt(value('SOLAT_BACKEND_TIMEOUT_MS', '12000'), 10) || 12000,
   });
 }
 
