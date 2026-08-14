@@ -118,6 +118,34 @@ test('commerce client exposes owner-scoped tools and fails writes closed without
   assert.equal(calls[0].options.method, 'GET');
 });
 
+test('commerce client uploads an owner-scoped asset only for reviewable intake analysis', async () => {
+  const calls = [];
+  const resolved = [];
+  const client = new CommerceClient({
+    baseUrl: 'http://127.0.0.1:8000', userId: 'owner-1',
+    assetResolver: async value => {
+      resolved.push(value);
+      return { asset: { asset_id: value.assetId, mime_type: 'text/plain', source: { file_name: 'order.txt' } }, bytes: Buffer.from('customer: A') };
+    },
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      return { ok: true, async json() { return { product_name: 'Widget', warnings: [] }; } };
+    },
+  });
+  const result = await client.execute({ name: 'commerce', sessionId: 'session-1', arguments: { action: 'commerce_intake_file', asset_id: 'asset-1' } });
+  assert.equal(result.status, 'ready');
+  assert.deepEqual(resolved, [{ sessionId: 'session-1', assetId: 'asset-1' }]);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, 'http://127.0.0.1:8000/api/v1/commerce/intake/file');
+  assert.equal(calls[0].options.method, 'POST');
+  assert.equal(calls[0].options.headers['X-User-ID'], 'owner-1');
+  assert.equal(typeof calls[0].options.body.get, 'function');
+  await assert.rejects(
+    () => client.execute({ name: 'commerce', arguments: { action: 'commerce_payment_slip_intake' } }),
+    error => error.code === 'invalid_tool_arguments',
+  );
+});
+
 test('conversation core recovers a clear business read when the model skips commerce', async () => {
   const calls = [];
   const provider = {

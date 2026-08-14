@@ -227,14 +227,20 @@ app.whenReady().then(() => {
     wikipediaFallback: config.searchWikipediaFallback,
     engines: config.searchEngines,
   });
+  assetStore = new AssetStore({ rootDir: path.join(app.getPath('userData'), 'assets') });
   commerceService = new CommerceClient({
     baseUrl: config.commerceBaseUrl,
     userId: config.commerceUserId,
     token: config.commerceToken,
     timeoutMs: config.commerceTimeoutMs,
+    assetResolver: async ({ sessionId, assetId }) => {
+      const normalizedSession = String(sessionId || '').trim();
+      if (!normalizedSession) throw Object.assign(new Error('A session is required to read an attached asset.'), { code: 'invalid_session' });
+      const project = core.workspace.getProject(normalizedSession);
+      return assetStore.readOriginal({ ownerId: normalizedSession, projectId: project.project_id, assetId });
+    },
   });
   core = new ConversationCore({ config, searchService, commerceService });
-  assetStore = new AssetStore({ rootDir: path.join(app.getPath('userData'), 'assets') });
   creativePersistence = new CreativePersistence({ rootDir: path.join(app.getPath('userData'), 'creative-history') });
   conversationPersistence = new ConversationPersistence({ rootDir: path.join(app.getPath('userData'), 'conversation-history') });
   creativeWorkflow = new CreativeWorkflow({ provider: core.provider, workspace: core.workspace });

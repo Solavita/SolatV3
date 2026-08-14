@@ -13,6 +13,10 @@ const READ_ACTIONS = new Set([
   'commerce_follow_ups', 'commerce_repeat_purchase_candidates', 'commerce_provider_readiness',
 ]);
 
+// These endpoints only parse an owner-provided asset into a reviewable draft;
+// they do not persist business state or execute an external action.
+const ANALYSIS_ACTIONS = new Set(['commerce_intake_file', 'commerce_payment_slip_intake']);
+
 const ACTION_PATHS = Object.freeze({
   business_profile_get: ['GET', '/api/v1/business/profile'],
   business_audit: ['GET', '/api/v1/business/audit'],
@@ -27,6 +31,8 @@ const ACTION_PATHS = Object.freeze({
   commerce_provider_readiness: ['GET', '/api/v1/commerce/provider-readiness'],
   business_profile_save: ['PUT', '/api/v1/business/profile'],
   commerce_intake_text: ['POST', '/api/v1/commerce/intake/text'],
+  commerce_intake_file: ['POST', '/api/v1/commerce/intake/file'],
+  commerce_payment_slip_intake: ['POST', '/api/v1/commerce/payment-slips/intake'],
   commerce_create_customer: ['POST', '/api/v1/commerce/customers'],
   commerce_create_product: ['POST', '/api/v1/commerce/products'],
   commerce_create_order: ['POST', '/api/v1/commerce/orders'],
@@ -43,7 +49,7 @@ const ACTION_PATHS = Object.freeze({
   commerce_send_draft: ['POST', '/api/v1/commerce/drafts/{id}/send'],
 });
 
-const WRITE_ACTIONS = new Set(Object.keys(ACTION_PATHS).filter(action => !READ_ACTIONS.has(action)));
+const WRITE_ACTIONS = new Set(Object.keys(ACTION_PATHS).filter(action => !READ_ACTIONS.has(action) && !ANALYSIS_ACTIONS.has(action)));
 
 function cleanBaseUrl(value) {
   return String(value || '').trim().replace(/\/+$/u, '');
@@ -58,12 +64,13 @@ function safeBody(value) {
 }
 
 class CommerceClient {
-  constructor({ baseUrl = '', userId = '', token = '', timeoutMs = 12000, fetchImpl = globalThis.fetch } = {}) {
+  constructor({ baseUrl = '', userId = '', token = '', timeoutMs = 12000, fetchImpl = globalThis.fetch, assetResolver = null } = {}) {
     this.baseUrl = cleanBaseUrl(baseUrl);
     this.userId = String(userId || '').trim();
     this.token = String(token || '').trim();
     this.timeoutMs = Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0 ? Number(timeoutMs) : 12000;
     this.fetchImpl = fetchImpl;
+    this.assetResolver = typeof assetResolver === 'function' ? assetResolver : null;
   }
 
   status() {
@@ -104,19 +111,36 @@ class CommerceClient {
     const action = String(args.action || '').trim();
     const route = ACTION_PATHS[action];
     if (!route) throw new CommerceClientError('invalid_tool_arguments', 'Unknown commerce action.');
-    if (!this.baseUrl || !this.userId) {
-      return { status: 'unavailable', tool: 'commerce', action, error: { code: 'commerce_backend_not_configured', message: 'The business workspace is not connected in this desktop installation.' } };
-    }
-    if (WRITE_ACTIONS.has(action) && args.confirm !== true) {
-      return { status: 'confirmation_required', tool: 'commerce', action, message: 'This action changes persistent business data. Ask the owner for explicit confirmation before retrying with confirm=true.' };
-    }
-    const body = safeBody(args.payload);
     let path = route[1];
     if (path.includes('{id}')) {
       const id = String(args.id || '').trim();
       if (!id) throw new CommerceClientError('invalid_tool_arguments', 'This commerce action requires an id.');
       path = path.replace('{id}', encodeURIComponent(id));
     }
+    if (!this.baseUrl || !this.userId) {
+      return { status: 'unavailable', tool: 'commerce', action, error: { code: 'commerce_backend_not_configured', message: 'The business workspace is not connected in this desktop installation.' } };
+    }
+    if (WRITE_ACTIONS.has(action) && args.confirm !== true) {
+      return { status: 'confirmation_required', tool: 'commerce', action, message: 'This action changes persistent business data. Ask the owner for explicit confirmation before retrying with confirm=true.' };
+    }
+    if (ANALYSIS_ACTIONS.has(action)) {
+      const assetId = String(args.asset_id || '').trim();
+      if (!assetId) throw new CommerceClientError('invalid_tool_arguments', 'This file-analysis action requires an asset_id from the current message.');
+      if (!this.assetResolver) return { status: 'unavailable', tool: 'commerce', action, error: { code: 'asset_resolver_not_configured', message: 'The desktop file bridge is not configured.' } };
+      let stored;
+      try {
+        stored = await this.assetResolver({ sessionId: String(call.sessionId || '').trim(), assetId });
+      } catch (error) {
+        return { status: 'unavailable', tool: 'commerce', action, error: { code: error?.code || 'asset_unavailable', message: error?.message || 'The attached asset could not be read.' } };
+      }
+      if (!stored?.bytes || !stored?.asset) return { status: 'unavailable', tool: 'commerce', action, error: { code: 'asset_unavailable', message: 'The attached asset could not be read.' } };
+      return this.requestMultipart(route[0], path, {
+        fileName: stored.asset.source?.file_name || `${assetId}.bin`,
+        mimeType: stored.asset.mime_type || 'application/octet-stream',
+        bytes: stored.bytes,
+      });
+    }
+    const body = safeBody(args.payload);
     return this.request(route[0], path, body);
   }
 
@@ -146,6 +170,33 @@ class CommerceClient {
       clearTimeout(timer);
     }
   }
+
+  async requestMultipart(method, path, { fileName, mimeType, bytes } = {}) {
+    if (typeof this.fetchImpl !== 'function') throw new CommerceClientError('tool_unavailable', 'This runtime cannot reach the business workspace.');
+    if (typeof FormData !== 'function' || typeof Blob !== 'function') throw new CommerceClientError('tool_unavailable', 'This runtime cannot upload an attached file.');
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      const form = new FormData();
+      form.append('file', new Blob([bytes], { type: String(mimeType || 'application/octet-stream') }), String(fileName || 'upload.bin'));
+      const headers = { Accept: 'application/json', 'X-User-ID': this.userId };
+      if (this.token) headers.Authorization = `Bearer ${this.token}`;
+      const response = await this.fetchImpl(`${this.baseUrl}${path}`, { method, headers, body: form, signal: controller.signal });
+      let data = null;
+      try { data = await response.json(); } catch { throw new CommerceClientError('malformed_response', 'The business workspace returned invalid JSON.'); }
+      if (!response.ok) {
+        const detail = typeof data?.detail === 'string' ? data.detail : 'The business workspace rejected the file.';
+        throw new CommerceClientError(`backend_http_${response.status}`, detail, { status: response.status });
+      }
+      return { status: 'ready', tool: 'commerce', data };
+    } catch (error) {
+      if (error instanceof CommerceClientError) throw error;
+      if (error?.name === 'AbortError') throw new CommerceClientError('timeout', 'The business workspace timed out.');
+      throw new CommerceClientError('backend_unavailable', 'The business workspace could not be reached.');
+    } finally {
+      clearTimeout(timer);
+    }
+  }
 }
 
-module.exports = { CommerceClient, CommerceClientError, READ_ACTIONS, WRITE_ACTIONS };
+module.exports = { CommerceClient, CommerceClientError, READ_ACTIONS, ANALYSIS_ACTIONS, WRITE_ACTIONS };
