@@ -9,6 +9,7 @@ const THAI_LATEST_TERMS = /(?:\u0e23\u0e32\u0e04\u0e32|\u0e27\u0e31\u0e19\u0e19\
 const THAI_GENERAL_CONVERSATION_TERMS = /(?:\u0e2a\u0e27\u0e31\u0e2a\u0e14\u0e35|\u0e02\u0e2d\u0e1a\u0e04\u0e38\u0e13|\u0e0a\u0e48\u0e27\u0e22|\u0e04\u0e34\u0e14|\u0e44\u0e2d\u0e40\u0e14\u0e35\u0e22|\u0e04\u0e38\u0e22|\u0e44\u0e14\u0e49\u0e44\u0e2b\u0e21)/u;
 const GEMINI_TERMS = /\b(?:gemini|ai\s+overview|google\s+ai)\b/iu;
 const FACTUAL_QUERY_TERMS = /\b(?:who|what|where|when)\s+(?:is|are|was|were)\b|\btell\s+me\s+about\b|\bexplain\b|(?:\u0e43\u0e04\u0e23\u0e04\u0e37\u0e2d|\u0e2d\u0e30\u0e44\u0e23\u0e04\u0e37\u0e2d|\u0e40\u0e01\u0e35\u0e48\u0e22\u0e27\u0e01\u0e31\u0e1a)/iu;
+const CORRECTION_TERMS = /\b(?:actually|correction|i\s+mean|not\s+that|rather)\b|(?:\u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48|\u0e09\u0e31\u0e19\u0e2b\u0e21\u0e32\u0e22\u0e16\u0e36\u0e07|\u0e1c\u0e21\u0e2b\u0e21\u0e32\u0e22\u0e16\u0e36\u0e07|\u0e41\u0e01\u0e49\u0e40\u0e1b\u0e47\u0e19|\u0e17\u0e35\u0e48\u0e08\u0e23\u0e34\u0e07)/iu;
 const NAMED_LOOKUP_STOPWORDS = new Set(['hi', 'hello', 'hey', 'thanks', 'thank', 'ok', 'okay', 'yes', 'no', 'please', 'help', 'solat']);
 // Use Unicode escapes for Thai terms so the router is stable across Windows
 // console/file encodings; the original user message remains untouched.
@@ -266,6 +267,7 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
   const original = String(content ?? '');
   const normalized = original.trim();
   const prior = Array.isArray(history) ? history : [];
+  const correctionDetected = CORRECTION_TERMS.test(normalized);
   let disambiguation = disambiguationHints(normalized, prior);
   const reference = referenceResolution(normalized, prior);
   // A pronoun-only follow-up is ambiguous only until the recent context
@@ -357,6 +359,8 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
       prior_turn_count: prior.length,
       has_follow_up_context: prior.length > 0,
       preserve_full_history: true,
+      correction_detected: correctionDetected,
+      correction_policy: correctionDetected ? 'prefer_latest_user_correction' : 'not_applicable',
     },
     task: {
       needs_latest_information: needsLatest,
