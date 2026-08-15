@@ -396,6 +396,11 @@
       const next = { id: uid('message'), ts: now(), ...message };
       thread.messages.push(next); thread.updatedAt = next.ts; this.emit('messages'); return next;
     },
+    updateMessage(id, messageId, patch) {
+      const thread = this.threads.find(item => item.id === id); if (!thread) return null;
+      const message = thread.messages.find(item => item.id === messageId); if (!message) return null;
+      Object.assign(message, patch, { ts: now() }); thread.updatedAt = message.ts; this.emit('messages'); return message;
+    },
     truncateAfter(id, messageId) {
       const thread = this.threads.find(item => item.id === id); if (!thread) return;
       const index = thread.messages.findIndex(message => message.id === messageId);
@@ -711,6 +716,7 @@
       const sources = toolSources;
       if (sources.length) bubble.append(sourceDisclosure({ sources, blockedCount: 0 }));
       article.append(bubble);
+      if (message.role === 'assistant' && message.responseMeta?.agentFile) article.append(AgentUI.fileCard(message));
       if (message.role === 'assistant' && message.responseMeta) {
         const provider = text(message.responseMeta.provider || 'model');
         const model = text(message.responseMeta.model || '');
@@ -790,6 +796,7 @@
         row.append(action('Edit', 'pencil', () => { State.truncateAfter(State.activeId, message.id); Composer.setValue(message.content); }));
       } else {
         row.append(action('Retry', 'refresh', () => this.retry(message.id)));
+        if (message.responseMeta?.agentActionPending) row.append(action('Review Agent', 'cpu', () => AgentUI.openPending(message)));
         row.append(action('Helpful', 'up', button => this.feedback(message, 'up', button), message.feedback === 'up'));
         row.append(action('Not helpful', 'down', button => this.feedback(message, 'down', button), message.feedback === 'down'));
       }
@@ -827,7 +834,7 @@
           assetIds.push(stored.assetId);
         }
         user.assetIds = assetIds; State.emit('messages');
-        result = await window.solat.send({ requestId: uid('request'), sessionId: threadSessionId, content: visible, musicContext: Music.song() || null, attachments: attachments.map(file => file.name), assetIds });
+        result = await window.solat.send({ requestId: uid('request'), sessionId: threadSessionId, content: visible, musicContext: Music.song() || null, attachments: attachments.map(file => file.name), assetIds, agentMode: AgentUI.isEnabled(), agentCommand: AgentUI.commandFromText(visible) });
         if (this.controller?.stopped || sequence !== this.requestId) return;
         const assistant = State.add(thread.id, {
           role: 'assistant',
@@ -841,8 +848,13 @@
             sources: Array.isArray(result.sources) ? result.sources : [],
             searchEvidence: Array.isArray(result.searchEvidence) ? result.searchEvidence : [],
             searchSummary: result.searchSummary && typeof result.searchSummary === 'object' ? result.searchSummary : null,
+            agentMode: Boolean(result.agentMode), agentCommand: result.agentCommand || null,
+            agentActionPending: Array.isArray(result.agentActions) && result.agentActions.length > 0,
           },
         });
+        if (Array.isArray(result.agentActions) && result.agentActions.length) {
+          await AgentUI.receive(result.agentActions, { threadId: thread.id, sessionId: threadSessionId, messageId: assistant.id });
+        }
         shouldRender = true;
         setStatus('ready', 'Ready', `${result.provider || 'provider'} / ${result.model || 'model'}`);
         return assistant;
@@ -945,9 +957,10 @@
     attachments: [], limit: 8000, launching: false,
     init() {
       const input = $('#input'); const form = $('#composer');
-      input.addEventListener('input', () => this.sync()); input.addEventListener('focus', () => { form.classList.add('focused'); this.syncMode('INPUT ACTIVE'); }); input.addEventListener('blur', () => { form.classList.remove('focused'); this.syncMode(); });
+      input.addEventListener('input', () => { AgentUI.handleInput(input.value); this.sync(); }); input.addEventListener('focus', () => { form.classList.add('focused'); this.syncMode('INPUT ACTIVE'); }); input.addEventListener('blur', () => { form.classList.remove('focused'); setTimeout(() => AgentUI.closeMenu(), 120); this.syncMode(); });
       input.addEventListener('keydown', event => {
         const modifier = event.metaKey || event.ctrlKey;
+        if (event.key === '@' && !modifier) requestAnimationFrame(() => AgentUI.openMenu());
         if (event.key === 'Enter' && !event.shiftKey && (Settings.get('enterSends') ? !modifier : modifier)) { event.preventDefault(); this.submit(); }
         if (event.key === 'ArrowUp' && !input.value.trim()) { const previous = [...(State.active?.messages || [])].reverse().find(message => message.role === 'user'); if (previous) { event.preventDefault(); this.setValue(previous.content); } }
       });
@@ -958,14 +971,18 @@
       wrap.addEventListener('drop', event => { event.preventDefault(); depth = 0; form.classList.remove('dropping'); this.attach([...(event.dataTransfer?.files || [])]); });
       this.initMic(); this.sync();
     },
-    setValue(value) { $('#input').value = text(value); this.sync(); this.focus(); },
+    setValue(value) { $('#input').value = text(value); AgentUI.syncInputAppearance($('#input').value); this.sync(); this.focus(); },
+    getAttachments() { return this.attachments.slice(); },
     focus() { const input = $('#input'); input.focus(); input.setSelectionRange(input.value.length, input.value.length); },
     syncMode(forced = '') {
       const node = $('.composer-mode'); if (!node) return;
-      node.textContent = forced || (busy ? 'SOLAT RESPONDING' : ($('#input').value.trim() || this.attachments.length) ? 'MESSAGE ARMED' : 'COMMAND READY');
+      const value = $('#input').value; const command = AgentUI.commandFromText(value);
+      const mode = forced || (busy ? 'SOLAT RESPONDING' : (value.trim() || this.attachments.length) ? 'MESSAGE ARMED' : 'COMMAND READY');
+      node.textContent = `${mode}${AgentUI.isEnabled() ? ' · AGENT ON' : ''}${command ? ` · ${command}` : ''}`;
     },
     sync() {
       const input = $('#input'); const length = input.value.length; input.style.height = 'auto'; input.style.height = `${Math.min(input.scrollHeight, Math.round(innerHeight * .44))}px`;
+      AgentUI.syncInputAppearance(input.value);
       const counter = $('#counter'); counter.textContent = length > 400 ? `${length.toLocaleString()} / ${this.limit.toLocaleString()}` : ''; counter.className = `counter${length > this.limit ? ' over' : length > this.limit * .85 ? ' warn' : ''}`;
       if (!busy) $('#sendBtn').disabled = !(input.value.trim() || this.attachments.length) || length > this.limit;
       this.syncMode();
@@ -975,8 +992,15 @@
     },
     attach(files) {
       const room = 6 - this.attachments.length; if (room <= 0) return Toast.show('Up to 6 files per message', { icon: 'alert' });
+      const supportedTypes = new Set([
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/plain', 'text/csv', 'application/csv', 'application/json', 'text/json',
+        'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      ]);
       for (const file of files.slice(0, room)) {
-        if (!['image/jpeg', 'image/png', 'image/webp', 'text/plain', 'application/pdf'].includes(file.type)) { Toast.show(`${file.name} is not a supported file`, { icon: 'alert' }); continue; }
+        if (!supportedTypes.has(file.type)) { Toast.show(`${file.name} is not a supported file`, { icon: 'alert' }); continue; }
         if (file.size > 20_000_000) { Toast.show(`${file.name} is over the 20 MB limit`, { icon: 'alert' }); continue; }
         this.attachments.push({ file, previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null, status: 'selected' });
       }
@@ -1005,7 +1029,257 @@
       recognition.onstart = () => { listening = true; button.setAttribute('aria-pressed', 'true'); setStatus('busy', 'Listening'); };
       recognition.onend = () => { listening = false; button.setAttribute('aria-pressed', 'false'); if (!busy) setStatus('ready', 'Ready'); this.sync(); };
       recognition.onerror = event => { if (event.error !== 'aborted') Toast.show(`Dictation stopped: ${event.error}`, { icon: 'alert' }); };
-      recognition.onresult = event => { let value = ''; for (let index = event.resultIndex; index < event.results.length; index += 1) value += event.results[index][0].transcript; $('#input').value = `${base.replace(/\s*$/, ' ')}${value}`; this.sync(); };
+      recognition.onresult = event => { let value = ''; for (let index = event.resultIndex; index < event.results.length; index += 1) value += event.results[index][0].transcript; $('#input').value = `${base.replace(/\s*$/, ' ')}${value}`; AgentUI.syncInputAppearance($('#input').value); this.sync(); };
+    },
+  };
+
+  const AgentUI = {
+    enabled: false, pending: null, queue: [], plan: null, busy: false, workingMessageId: null, lastCommandSelectionAt: 0,
+    isEnabled() { return this.enabled; },
+    commands: Object.freeze(['@create-file', '@computer-use']),
+    available() { return Boolean(window.solat?.agentInspect && window.solat?.agentApprove && window.solat?.agentRun && window.solat?.agentCancel); },
+    syncCommandMenu() {
+      const button = $('#agentCommandBtn'); if (!button) return;
+      button.setAttribute('aria-pressed', String(this.enabled));
+      button.setAttribute('aria-label', this.enabled ? 'Disable Agent mode' : 'Enable Agent mode');
+      button.title = this.enabled ? 'Agent mode is on' : 'Agent mode is off';
+      button.classList.toggle('active', this.enabled);
+      $('#composer')?.classList.toggle('agent-on', this.isEnabled());
+      const selected = this.commandFromText($('#input')?.value || '');
+      $$('[data-agent-command]').forEach(item => {
+        const active = item.dataset.agentCommand === selected;
+        item.setAttribute('aria-checked', String(active));
+        item.classList.toggle('active', active);
+      });
+    },
+    handleInput(value) {
+      const current = String(value || '');
+      const menu = $('#agentCommandMenu');
+      if (/(?:^|\s)@[a-z-]*$/iu.test(current)) this.openMenu();
+      else if (menu && !menu.hidden) this.closeMenu();
+      this.syncInputAppearance(current);
+    },
+    commandFromText(value) {
+      const tokens = String(value || '').match(/(?:^|\s)(@(create-file|computer-use))(?=\s|$)/giu);
+      if (!tokens?.length) return null;
+      const token = tokens.at(-1).trim().toLowerCase();
+      return this.commands.includes(token) ? token.slice(1) : null;
+    },
+    syncInputAppearance(value = $('#input')?.value || '') {
+      $('#input')?.classList.toggle('has-agent-command', Boolean(this.commandFromText(value)));
+    },
+    openMenu() {
+      const menu = $('#agentCommandMenu'); if (!menu) return;
+      // The command palette must not be clipped by the composer or its
+      // scrolling parents.  Keep a single element, but render it at body
+      // level whenever it is used, like a popover.
+      if (menu.parentElement !== document.body) document.body.append(menu);
+      const input = $('#input');
+      if (input) {
+        const bounds = input.getBoundingClientRect();
+        menu.style.left = `${Math.max(12, Math.round(bounds.left))}px`;
+        menu.style.top = `${Math.max(12, Math.round(bounds.top - 116))}px`;
+      }
+      menu.removeAttribute('hidden'); menu.hidden = false; menu.style.visibility = 'visible'; this.syncCommandMenu();
+    },
+    closeMenu() { const menu = $('#agentCommandMenu'); if (menu && !menu.hidden) { menu.hidden = true; menu.style.left = ''; menu.style.top = ''; menu.style.visibility = ''; this.syncCommandMenu(); } },
+    toggle() {
+      if (!this.available()) return Toast.show('Agent controls are unavailable in this desktop build.', { icon: 'alert' });
+      this.enabled = !this.enabled; this.syncCommandMenu(); Composer.syncMode();
+      Toast.show(this.enabled ? 'Agent mode is on.' : 'Agent mode is off.', { icon: this.enabled ? 'cpu' : 'shield', timeout: 2400 });
+    },
+    select(command) {
+      if (!['create-file', 'computer-use'].includes(command)) return;
+      const now = Date.now();
+      // A pointerdown is intentionally handled before the textarea blur. The
+      // browser will then also emit click; ignore only that synthetic follow-up
+      // so one user press cannot insert two command tokens.
+      if (now - this.lastCommandSelectionAt < 350) return;
+      this.lastCommandSelectionAt = now;
+      const input = $('#input'); if (!input) return;
+      const start = Number.isInteger(input.selectionStart) ? input.selectionStart : input.value.length;
+      const end = Number.isInteger(input.selectionEnd) ? input.selectionEnd : start;
+      const before = input.value.slice(0, start); const after = input.value.slice(end);
+      const partial = before.match(/(^|\s)@[a-z-]*$/iu);
+      const tokenStart = partial ? start - partial[0].length + partial[1].length : start;
+      const spacer = partial || !before || /\s$/u.test(before) ? '' : ' ';
+      const token = `@${command} `;
+      input.value = `${before.slice(0, tokenStart)}${spacer}${token}${after}`;
+      const caret = tokenStart + spacer.length + token.length;
+      input.focus(); input.setSelectionRange(caret, caret);
+      this.closeMenu(); this.syncInputAppearance(input.value); this.syncCommandMenu(); Composer.sync();
+      Toast.show(`@${command} inserted.`, { icon: 'cpu', timeout: 1800 });
+    },
+    status(message) { const node = $('#agentStatus'); if (node) node.textContent = message; },
+    actionPreview(action) {
+      const args = action?.arguments && typeof action.arguments === 'object' ? action.arguments : {};
+      const preview = { tool: action?.tool || 'unknown' };
+      for (const key of ['path', 'export_name', 'expected_sha256', 'app_id', 'query', 'hwnd', 'selector', 'verify_selector', 'verify_state', 'verify_value']) if (args[key] !== undefined) preview[key] = args[key];
+      if (typeof args.content === 'string') {
+        preview.content_length = args.content.length; preview.content_preview = args.content.slice(0, 1200);
+        if (args.content.length > 1200) preview.content_truncated = true;
+      }
+      if (typeof args.value === 'string') {
+        preview.value_length = args.value.length; preview.value_preview = args.value.slice(0, 1200);
+        if (args.value.length > 1200) preview.value_truncated = true;
+      }
+      return preview;
+    },
+    outcomeText(plan) {
+      const step = plan?.steps?.[0]; const output = step?.output || {};
+      if (plan?.status !== 'SUCCEEDED') return `Agent action failed: ${plan?.failure?.message || plan?.status || 'unknown failure'}`;
+      if (String(step?.tool || '').startsWith('filesystem_')) {
+        const operation = output.operation || step.tool.replace('filesystem_', '');
+        const location = output.relative_path ? ` \`${output.relative_path}\`` : '';
+        const hash = output.sha256 ? `\nSHA-256: \`${output.sha256}\`` : '';
+        return `Agent verified the file ${operation}${location}.${hash}`;
+      }
+      if (String(step?.tool || '').startsWith('computer_')) {
+        if (output.operation === 'launch_app' && output.launched === true) return `Agent verified ${output.app_id || output.process_name || 'the application'} was launched.`;
+        if (output.operation === 'play_youtube_music' && output.verified === true) return `Agent verified Chrome searched YouTube for “${output.query}”, opened “${output.selected_result}”, and music playback is active.`;
+        const target = output.target?.process_name ? ` in ${output.target.process_name}` : '';
+        const evidence = output.verification ? ` Verified ${output.verification.selector} (${output.verification.state}).` : '';
+        return `Agent verified ${output.operation || step.tool}${target}.${evidence}`;
+      }
+      return 'Agent action completed with verified tool output.';
+    },
+    artifactFromPlan(plan) {
+      const step = plan?.steps?.[0]; const output = step?.output || {};
+      if (plan?.status !== 'SUCCEEDED' || !String(step?.tool || '').startsWith('filesystem_') || !output.relative_path || !output.sha256) return null;
+      return {
+        schemaVersion: 'solat.agent-chat-file.v1', status: 'ready', operation: output.operation || step.tool.replace('filesystem_', ''),
+        relativePath: output.relative_path, sha256: output.sha256, sizeBytes: Number(output.size_bytes) || 0,
+        sessionId: this.pending?.sessionId || '',
+      };
+    },
+    startWorkingMessage() {
+      if (!String(this.pending?.tool || '').startsWith('filesystem_') || !this.pending?.threadId) return;
+      const relativePath = text(this.pending?.arguments?.path || 'workspace file');
+      const message = State.add(this.pending.threadId, {
+        role: 'assistant', content: `Creating \`${relativePath}\`…`,
+        responseMeta: { provider: 'SOLAT Agent', model: 'workspace tool', mode: 'agent_working', webSearchStatus: 'not_requested', sources: [], searchEvidence: [], agentMode: true, agentFile: { schemaVersion: 'solat.agent-chat-file.v1', status: 'working', operation: this.pending.tool.replace('filesystem_', ''), relativePath } },
+      });
+      this.workingMessageId = message?.id || null;
+    },
+    addChatResult(content, error = false, artifact = null) {
+      const threadId = this.pending?.threadId; if (!threadId) return;
+      const responseMeta = { provider: 'SOLAT Agent', model: 'verified tool result', mode: error ? 'agent_failure' : 'agent_verified', webSearchStatus: 'not_requested', sources: [], searchEvidence: [], agentMode: true, ...(artifact ? { agentFile: artifact } : {}) };
+      if (this.workingMessageId && State.updateMessage(threadId, this.workingMessageId, { content, error, responseMeta })) return;
+      State.add(threadId, { role: 'assistant', content, error, responseMeta });
+    },
+    fileCard(message) {
+      const artifact = message.responseMeta?.agentFile || {}; const working = artifact.status === 'working';
+      const name = text(artifact.relativePath || 'Workspace file');
+      const meta = working ? `Creating ${artifact.operation || 'file'}…` : `${Number(artifact.sizeBytes || 0).toLocaleString()} bytes · verified`;
+      const card = make(working ? 'div' : 'button', { class: `agent-file-card${working ? ' is-working' : ''}`, ...(working ? { role: 'status', 'aria-live': 'polite' } : { type: 'button', 'aria-label': `Open ${name} in SOLAT` }) },
+        icon('file'), make('span', { class: 'agent-file-copy' }, make('b', { text: name }), make('span', { text: meta })),
+        working ? make('span', { class: 'agent-file-dots', 'aria-hidden': 'true' }, make('i'), make('i'), make('i')) : make('span', { class: 'agent-file-open', text: 'Open' }));
+      if (!working) card.addEventListener('click', () => this.openArtifact(message));
+      return card;
+    },
+    async openArtifact(message) {
+      const artifact = message.responseMeta?.agentFile;
+      if (!artifact || artifact.status !== 'ready' || !window.solat?.agentReadArtifact) return Toast.show('This file preview is unavailable.', { icon: 'alert' });
+      const dialog = make('dialog', { class: 'music-surface agent-artifact-viewer', 'aria-label': `Preview ${artifact.relativePath}` });
+      const close = make('button', { type: 'button', class: 'iconbtn', 'aria-label': 'Close file preview' }, icon('x'));
+      const meta = make('p', { class: 'muted', text: 'Opening verified workspace file…' });
+      const content = make('pre', { class: 'agent-artifact-content', text: 'Loading…' });
+      close.addEventListener('click', () => dialog.close()); dialog.addEventListener('close', () => dialog.remove(), { once: true });
+      dialog.append(make('div', { class: 'music-surface-head' }, make('strong', { text: artifact.relativePath }), close), meta, content);
+      document.body.append(dialog); dialog.showModal();
+      try {
+        const result = await window.solat.agentReadArtifact({ sessionId: artifact.sessionId, relativePath: artifact.relativePath, expectedSha256: artifact.sha256 });
+        meta.textContent = `${result.size_bytes.toLocaleString()} bytes · ${result.sha256}${result.truncated ? ' · preview truncated' : ''}`;
+        content.textContent = result.content;
+      } catch (error) { meta.textContent = `File preview failed: ${errorText(error)}`; content.textContent = ''; }
+    },
+    async receive(actions, context) {
+      const accepted = actions.filter(action => action?.status === 'confirmation_required' && action.idempotency_key && action.approval_token);
+      this.queue.push(...accepted.map(action => ({ ...action, ...context })));
+      if (!this.pending) await this.activateNext();
+    },
+    async activateNext() {
+      this.pending = this.queue.shift() || null; this.plan = null;
+      if (!this.pending) { this.render(); return; }
+      try {
+        this.plan = await window.solat.agentInspect({ sessionId: this.pending.sessionId, idempotencyKey: this.pending.idempotency_key });
+        this.status('This action changes a file or app. Review it before approval.');
+      } catch (error) { this.status(`The pending action could not be inspected: ${errorText(error)}`); }
+      this.render(); Overlay.open($('#agentDialog'), { focus: $('#agentApproveBtn') });
+    },
+    openPending(message) {
+      if (!this.pending || this.pending.messageId !== message.id) return Toast.show('This Agent action is no longer pending.', { icon: 'alert' });
+      this.render(); Overlay.open($('#agentDialog'), { focus: $('#agentApproveBtn') });
+    },
+    close() { Overlay.close(); },
+    async approve() {
+      if (!this.pending || this.busy) return;
+      const animationStartedAt = performance.now();
+      this.busy = true; this.startWorkingMessage(); this.status('Approving and running the verified plan…'); this.render();
+      try {
+        await window.solat.agentApprove({ sessionId: this.pending.sessionId, idempotencyKey: this.pending.idempotency_key, approvalToken: this.pending.approval_token });
+        const result = await window.solat.agentRun({ sessionId: this.pending.sessionId, idempotencyKey: this.pending.idempotency_key });
+        this.plan = result.plan;
+        const remainingAnimationMs = 600 - (performance.now() - animationStartedAt);
+        if (remainingAnimationMs > 0) await new Promise(resolve => setTimeout(resolve, remainingAnimationMs));
+        const message = this.outcomeText(this.plan); this.addChatResult(message, this.plan?.status !== 'SUCCEEDED', this.artifactFromPlan(this.plan));
+        this.status(message); this.render();
+        if (this.plan?.status === 'SUCCEEDED') Toast.show('Agent action verified and completed.', { icon: 'check' });
+      } catch (error) {
+        const message = `Agent action failed: ${errorText(error)}`; this.status(message); this.addChatResult(message, true);
+      } finally {
+        this.busy = false; this.workingMessageId = null; this.pending = null; this.render(); Overlay.close(); await this.activateNext();
+      }
+    },
+    async cancel() {
+      if (!this.pending || this.busy) return this.close();
+      this.busy = true; this.status('Cancelling the pending action…'); this.render();
+      try {
+        this.plan = await window.solat.agentCancel({ sessionId: this.pending.sessionId, idempotencyKey: this.pending.idempotency_key });
+        this.addChatResult('Agent action cancelled. No pending file or computer change was completed.');
+        Toast.show('Agent action cancelled.', { icon: 'check' });
+      } catch (error) { this.status(`Cancellation failed: ${errorText(error)}`); return; }
+      finally {
+        this.busy = false;
+        if (this.plan?.status === 'CANCELLED') { this.pending = null; Overlay.close(); await this.activateNext(); }
+        this.render();
+      }
+    },
+    render() {
+      const steps = $('#agentSteps'); if (steps) {
+        steps.textContent = '';
+        const current = this.plan?.steps?.length ? this.plan.steps : this.pending ? [{ tool: this.pending.tool, status: 'PAUSED_APPROVAL' }] : [];
+        for (const step of current) steps.append(make('li', { text: `${step.tool} — ${step.status || 'QUEUED'}` }));
+      }
+      const result = $('#agentResult'); if (result) {
+        const value = this.pending ? this.actionPreview(this.pending) : this.plan ? { status: this.plan.status, failure: this.plan.failure || null } : null;
+        result.hidden = !value; result.textContent = value ? JSON.stringify(value, null, 2) : '';
+      }
+      const approve = $('#agentApproveBtn'); const cancel = $('#agentCancelBtn');
+      const progress = $('#agentProgress'); const progressLabel = $('#agentProgressLabel');
+      if (progress) progress.hidden = !this.busy;
+      if (progressLabel && this.busy) progressLabel.textContent = String(this.pending?.tool || '').startsWith('filesystem_') ? `Creating ${text(this.pending?.arguments?.path || 'file')}…` : 'Running approved Agent action…';
+      if (approve) { approve.hidden = !this.pending; approve.disabled = this.busy; }
+      if (cancel) { cancel.textContent = this.pending ? 'Cancel action' : 'Close'; cancel.disabled = this.busy; }
+    },
+    init() {
+      const commandMenu = $('#agentCommandMenu');
+      if (commandMenu && commandMenu.parentElement !== document.body) document.body.append(commandMenu);
+      $('#agentCommandBtn')?.addEventListener('click', () => this.toggle());
+      const chooseCommand = event => {
+        const command = event.target.closest('[data-agent-command]')?.dataset.agentCommand;
+        if (!command) return;
+        if (event.type === 'pointerdown') event.preventDefault();
+        this.select(command);
+      };
+      // `pointerdown` wins the race against textarea blur. Keyboard users
+      // still activate the same control through click.
+      $('#agentCommandMenu')?.addEventListener('pointerdown', chooseCommand);
+      $('#agentCommandMenu')?.addEventListener('click', chooseCommand);
+      $('#agentApproveBtn')?.addEventListener('click', () => this.approve());
+      $('#agentCancelBtn')?.addEventListener('click', () => this.cancel());
+      $('[data-agent-close]')?.addEventListener('click', () => this.close());
+      this.syncCommandMenu(); this.render();
     },
   };
 
@@ -1431,7 +1705,11 @@
       else Overlay.open($('#shortcuts'));
     }, true);
     $('#newChatBtn')?.addEventListener('click', newConversation); $('#brandHomeBtn')?.addEventListener('click', () => newConversation({ animate: true })); $('#navToggle')?.addEventListener('click', () => $('#sidebar').classList.contains('open') ? closeSidebar() : openSidebar()); $('#scrim')?.addEventListener('click', () => { Menu.close(); Overlay.close(); closeSidebar(); });
-    $('#omniBtn')?.addEventListener('click', () => Palette.open()); $('#themeBtn')?.addEventListener('click', () => cycleTheme());
+    $('#omniBtn')?.addEventListener('click', () => Palette.open());
+    $('#themeBtn')?.addEventListener('click', () => {
+      const current = document.documentElement.dataset.uiMode === 'alternate' ? 'alternate' : 'classic';
+      setUiMode(current === 'alternate' ? 'classic' : 'alternate');
+    });
     $('#chatTitle')?.addEventListener('click', renameActive);
     $('#profileBtn')?.addEventListener('click', () => Menu.open($('#profileBtn'), [{ label: 'Appearance and settings', icon: 'settings', run: () => openSettings('general') }, { label: 'Provider status', icon: 'shield', run: () => openSettings('keys') }, { label: 'Keyboard shortcuts', icon: 'keyboard', run: () => Overlay.open($('#shortcuts')) }, '-', { label: 'Export this conversation', icon: 'download', run: () => State.active && exportThread(State.active) }]));
     $('#modelBtn')?.addEventListener('click', () => Menu.open($('#modelBtn'), [{ label: 'SOLAT Core', icon: 'cpu', checked: true, run: () => Toast.show('SOLAT Core is the active V2 model boundary.', { icon: 'cpu' }) }]));
@@ -1449,6 +1727,21 @@
 
   function updateStorageInfo() { const node = $('#storageInfo'); if (node) node.textContent = `${State.threads.length} conversation${State.threads.length === 1 ? '' : 's'} saved locally`; }
 
-  Settings.load(); Projects.load(); State.load(); SettingsUI.init(); Palette.init(); Composer.init(); Music.init(); wire(); wireSolatCursor(); Threads.render(); Projects.render(); LibraryFiles.render(); Chat.render(); updateStorageInfo(); refreshStatus(); Music.restoreHistory(); State.restoreDurable();
+  function setUiMode(next, announce = true) {
+    const mode = next === 'alternate' ? 'alternate' : 'classic';
+    document.documentElement.dataset.uiMode = mode;
+    const toggle = $('#themeBtn');
+    if (toggle) {
+      const alternate = mode === 'alternate';
+      toggle.setAttribute('aria-pressed', String(alternate));
+      toggle.setAttribute('aria-label', alternate ? 'Return to classic SOLAT interface' : 'Switch SOLAT interface');
+      toggle.title = alternate ? 'Return to classic SOLAT interface' : 'Switch SOLAT interface';
+    }
+    localStorage.setItem('solat.ui.mode', mode);
+    if (announce) Toast.show(alternate ? 'Alternate interface selected' : 'Classic interface selected', { icon: alternate ? 'spark' : 'check', timeout: 2200 });
+  }
+
+  Settings.load(); Projects.load(); State.load(); SettingsUI.init(); Palette.init(); Composer.init(); AgentUI.init(); Music.init(); wire(); wireSolatCursor(); Threads.render(); Projects.render(); LibraryFiles.render(); Chat.render(); updateStorageInfo(); refreshStatus(); Music.restoreHistory(); State.restoreDurable();
+  setUiMode(localStorage.getItem('solat.ui.mode') || 'classic', false);
   $('#boot')?.classList.add('done'); $('#input')?.focus();
 })();

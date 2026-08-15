@@ -13,7 +13,12 @@ const { exportEditableHtml, inspectEditableHtml } = require('./core/exporter');
 const { WebSearchService } = require('./core/web-search');
 const { CommerceClient } = require('./core/commerce-client');
 const { AgentService } = require('./core/agent-service');
-const { createReadOnlyAgentTools } = require('./core/agent-tools');
+const { createAgentTools } = require('./core/agent-tools');
+const { FilesystemWorkspace } = require('./core/filesystem-workspace');
+const { WinAppComputerUseAdapter } = require('./core/computer-use-adapter');
+const { createComputerAgentTools } = require('./core/computer-agent-tools');
+const { composeAgentTools } = require('./core/agent-tool-composer');
+const { AgentChatBridge } = require('./core/agent-chat-bridge');
 
 let mainWindow;
 let core;
@@ -26,6 +31,7 @@ let fileContextProvider;
 let searchService;
 let commerceService;
 let agentService;
+let filesystemWorkspace;
 
 function resolveOwnedExportPath(requestedPath) {
   const candidate = String(requestedPath || '').trim();
@@ -85,6 +91,27 @@ function registerIpc() {
   ipcMain.handle('solat:agent-approve', (_event, request) => agentCall(value => agentService.approve(value), request));
   ipcMain.handle('solat:agent-cancel', (_event, request) => agentCall(value => agentService.cancel(value), request));
   ipcMain.handle('solat:agent-run', (_event, request) => agentCall(value => agentService.run(value), request));
+  ipcMain.handle('solat:agent-read-artifact', (_event, request) => agentCall(async value => {
+    const relativePath = String(value?.relativePath || '').trim();
+    const expectedSha256 = String(value?.expectedSha256 || '').trim();
+    if (!relativePath || !/^sha256:[a-f0-9]{64}$/u.test(expectedSha256)) {
+      throw Object.assign(new Error('A workspace path and verified SHA-256 are required.'), { code: 'invalid_artifact_request' });
+    }
+    const artifact = await filesystemWorkspace.read({ ownerId: value.ownerId, sessionId: value.sessionId, relativePath });
+    if (artifact.sha256 !== expectedSha256) {
+      throw Object.assign(new Error('The workspace file changed after this message was created.'), { code: 'artifact_hash_mismatch' });
+    }
+    const previewLimit = 200000;
+    return {
+      schema_version: 'solat.agent-artifact-preview.v1',
+      status: 'ready',
+      relative_path: artifact.relative_path,
+      sha256: artifact.sha256,
+      size_bytes: artifact.size_bytes,
+      content: artifact.content.slice(0, previewLimit),
+      truncated: artifact.content.length > previewLimit,
+    };
+  }, request));
   ipcMain.handle('solat:save-conversation', async (_event, request) => {
     try {
       return { ok: true, value: await conversationPersistence.save(request) };
@@ -251,12 +278,19 @@ app.whenReady().then(() => {
   assetStore = new AssetStore({ rootDir: path.join(app.getPath('userData'), 'assets') });
   fileIntake = new FileIntakeService({ assetStore });
   fileContextProvider = new FileContextProvider({ fileIntake });
-  const agentTools = createReadOnlyAgentTools({ fileContextProvider });
+  filesystemWorkspace = new FilesystemWorkspace({
+    rootDir: path.join(app.getPath('userData'), 'agent-workspaces'),
+    exportRoot: path.join(app.getPath('userData'), 'agent-exports'),
+  });
+  const filesystemTools = createAgentTools({ fileContextProvider, fileWorkspace: filesystemWorkspace });
+  const computerTools = createComputerAgentTools({ adapter: new WinAppComputerUseAdapter() });
+  const agentTools = composeAgentTools(filesystemTools, computerTools);
   agentService = new AgentService({
     rootDir: path.join(app.getPath('userData'), 'agent-plans'),
     toolRegistry: agentTools.registry,
     executeTool: agentTools.executeTool,
   });
+  const agentBridge = new AgentChatBridge({ agentService, toolDefinitions: agentTools.definitions });
   commerceService = new CommerceClient({
     baseUrl: config.commerceBaseUrl,
     userId: config.commerceUserId,
@@ -269,7 +303,7 @@ app.whenReady().then(() => {
       return assetStore.readOriginal({ ownerId: normalizedSession, projectId: project.project_id, assetId });
     },
   });
-  core = new ConversationCore({ config, searchService, commerceService, fileContextProvider });
+  core = new ConversationCore({ config, searchService, commerceService, fileContextProvider, agentBridge });
   creativePersistence = new CreativePersistence({ rootDir: path.join(app.getPath('userData'), 'creative-history') });
   conversationPersistence = new ConversationPersistence({ rootDir: path.join(app.getPath('userData'), 'conversation-history') });
   creativeWorkflow = new CreativeWorkflow({ provider: core.provider, workspace: core.workspace });

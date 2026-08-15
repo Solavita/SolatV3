@@ -43,6 +43,18 @@
 
 No external repository code or dependency was copied into production in this iteration.
 
+## 2026-08-15 Agent V3.1 research
+
+| Repository | License/version | Reviewed source/fit | Decision |
+|---|---|---|---|
+| https://github.com/microsoft/winappCli | MIT / v0.6.0 | Windows UI Automation list/inspect/invoke/set-value/wait-for JSON CLI; Electron-compatible, semantic selectors, active Microsoft project | **INTEGRATED AS PINNED EXTERNAL ADAPTER**. Installed through Winget with published SHA-256 verification; SOLAT exposes only four bounded tools through `spawn(shell:false)`, adds sensitive-window/password denial, limits and approval, and uses `wait-for` to verify the requested post-action state instead of trusting exit code alone. |
+| https://github.com/sbroenne/mcp-windows | MIT / reviewed 2026-08-15 | Dedicated STA UIA worker, semantic element references, schema-derived tools and post-mutation refresh | **REVIEWED / ADAPTED CONCEPTS ONLY**; .NET 10 sidecar and broad surface were not imported. |
+| https://github.com/openai/openai-agents-js | MIT / reviewed 2026-08-15 | Canonical tool identity, argument validation, approval state, bounded cancellation and resumable run-state patterns | **REVIEWED / ADAPTED CONCEPTS ONLY** into existing AgentService; dependency rejected to preserve DeepSeek/model-agnostic architecture. |
+| https://github.com/npm/write-file-atomic | ISC / v8.0.0 | temp-write, fsync, rename and cleanup algorithm | **REVIEWED / ADAPTED ALGORITHM ONLY**; dependency rejected because current engine constraints may not match Electron and SOLAT needs stronger path/hash/ownership rules. |
+| https://github.com/modelcontextprotocol/typescript-sdk | Apache-2.0/MIT | Tool schema/cancellation boundary; reviewed advisory affecting shared transports before v1.26.0 | **REVIEWED / NOT INTEGRATED**; no arbitrary MCP discovery is exposed. |
+
+No repository was copied wholesale. `src/core/filesystem-workspace.js` and the approval/tool composition are SOLAT-native implementations.
+
 ## 2026-08-15 implementation boundary
 
 The current local changes use existing SOLAT contracts and do not add a GitHub dependency. File-intake, derived persistence, agent approval boundaries and evaluation manifest work are SOLAT-native adaptations; external repositories remain reference-only with license review recorded above. No secret, provider credential or external repository code was copied.

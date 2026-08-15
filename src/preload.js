@@ -36,6 +36,11 @@ contextBridge.exposeInMainWorld('solat', Object.freeze({
     if (result?.ok === false) { const error = new Error(result.error?.message || 'Agent plan could not run.'); error.code = result.error?.code || 'agent_error'; throw error; }
     return result?.value;
   },
+  agentReadArtifact: async request => {
+    const result = await ipcRenderer.invoke('solat:agent-read-artifact', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Agent file could not be opened.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
   saveConversation: async request => {
     const result = await ipcRenderer.invoke('solat:save-conversation', request);
     if (result?.ok === false) {

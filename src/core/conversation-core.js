@@ -4,10 +4,11 @@ const { SessionWorkspace } = require('./session-workspace');
 const { analyzeIntent } = require('./intent-router');
 const { canonicalUrl, directlyIdentifiesQuery, evidenceAuthorityLevel } = require('./web-search');
 const { createGroundedAnswerContract, groundedAnswerInstruction } = require('./grounded-answer-contract');
+const { planAgentCommand } = require('./agent-command-planner');
 
 const MAX_MESSAGE_LENGTH = 12000;
 const MAX_MODEL_CONTEXT_CHARS = 56000;
-const CONVERSATION_PROMPT_VERSION = 'solat.conversation-system.v3';
+const CONVERSATION_PROMPT_VERSION = 'solat.conversation-system.v4';
 const REQUESTED_PLATFORM_HINTS = Object.freeze([
   { scope: 'social', label: 'Pinterest', pattern: /\bpinterest\b|\u0e1e\u0e34\u0e19\u0e40\u0e17\u0e2d\u0e40\u0e23\u0e2a\u0e15\u0e4c/iu },
   { scope: 'social', label: 'TikTok', pattern: /\btiktok\b|\u0e15\u0e34\u0e4a\u0e01\u0e15\u0e47\u0e2d\u0e01/iu },
@@ -48,6 +49,49 @@ function runtimeGroundingEvidenceState({ searchRequested, webSearchStatus, sourc
   if (!visibleSourceCount) return 'insufficient';
   if (webSearchStatus === 'degraded' || comparisonStatus === 'incomplete' || requestedScopeStatus === 'incomplete') return 'partial';
   return 'available';
+}
+
+function requestsAgentCapability(message) {
+  const value = String(message || '').toLocaleLowerCase();
+  const target = /(?:\b(?:file|folder|workspace|computer|screen|window|app|application|notepad)\b|\.(?:txt|md|json|csv|html)\b|\u0e44\u0e1f\u0e25\u0e4c|\u0e42\u0e1f\u0e25\u0e40\u0e14\u0e2d\u0e23\u0e4c|\u0e40\u0e27\u0e34\u0e23\u0e4c\u0e01\u0e2a\u0e40\u0e1b\u0e0b|\u0e04\u0e2d\u0e21\u0e1e\u0e34\u0e27\u0e40\u0e15\u0e2d\u0e23\u0e4c|\u0e2b\u0e19\u0e49\u0e32\u0e08\u0e2d|\u0e2b\u0e19\u0e49\u0e32\u0e15\u0e48\u0e32\u0e07|\u0e42\u0e1b\u0e23\u0e41\u0e01\u0e23\u0e21|\u0e41\u0e2d\u0e1b)/iu;
+  if (!target.test(value)) return false;
+  return /(?:\b(?:create|write|edit|update|undo|export|read|open|control|click|type|inspect|screenshot)\b|\u0e2a\u0e23\u0e49\u0e32\u0e07|\u0e41\u0e01\u0e49\u0e44\u0e02|\u0e41\u0e01\u0e49|\u0e40\u0e02\u0e35\u0e22\u0e19|\u0e2d\u0e31\u0e1b\u0e40\u0e14\u0e15|\u0e22\u0e49\u0e2d\u0e19\u0e01\u0e25\u0e31\u0e1a|\u0e2a\u0e48\u0e07\u0e2d\u0e2d\u0e01|\u0e2d\u0e48\u0e32\u0e19|\u0e40\u0e1b\u0e34\u0e14|\u0e04\u0e27\u0e1a\u0e04\u0e38\u0e21|\u0e04\u0e25\u0e34\u0e01|\u0e1e\u0e34\u0e21\u0e1e\u0e4c|\u0e08\u0e31\u0e1a\u0e20\u0e32\u0e1e)/iu.test(value);
+}
+
+function parseDirectFileCreateRequest(message) {
+  const value = repairWindows874Mojibake(String(message || '')).trim();
+  if (!/(?:\b(?:create|write)\s+(?:a\s+)?file\b|\u0e2a\u0e23\u0e49\u0e32\u0e07\s*(?:ไฟล์|\u0e44\u0e1f\u0e25\u0e4c))/iu.test(value)) return null;
+  const pathMatch = value.match(/(?:\bfile\b|\u0e44\u0e1f\u0e25\u0e4c)\s*["'`]?([^\s"'`]+\.(?:txt|md|json|csv|html))["'`]?/iu)
+    || value.match(/\b([^\s"'`]+\.(?:txt|md|json|csv|html))\b/iu);
+  if (!pathMatch) return { status: 'needs_input', message: 'กรุณาระบุชื่อไฟล์และนามสกุลที่รองรับ เช่น note.txt, page.html หรือ data.json' };
+  const path = pathMatch[1];
+  const contentMatch = value.match(/(?:\bwith\s+content\b|\bcontent\b|\u0e40\u0e19\u0e37\u0e49\u0e2d\u0e2b\u0e32|\u0e14\u0e49\u0e27\u0e22\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21)\s*(?::|=|\u0e04\u0e37\u0e2d|\u0e40\u0e1b\u0e47\u0e19)?\s*([\s\S]+)$/iu);
+  if (!contentMatch && !/(?:\bempty\b|\u0e27\u0e48\u0e32\u0e07\u0e40\u0e1b\u0e25\u0e48\u0e32|\u0e44\u0e21\u0e48\u0e21\u0e35\u0e40\u0e19\u0e37\u0e49\u0e2d\u0e2b\u0e32)/iu.test(value)) {
+    return { status: 'needs_input', message: 'กรุณาระบุเนื้อหาไฟล์ให้ชัดเจน เช่น “สร้างไฟล์ note.txt เนื้อหา: hello”' };
+  }
+  const content = contentMatch ? contentMatch[1].trim().replace(/^(?:["'`])([\s\S]*)\1$/u, '$1') : '';
+  return { status: 'ready', path, content };
+}
+
+function parseDirectComputerLaunchRequest(message) {
+  const value = repairWindows874Mojibake(String(message || '')).trim();
+  if (!/(?:\b(?:open|launch|start)\b|\u0e40\u0e1b\u0e34\u0e14)/iu.test(value)) return null;
+  if (/(?:\b(?:google\s+)?chrome\b|\u0e42\u0e04\u0e23\u0e21)/iu.test(value)) return { status: 'ready', appId: 'chrome' };
+  if (/(?:\bnotepad\b|\u0e42\u0e19\u0e49\u0e15\u0e41\u0e1e\u0e14)/iu.test(value)) return { status: 'ready', appId: 'notepad' };
+  return null;
+}
+
+function parseDirectComputerWorkflowRequest(message) {
+  const value = repairWindows874Mojibake(String(message || '')).trim();
+  const asksYoutube = /\byoutube\b|\u0e22\u0e39\u0e17\u0e39\u0e1a/iu.test(value);
+  const asksPlayback = /\b(?:play|music|song)\b|\u0e40\u0e1b\u0e34\u0e14\s*\u0e40\u0e1e\u0e25\u0e07|\u0e40\u0e25\u0e48\u0e19\s*\u0e40\u0e1e\u0e25\u0e07|\u0e40\u0e1e\u0e25\u0e07/iu.test(value);
+  if (asksYoutube && asksPlayback) {
+    const queryMatch = value.match(/(?:\u0e40\u0e1b\u0e34\u0e14|\u0e40\u0e25\u0e48\u0e19)\s*\u0e40\u0e1e\u0e25\u0e07\s*[:=]?\s*([^,.;]+)$/iu)
+      || value.match(/\bplay\s+(?:the\s+)?(?:song|music)\s*[:=]?\s*([^,.;]+)$/iu);
+    const query = String(queryMatch?.[1] || 'music').trim();
+    return { status: 'ready', workflow: 'youtube_music', query };
+  }
+  return null;
 }
 
 function modelContextWindow(history, currentMessage, maxChars = MAX_MODEL_CONTEXT_CHARS) {
@@ -321,7 +365,7 @@ function comparisonRecoveryQueries(searchRuns, entities) {
 }
 
 class ConversationCore {
-  constructor({ config, provider, router = { analyze: analyzeIntent }, searchService = null, commerceService = null, fileContextProvider = null } = {}) {
+  constructor({ config, provider, router = { analyze: analyzeIntent }, searchService = null, commerceService = null, fileContextProvider = null, agentBridge = null } = {}) {
     this.config = config;
     this.provider = provider || createProvider(config);
     this.sessions = new Map();
@@ -330,6 +374,7 @@ class ConversationCore {
     this.searchService = searchService;
     this.commerceService = commerceService;
     this.fileContextProvider = fileContextProvider;
+    this.agentBridge = agentBridge;
   }
 
   status() {
@@ -340,7 +385,7 @@ class ConversationCore {
     };
   }
 
-  async send({ sessionId, content, requestId, assetIds = [] }) {
+  async send({ sessionId, content, requestId, assetIds = [], agentMode = false, agentCommand = null }) {
     const normalizedSession = String(sessionId || '').trim();
     const submittedContent = String(content ?? '');
     const normalizedContent = submittedContent.trim();
@@ -379,6 +424,7 @@ class ConversationCore {
     let result;
     const searchRuns = [];
     const pageReadRuns = [];
+    const agentActions = [];
     const searchRunCache = new Map();
     const discoveredPageUrls = new Set();
     const rememberDiscoveredPages = outcome => {
@@ -400,6 +446,11 @@ class ConversationCore {
       : [];
     const searchEnabled = this.searchService?.status?.().enabled && intentHints.allowed_tools.includes('web_search');
     const commerceEnabled = this.commerceService?.status?.().enabled && this.commerceService?.status?.().configured;
+    const normalizedAgentCommand = ['create-file', 'computer-use'].includes(String(agentCommand || '')) ? String(agentCommand) : null;
+    // Keep the legacy IPC contract usable for existing sessions/tests that
+    // still send agentMode=true without an @ command. The renderer now always
+    // sends one of the two explicit commands, so new requests stay scoped.
+    const agentEnabled = agentMode === true && this.agentBridge && typeof this.agentBridge.definitions === 'function';
     let executeSearchTool;
     let searchRecoveryUsed = false;
     const commerceRuns = [];
@@ -407,17 +458,71 @@ class ConversationCore {
       const fileContext = this.fileContextProvider
         ? await this.fileContextProvider.build({ ownerId: normalizedSession, projectId: this.workspace.getProject(normalizedSession).project_id, assetIds })
         : '';
-      const modelMessages = [hintMessage, ...(fileContext ? [{ role: 'system', content: fileContext }] : []), ...contextWindow.messages];
-      if ((searchEnabled || commerceEnabled) && typeof this.provider.completeWithTools === 'function') {
+      const agentModeMessage = this.agentBridge ? {
+        role: 'system',
+        content: agentEnabled
+          ? (normalizedAgentCommand
+            ? `SOLAT @${normalizedAgentCommand} is selected. Ordinary conversation remains normal. Use only the matching ${normalizedAgentCommand === 'create-file' ? 'filesystem' : 'computer'} tools when the user explicitly requests that capability; do not merely describe a plan. Mutation tools return confirmation_required and must never be described as completed before approval and verified output.`
+            : 'SOLAT Agent mode is ON for this legacy request. Use a matching agent tool when explicitly requested; ordinary conversation remains normal.')
+          : (agentMode === true
+            ? 'SOLAT Agent mode is ON but no @ command is selected. Continue answering ordinary questions normally.'
+            : 'SOLAT Agent mode is OFF. Do not claim to create, edit, export, or control files or the computer. Continue answering ordinary questions normally.'),
+      } : null;
+      const modelMessages = [hintMessage, ...(agentModeMessage ? [agentModeMessage] : []), ...(fileContext ? [{ role: 'system', content: fileContext }] : []), ...contextWindow.messages];
+      if (this.agentBridge && !agentEnabled && requestsAgentCapability(modelContent)) {
+        const thai = /[\u0E00-\u0E7F]/u.test(modelContent);
+        result = {
+          content: thai
+            ? 'Agent mode ปิดอยู่ จึงยังไม่ได้สร้าง แก้ไข หรือควบคุมสิ่งใด กรุณาเปิดปุ่ม Agent แล้วส่งคำสั่งนี้อีกครั้ง'
+            : 'Agent mode is off, so no file or computer action was performed. Turn on Agent mode and send the request again.',
+          provider: 'solat_agent_gate',
+          model: 'deterministic',
+          usage: null,
+          toolRounds: 0,
+        };
+      } else if (agentEnabled && normalizedAgentCommand) {
+        const plan = await planAgentCommand({ provider: this.provider, messages: modelMessages, command: normalizedAgentCommand });
+        if (plan.status !== 'planned') {
+          result = { content: plan.summary, provider: 'solat_agent_planner', model: 'model planned clarification', usage: null, toolRounds: 0 };
+        } else {
+          const outcome = await this.agentBridge.execute({
+            sessionId: normalizedSession,
+            requestId: normalizedRequestId,
+            call: { id: `model-plan-${normalizedRequestId}`, name: plan.tool, arguments: plan.arguments },
+          });
+          if (outcome.action) agentActions.push(outcome.action);
+          result = {
+            content: `${plan.summary}\n\nReview and approve this validated plan before the Agent starts.`,
+            provider: 'solat_agent_planner',
+            model: plan.tool,
+            usage: null,
+            toolRounds: 1,
+          };
+        }
+      } else if ((searchEnabled || commerceEnabled || agentEnabled) && typeof this.provider.completeWithTools === 'function') {
         const toolDefinitions = [];
         if (searchEnabled) {
           toolDefinitions.push(this.searchService.toolDefinition());
           if (typeof this.searchService.readPageToolDefinition === 'function') toolDefinitions.push(this.searchService.readPageToolDefinition());
         }
         if (commerceEnabled) toolDefinitions.push(this.commerceService.toolDefinition());
+        if (agentEnabled) {
+          const definitions = this.agentBridge.definitions();
+          const prefix = normalizedAgentCommand === 'create-file' ? 'filesystem_' : normalizedAgentCommand === 'computer-use' ? 'computer_' : '';
+          toolDefinitions.push(...(prefix ? definitions.filter(definition => String(definition?.function?.name || '').startsWith(prefix)) : definitions));
+        }
         result = await this.provider.completeWithTools(modelMessages, {
           tools: toolDefinitions,
           toolExecutor: executeSearchTool = async call => {
+            if (agentEnabled && this.agentBridge.owns(call?.name)) {
+              try {
+                const outcome = await this.agentBridge.execute({ sessionId: normalizedSession, requestId: normalizedRequestId, call });
+                if (outcome.action) agentActions.push(outcome.action);
+                return outcome.model_result;
+              } catch (error) {
+                return { status: 'failed', tool: String(call?.name || ''), error: { code: error?.code || 'agent_failed', message: error?.message || 'The agent tool could not complete.' } };
+              }
+            }
             if (call?.name === 'commerce') {
               try {
                 const outcome = await this.commerceService.execute({ ...call, sessionId: normalizedSession });
@@ -843,6 +948,9 @@ class ConversationCore {
       searchEvidence,
       searchSummary,
       grounding,
+      agentMode: Boolean(agentEnabled),
+      agentCommand: normalizedAgentCommand,
+      agentActions,
       ...(pageReadRuns.length ? { pageReads: pageReadRuns.map(page => ({ status: page.status, tool: page.tool, url: page.url || null, text: typeof page.text === 'string' ? page.text.slice(0, 12000) : null, truncated: Boolean(page.truncated), error: page.error || null })), pageReadUsed: true } : {}),
       contextWindow: {
         available_message_count: contextWindow.available_message_count,
@@ -856,4 +964,4 @@ class ConversationCore {
   }
 }
 
-module.exports = { alignComparisonQuery, buildConversationSystemPrompt, buildResolvedReferenceInstruction, comparisonTargetForQuery, directlyIdentifiesComparisonTarget, filterComparisonOutcome, mergeScopedOutcomes, modelContextWindow, preserveContextQualifierQuery, preserveRequestedPlatformQuery, runtimeGroundingEvidenceState, unavailableSearchOutcome, ConversationCore, CONVERSATION_PROMPT_VERSION, MAX_MESSAGE_LENGTH, MAX_MODEL_CONTEXT_CHARS };
+module.exports = { alignComparisonQuery, buildConversationSystemPrompt, buildResolvedReferenceInstruction, comparisonTargetForQuery, directlyIdentifiesComparisonTarget, filterComparisonOutcome, mergeScopedOutcomes, modelContextWindow, parseDirectComputerLaunchRequest, parseDirectComputerWorkflowRequest, parseDirectFileCreateRequest, preserveContextQualifierQuery, preserveRequestedPlatformQuery, requestsAgentCapability, runtimeGroundingEvidenceState, unavailableSearchOutcome, ConversationCore, CONVERSATION_PROMPT_VERSION, MAX_MESSAGE_LENGTH, MAX_MODEL_CONTEXT_CHARS };

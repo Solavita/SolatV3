@@ -671,8 +671,8 @@ test('conversation system prompt is versioned and keeps structured hints separat
     assetIds: ['asset-1', '  '],
     history: [{ role: 'user', content: 'The tracked entity is item 42.' }],
   });
-  assert.equal(CONVERSATION_PROMPT_VERSION, 'solat.conversation-system.v3');
-  assert.match(prompt, /^Prompt version: solat\.conversation-system\.v3\./u);
+  assert.equal(CONVERSATION_PROMPT_VERSION, 'solat.conversation-system.v4');
+  assert.match(prompt, /^Prompt version: solat\.conversation-system\.v4\./u);
   assert.match(prompt, /"original_message":"ค้นหา Ada Lovelace"/u);
   assert.match(prompt, /Attached asset_ids available for analysis: \["asset-1"\]/u);
   assert.doesNotMatch(prompt, /Attached asset_ids available for analysis: \["asset-1",""\]/u);

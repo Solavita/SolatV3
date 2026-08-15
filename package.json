@@ -5,6 +5,8 @@
   "description": "SOLAT V2 clean Electron foundation",
   "main": "src/main.js",
   "scripts": {
+    "check:agent": "node --check src/core/filesystem-workspace.js && node --check src/core/agent-tools.js && node --check src/core/agent-tool-composer.js && node --check src/core/agent-chat-bridge.js && node --check src/core/agent-command-planner.js && node --check src/core/computer-use-adapter.js && node --check src/core/computer-agent-tools.js && node --check scripts/smoke-computer-use-live.js && node --check test/agent-e2e.test.js",
+    "smoke:computer-use-live": "node scripts/smoke-computer-use-live.js",
     "dev": "electron .",
     "start": "electron .",
     "test": "node --test",
