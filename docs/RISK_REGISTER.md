@@ -16,3 +16,16 @@
 
 - MF-01 is mitigated for the four bounded semantic categories exercised by the authorized live DeepSeek run; broader semantic quality and GPT parity remain open.
 - MF-07 is mitigated for those same four cases by six provider requests with zero retries and preserved provider/model/latency/usage/raw-response evidence; this does not generalize beyond the captured run.
+
+## Quality iteration update (2026-08-15)
+
+- MF-08 (gateway character-set corruption): MITIGATED at the provider boundary with a narrow Windows-874 mojibake detector/repair and regression tests; live post-change semantic improvement remains NOT VERIFIED.
+- MF-09 (ordinary chat over-search and over-expansion): PROMPT MITIGATION ADDED; requires rerunning the fixed 100-case corpus to verify tool/scope and task-fulfillment gains.
+- MF-10 (paired benchmark context leakage): OPEN. Ten fixed cases refer to earlier/previous entities while declaring empty history; captured ChatGPT answers sometimes contain earlier-chat context. `npm.cmd run validate:paired100` now fails visibly instead of allowing an unfair semantic score.
+
+## Runtime and capability update (2026-08-15)
+
+- MF-11 (live capture evidence pending): OPEN/CONFIGURED BUT NOT VERIFIED. D:\SOLAT_V3 now has local DeepSeek/Brave configuration with boolean readiness true; no live provider evidence is recorded yet and secret values remain excluded.
+- MF-12 (file parser scope): MITIGATED for bounded TXT/JSON/CSV only. Derived records are persisted with provenance/content hash and owner/project isolation; PDF/DOCX/XLSX/images remain `NOT VERIFIED` without a parser.
+- MF-13 (agent production tool scope): OPEN. Agent IPC/approval/audit boundaries exist, but the trusted production registry is empty by design; no side-effect tool is enabled.
+- MF-14 (300-case evaluation evidence): OPEN. Manifest preflight is verified (300/300 references; local tests 159/159), but live execution and semantic scoring have not started.

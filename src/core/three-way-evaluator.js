@@ -140,8 +140,12 @@ function baselinePriority(item) {
 
 function safeHistory(history) {
   return (Array.isArray(history) ? history : []).slice(-8).flatMap(message => {
-    const content = safeText(message?.content, 12000);
-    return content ? [{ role: message?.role === 'assistant' ? 'assistant' : 'user', content }] : [];
+    // Conversation seed turns are evaluation input, not display copy. Preserve
+    // significant leading/trailing whitespace byte-for-byte so matched-history
+    // captures cannot silently diverge from the corpus. NUL is still removed
+    // and the bounded length is retained as a safety limit.
+    const content = String(message?.content ?? '').replace(/\u0000/gu, '').slice(0, 12000);
+    return content.length ? [{ role: message?.role === 'assistant' ? 'assistant' : 'user', content }] : [];
   });
 }
 
@@ -150,8 +154,9 @@ function evaluationCase(testCase, baseline) {
   // preceded its capture. This keeps all three providers on one conversation,
   // while temporary chats and ordinary corpus rows retain corpus history.
   const externalHistory = safeHistory(baseline?.history);
+  const seedInputs = safeHistory(baseline?.seed_inputs);
   const matchedHistory = safeText(baseline?.context_mode, 80) === 'matched_history';
-  return { ...testCase, history: matchedHistory && externalHistory.length ? externalHistory : safeHistory(testCase?.history) };
+  return { ...testCase, history: matchedHistory && seedInputs.length ? seedInputs : matchedHistory && externalHistory.length ? externalHistory : safeHistory(testCase?.history) };
 }
 
 async function captureDeepSeekBaseline(provider, testCase, now = () => new Date()) {
@@ -175,14 +180,21 @@ async function captureDeepSeekBaseline(provider, testCase, now = () => new Date(
   }
 }
 
-async function captureSolat(core, testCase, now = () => new Date()) {
+async function captureSolat(core, testCase, now = () => new Date(), { replayUserSeeds = false } = {}) {
   const startedAt = now().toISOString();
   try {
     const sessionId = `three-way-${testCase.id}-${crypto.randomUUID()}`;
-    // Evaluation-only seeding preserves a corpus follow-up's prior turns
-    // without issuing extra paid calls. Normal production turns remain isolated.
-    if (Array.isArray(testCase.history) && core.sessions instanceof Map) {
-      core.sessions.set(sessionId, safeHistory(testCase.history));
+    const evaluationHistory = safeHistory(testCase.history);
+    const seedTranscript = [];
+    if (replayUserSeeds && evaluationHistory.length) {
+      for (const seed of evaluationHistory) {
+        if (seed.role !== 'user') continue;
+        const seedResult = await core.send({ sessionId, requestId: crypto.randomUUID(), content: seed.content });
+        seedTranscript.push({ role: 'user', content: seed.content }, { role: 'assistant', content: safeText(seedResult?.assistant) });
+      }
+    } else if (Array.isArray(testCase.history) && core.sessions instanceof Map) {
+      // Evaluation-only seeding is retained for A/C and compatibility; B uses replayUserSeeds.
+      core.sessions.set(sessionId, evaluationHistory);
     }
     const result = await core.send({
       sessionId,
@@ -193,6 +205,12 @@ async function captureSolat(core, testCase, now = () => new Date()) {
     return {
       status: 'PASS', started_at: startedAt, finished_at: finishedAt, latency_ms: elapsedMs(startedAt, finishedAt),
       provider: safeText(result.provider, 120), model: safeText(result.model, 160),
+      isolation_id: sessionId,
+      context_mode: evaluationHistory.length ? 'matched_history' : 'temporary_chat',
+      history: evaluationHistory,
+      history_count: evaluationHistory.length,
+      seed_transcript: seedTranscript,
+      seed_request_count: seedTranscript.filter(turn => turn.role === 'user').length,
       response: safeText(result.assistant), usage: safeUsage(result.usage),
       mode: safeText(result.mode, 80), tool_rounds: Number(result.toolRounds) || 0,
       comparison_recovery_used: Boolean(result.comparisonRecoveryUsed),

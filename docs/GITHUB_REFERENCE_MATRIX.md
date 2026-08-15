@@ -31,3 +31,18 @@
 - MIT/Apache-2.0 ถูกพิจารณาได้ในเชิง license แต่ยังไม่ได้นำ code มาเป็น dependency
 - ห้ามนำ `.env`, credential, trace ภายนอก หรือข้อมูลส่วนตัวเข้า benchmark
 - paid provider และ external judge ถูกปิดไว้ในรอบ local/free นี้
+
+## 2026-08-15 research addendum
+
+| Repository | License | Reviewed scope | Compatibility / decision |
+|---|---|---|---|
+| https://github.com/responsibleai/ASSERT | MIT | Local-first, trace-grounded evaluation artifacts and requirement assertions | REVIEWED; reference only. Python/OTel dependency is not added to the Node/Electron runtime. |
+| https://github.com/harness/harness-evals | Apache-2.0 | Structural/schema, tool-correctness, reliability and rubric evaluation concepts | REVIEWED; adapted conceptually into existing JSON reports; no dependency or paid evaluator added. |
+| https://github.com/ajv-validator/ajv | MIT | JSON Schema validation | REVIEWED; not added because SOLAT already has a bounded dependency-free validator and changing it would add unnecessary runtime surface. |
+| https://github.com/modelcontextprotocol/typescript-sdk | Apache-2.0 / MIT legacy code | MCP tool/resource protocol | REVIEWED; not integrated because current adapter boundary is sufficient and adding MCP would expand scope without a tested provider. |
+
+No external repository code or dependency was copied into production in this iteration.
+
+## 2026-08-15 implementation boundary
+
+The current local changes use existing SOLAT contracts and do not add a GitHub dependency. File-intake, derived persistence, agent approval boundaries and evaluation manifest work are SOLAT-native adaptations; external repositories remain reference-only with license review recorded above. No secret, provider credential or external repository code was copied.

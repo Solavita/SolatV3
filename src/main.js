@@ -7,9 +7,13 @@ const { CreativeWorkflow } = require('./core/creative-workflow');
 const { CreativePersistence } = require('./core/creative-persistence');
 const { ConversationPersistence } = require('./core/conversation-persistence');
 const { AssetStore } = require('./core/asset-store');
+const { FileIntakeService } = require('./core/file-intake');
+const { FileContextProvider } = require('./core/file-context');
 const { exportEditableHtml, inspectEditableHtml } = require('./core/exporter');
 const { WebSearchService } = require('./core/web-search');
 const { CommerceClient } = require('./core/commerce-client');
+const { AgentService } = require('./core/agent-service');
+const { createReadOnlyAgentTools } = require('./core/agent-tools');
 
 let mainWindow;
 let core;
@@ -17,8 +21,11 @@ let creativeWorkflow;
 let creativePersistence;
 let conversationPersistence;
 let assetStore;
+let fileIntake;
+let fileContextProvider;
 let searchService;
 let commerceService;
+let agentService;
 
 function resolveOwnedExportPath(requestedPath) {
   const candidate = String(requestedPath || '').trim();
@@ -65,6 +72,19 @@ function registerIpc() {
       };
     }
   });
+  const agentScope = request => {
+    const sessionId = String(request?.sessionId || '').trim();
+    if (!sessionId) throw Object.assign(new Error('A session id is required.'), { code: 'invalid_request' });
+    return { ...request, ownerId: sessionId, sessionId };
+  };
+  const agentCall = async (action, request) => {
+    try { return { ok: true, value: await action(agentScope(request)) }; } catch (error) { return { ok: false, error: { code: error?.code || 'agent_error', message: error?.message || 'Agent operation failed.' } }; }
+  };
+  ipcMain.handle('solat:agent-create', (_event, request) => agentCall(value => agentService.createPlan(value), request));
+  ipcMain.handle('solat:agent-inspect', (_event, request) => agentCall(value => agentService.inspect(value), request));
+  ipcMain.handle('solat:agent-approve', (_event, request) => agentCall(value => agentService.approve(value), request));
+  ipcMain.handle('solat:agent-cancel', (_event, request) => agentCall(value => agentService.cancel(value), request));
+  ipcMain.handle('solat:agent-run', (_event, request) => agentCall(value => agentService.run(value), request));
   ipcMain.handle('solat:save-conversation', async (_event, request) => {
     try {
       return { ok: true, value: await conversationPersistence.save(request) };
@@ -111,15 +131,16 @@ function registerIpc() {
     try {
       const sessionId = String(request?.sessionId || '').trim();
       const project = core.workspace.getProject(sessionId);
-      const asset = await assetStore.storeOriginal({
+      const intake = await fileIntake.intake({
         ownerId: sessionId,
         projectId: project.project_id,
         fileName: request?.fileName,
         mimeType: request?.mimeType,
         bytes: request?.bytes,
       });
+      const asset = intake.asset;
       core.workspace.linkProject({ sessionId, assetIds: [asset.asset_id] });
-      return { ok: true, value: { assetId: asset.asset_id, projectId: asset.project_id, hash: asset.hash, sizeBytes: asset.size_bytes } };
+      return { ok: true, value: { assetId: asset.asset_id, projectId: asset.project_id, hash: asset.hash, sizeBytes: asset.size_bytes, intakeStatus: intake.status, extraction: intake.extraction } };
     } catch (error) {
       return {
         ok: false,
@@ -228,6 +249,14 @@ app.whenReady().then(() => {
     engines: config.searchEngines,
   });
   assetStore = new AssetStore({ rootDir: path.join(app.getPath('userData'), 'assets') });
+  fileIntake = new FileIntakeService({ assetStore });
+  fileContextProvider = new FileContextProvider({ fileIntake });
+  const agentTools = createReadOnlyAgentTools({ fileContextProvider });
+  agentService = new AgentService({
+    rootDir: path.join(app.getPath('userData'), 'agent-plans'),
+    toolRegistry: agentTools.registry,
+    executeTool: agentTools.executeTool,
+  });
   commerceService = new CommerceClient({
     baseUrl: config.commerceBaseUrl,
     userId: config.commerceUserId,
@@ -240,7 +269,7 @@ app.whenReady().then(() => {
       return assetStore.readOriginal({ ownerId: normalizedSession, projectId: project.project_id, assetId });
     },
   });
-  core = new ConversationCore({ config, searchService, commerceService });
+  core = new ConversationCore({ config, searchService, commerceService, fileContextProvider });
   creativePersistence = new CreativePersistence({ rootDir: path.join(app.getPath('userData'), 'creative-history') });
   conversationPersistence = new ConversationPersistence({ rootDir: path.join(app.getPath('userData'), 'conversation-history') });
   creativeWorkflow = new CreativeWorkflow({ provider: core.provider, workspace: core.workspace });

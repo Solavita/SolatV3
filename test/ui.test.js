@@ -7,7 +7,13 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'renderer', 'index.html'
 const renderer = fs.readFileSync(path.join(__dirname, '..', 'renderer', 'renderer.js'), 'utf8');
 const main = fs.readFileSync(path.join(__dirname, '..', 'src', 'main.js'), 'utf8');
 const preload = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload.js'), 'utf8');
-const v1 = fs.readFileSync(path.join(__dirname, '..', '..', 'frontend', 'claude', 'SolatUI.html'), 'utf8');
+const v1Candidates = [
+  path.join(__dirname, '..', '..', 'frontend', 'claude', 'SolatUI.html'),
+  path.join(__dirname, 'fixtures', 'SolatUI.html'),
+];
+const v1Path = v1Candidates.find(candidate => fs.existsSync(candidate));
+assert.ok(v1Path, 'V1 UI reference fixture is required for the compatibility test');
+const v1 = fs.readFileSync(v1Path, 'utf8');
 
 test('renderer preserves the owner visual shell while exposing the V2 IPC surface', () => {
   for (const id of [

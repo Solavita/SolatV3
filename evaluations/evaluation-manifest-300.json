@@ -1,0 +1,1865 @@
+{
+  "schema_version": "solat.evaluation-manifest.v1",
+  "generated_at": "2026-08-15T03:13:41.068Z",
+  "suite": "SOLAT foundation supplemental paired evaluation",
+  "total_cases": 300,
+  "source_suites": [
+    {
+      "source": "A",
+      "mode": "A",
+      "corpus_path": "D:/SOLAT_WORKSPACE/tmp-20260814/paired-100-corpus.json",
+      "sha256": "7914f8b170fd91bc44524052f348ea7196de7cbd7999c71561ccca893b23cbe8",
+      "case_count": 100,
+      "report_paths": [
+        "D:/SOLAT_WORKSPACE/tmp-20260814/paired-only-100-complete-20260815.json",
+        "D:/SOLAT_WORKSPACE/tmp-20260814/chatgpt-baselines-100-complete-20260815.json"
+      ]
+    },
+    {
+      "source": "B",
+      "mode": "B",
+      "corpus_path": "D:/SOLAT_V3/evaluations/followup-context-100.json",
+      "sha256": "54ca4ed329a9748fdd7936278bd26a57ec9c81f0224d0eeb8b878dfaee496ff1",
+      "case_count": 100,
+      "report_paths": [
+        "D:/SOLAT_V3/reports/human-review-packet-20260815.json"
+      ]
+    },
+    {
+      "source": "C",
+      "mode": "C",
+      "corpus_path": "D:/SOLAT_V3/evaluations/capability-regression-100.json",
+      "sha256": "1236da9f55393ec0ff18cbec0c4dba768cd1d558fca5eb2592724e54a13fd97b",
+      "case_count": 100,
+      "report_paths": [
+        "D:/SOLAT_V3/reports/quality-iteration-20260815.json"
+      ]
+    }
+  ],
+  "case_refs": [
+    {
+      "id": "paired100_000_conversation_1",
+      "source": "A",
+      "mode": "A",
+      "index": 0
+    },
+    {
+      "id": "paired100_001_conversation_2",
+      "source": "A",
+      "mode": "A",
+      "index": 1
+    },
+    {
+      "id": "paired100_002_conversation_3",
+      "source": "A",
+      "mode": "A",
+      "index": 2
+    },
+    {
+      "id": "paired100_003_conversation_4",
+      "source": "A",
+      "mode": "A",
+      "index": 3
+    },
+    {
+      "id": "paired100_004_conversation_5",
+      "source": "A",
+      "mode": "A",
+      "index": 4
+    },
+    {
+      "id": "paired100_005_conversation_6",
+      "source": "A",
+      "mode": "A",
+      "index": 5
+    },
+    {
+      "id": "paired100_006_conversation_7",
+      "source": "A",
+      "mode": "A",
+      "index": 6
+    },
+    {
+      "id": "paired100_007_conversation_8",
+      "source": "A",
+      "mode": "A",
+      "index": 7
+    },
+    {
+      "id": "paired100_008_conversation_9",
+      "source": "A",
+      "mode": "A",
+      "index": 8
+    },
+    {
+      "id": "paired100_009_conversation_10",
+      "source": "A",
+      "mode": "A",
+      "index": 9
+    },
+    {
+      "id": "paired100_010_instruction_1",
+      "source": "A",
+      "mode": "A",
+      "index": 10
+    },
+    {
+      "id": "paired100_011_instruction_2",
+      "source": "A",
+      "mode": "A",
+      "index": 11
+    },
+    {
+      "id": "paired100_012_instruction_3",
+      "source": "A",
+      "mode": "A",
+      "index": 12
+    },
+    {
+      "id": "paired100_013_instruction_4",
+      "source": "A",
+      "mode": "A",
+      "index": 13
+    },
+    {
+      "id": "paired100_014_instruction_5",
+      "source": "A",
+      "mode": "A",
+      "index": 14
+    },
+    {
+      "id": "paired100_015_instruction_6",
+      "source": "A",
+      "mode": "A",
+      "index": 15
+    },
+    {
+      "id": "paired100_016_instruction_7",
+      "source": "A",
+      "mode": "A",
+      "index": 16
+    },
+    {
+      "id": "paired100_017_instruction_8",
+      "source": "A",
+      "mode": "A",
+      "index": 17
+    },
+    {
+      "id": "paired100_018_instruction_9",
+      "source": "A",
+      "mode": "A",
+      "index": 18
+    },
+    {
+      "id": "paired100_019_instruction_10",
+      "source": "A",
+      "mode": "A",
+      "index": 19
+    },
+    {
+      "id": "paired100_020_context_1",
+      "source": "A",
+      "mode": "A",
+      "index": 20
+    },
+    {
+      "id": "paired100_021_context_2",
+      "source": "A",
+      "mode": "A",
+      "index": 21
+    },
+    {
+      "id": "paired100_022_context_3",
+      "source": "A",
+      "mode": "A",
+      "index": 22
+    },
+    {
+      "id": "paired100_023_context_4",
+      "source": "A",
+      "mode": "A",
+      "index": 23
+    },
+    {
+      "id": "paired100_024_context_5",
+      "source": "A",
+      "mode": "A",
+      "index": 24
+    },
+    {
+      "id": "paired100_025_context_6",
+      "source": "A",
+      "mode": "A",
+      "index": 25
+    },
+    {
+      "id": "paired100_026_context_7",
+      "source": "A",
+      "mode": "A",
+      "index": 26
+    },
+    {
+      "id": "paired100_027_context_8",
+      "source": "A",
+      "mode": "A",
+      "index": 27
+    },
+    {
+      "id": "paired100_028_context_9",
+      "source": "A",
+      "mode": "A",
+      "index": 28
+    },
+    {
+      "id": "paired100_029_context_10",
+      "source": "A",
+      "mode": "A",
+      "index": 29
+    },
+    {
+      "id": "paired100_030_multilingual_1",
+      "source": "A",
+      "mode": "A",
+      "index": 30
+    },
+    {
+      "id": "paired100_031_multilingual_2",
+      "source": "A",
+      "mode": "A",
+      "index": 31
+    },
+    {
+      "id": "paired100_032_multilingual_3",
+      "source": "A",
+      "mode": "A",
+      "index": 32
+    },
+    {
+      "id": "paired100_033_multilingual_4",
+      "source": "A",
+      "mode": "A",
+      "index": 33
+    },
+    {
+      "id": "paired100_034_multilingual_5",
+      "source": "A",
+      "mode": "A",
+      "index": 34
+    },
+    {
+      "id": "paired100_035_multilingual_6",
+      "source": "A",
+      "mode": "A",
+      "index": 35
+    },
+    {
+      "id": "paired100_036_multilingual_7",
+      "source": "A",
+      "mode": "A",
+      "index": 36
+    },
+    {
+      "id": "paired100_037_multilingual_8",
+      "source": "A",
+      "mode": "A",
+      "index": 37
+    },
+    {
+      "id": "paired100_038_multilingual_9",
+      "source": "A",
+      "mode": "A",
+      "index": 38
+    },
+    {
+      "id": "paired100_039_multilingual_10",
+      "source": "A",
+      "mode": "A",
+      "index": 39
+    },
+    {
+      "id": "paired100_040_ambiguity_1",
+      "source": "A",
+      "mode": "A",
+      "index": 40
+    },
+    {
+      "id": "paired100_041_ambiguity_2",
+      "source": "A",
+      "mode": "A",
+      "index": 41
+    },
+    {
+      "id": "paired100_042_ambiguity_3",
+      "source": "A",
+      "mode": "A",
+      "index": 42
+    },
+    {
+      "id": "paired100_043_ambiguity_4",
+      "source": "A",
+      "mode": "A",
+      "index": 43
+    },
+    {
+      "id": "paired100_044_ambiguity_5",
+      "source": "A",
+      "mode": "A",
+      "index": 44
+    },
+    {
+      "id": "paired100_045_ambiguity_6",
+      "source": "A",
+      "mode": "A",
+      "index": 45
+    },
+    {
+      "id": "paired100_046_ambiguity_7",
+      "source": "A",
+      "mode": "A",
+      "index": 46
+    },
+    {
+      "id": "paired100_047_ambiguity_8",
+      "source": "A",
+      "mode": "A",
+      "index": 47
+    },
+    {
+      "id": "paired100_048_ambiguity_9",
+      "source": "A",
+      "mode": "A",
+      "index": 48
+    },
+    {
+      "id": "paired100_049_ambiguity_10",
+      "source": "A",
+      "mode": "A",
+      "index": 49
+    },
+    {
+      "id": "paired100_050_grounding_1",
+      "source": "A",
+      "mode": "A",
+      "index": 50
+    },
+    {
+      "id": "paired100_051_grounding_2",
+      "source": "A",
+      "mode": "A",
+      "index": 51
+    },
+    {
+      "id": "paired100_052_grounding_3",
+      "source": "A",
+      "mode": "A",
+      "index": 52
+    },
+    {
+      "id": "paired100_053_grounding_4",
+      "source": "A",
+      "mode": "A",
+      "index": 53
+    },
+    {
+      "id": "paired100_054_grounding_5",
+      "source": "A",
+      "mode": "A",
+      "index": 54
+    },
+    {
+      "id": "paired100_055_grounding_6",
+      "source": "A",
+      "mode": "A",
+      "index": 55
+    },
+    {
+      "id": "paired100_056_grounding_7",
+      "source": "A",
+      "mode": "A",
+      "index": 56
+    },
+    {
+      "id": "paired100_057_grounding_8",
+      "source": "A",
+      "mode": "A",
+      "index": 57
+    },
+    {
+      "id": "paired100_058_grounding_9",
+      "source": "A",
+      "mode": "A",
+      "index": 58
+    },
+    {
+      "id": "paired100_059_grounding_10",
+      "source": "A",
+      "mode": "A",
+      "index": 59
+    },
+    {
+      "id": "paired100_060_tools_search_1",
+      "source": "A",
+      "mode": "A",
+      "index": 60
+    },
+    {
+      "id": "paired100_061_tools_search_2",
+      "source": "A",
+      "mode": "A",
+      "index": 61
+    },
+    {
+      "id": "paired100_062_tools_search_3",
+      "source": "A",
+      "mode": "A",
+      "index": 62
+    },
+    {
+      "id": "paired100_063_tools_search_4",
+      "source": "A",
+      "mode": "A",
+      "index": 63
+    },
+    {
+      "id": "paired100_064_tools_search_5",
+      "source": "A",
+      "mode": "A",
+      "index": 64
+    },
+    {
+      "id": "paired100_065_tools_search_6",
+      "source": "A",
+      "mode": "A",
+      "index": 65
+    },
+    {
+      "id": "paired100_066_tools_search_7",
+      "source": "A",
+      "mode": "A",
+      "index": 66
+    },
+    {
+      "id": "paired100_067_tools_search_8",
+      "source": "A",
+      "mode": "A",
+      "index": 67
+    },
+    {
+      "id": "paired100_068_tools_search_9",
+      "source": "A",
+      "mode": "A",
+      "index": 68
+    },
+    {
+      "id": "paired100_069_tools_search_10",
+      "source": "A",
+      "mode": "A",
+      "index": 69
+    },
+    {
+      "id": "paired100_070_failures_1",
+      "source": "A",
+      "mode": "A",
+      "index": 70
+    },
+    {
+      "id": "paired100_071_failures_2",
+      "source": "A",
+      "mode": "A",
+      "index": 71
+    },
+    {
+      "id": "paired100_072_failures_3",
+      "source": "A",
+      "mode": "A",
+      "index": 72
+    },
+    {
+      "id": "paired100_073_failures_4",
+      "source": "A",
+      "mode": "A",
+      "index": 73
+    },
+    {
+      "id": "paired100_074_failures_5",
+      "source": "A",
+      "mode": "A",
+      "index": 74
+    },
+    {
+      "id": "paired100_075_failures_6",
+      "source": "A",
+      "mode": "A",
+      "index": 75
+    },
+    {
+      "id": "paired100_076_failures_7",
+      "source": "A",
+      "mode": "A",
+      "index": 76
+    },
+    {
+      "id": "paired100_077_failures_8",
+      "source": "A",
+      "mode": "A",
+      "index": 77
+    },
+    {
+      "id": "paired100_078_failures_9",
+      "source": "A",
+      "mode": "A",
+      "index": 78
+    },
+    {
+      "id": "paired100_079_failures_10",
+      "source": "A",
+      "mode": "A",
+      "index": 79
+    },
+    {
+      "id": "paired100_080_consistency_1",
+      "source": "A",
+      "mode": "A",
+      "index": 80
+    },
+    {
+      "id": "paired100_081_consistency_2",
+      "source": "A",
+      "mode": "A",
+      "index": 81
+    },
+    {
+      "id": "paired100_082_consistency_3",
+      "source": "A",
+      "mode": "A",
+      "index": 82
+    },
+    {
+      "id": "paired100_083_consistency_4",
+      "source": "A",
+      "mode": "A",
+      "index": 83
+    },
+    {
+      "id": "paired100_084_consistency_5",
+      "source": "A",
+      "mode": "A",
+      "index": 84
+    },
+    {
+      "id": "paired100_085_consistency_6",
+      "source": "A",
+      "mode": "A",
+      "index": 85
+    },
+    {
+      "id": "paired100_086_consistency_7",
+      "source": "A",
+      "mode": "A",
+      "index": 86
+    },
+    {
+      "id": "paired100_087_consistency_8",
+      "source": "A",
+      "mode": "A",
+      "index": 87
+    },
+    {
+      "id": "paired100_088_consistency_9",
+      "source": "A",
+      "mode": "A",
+      "index": 88
+    },
+    {
+      "id": "paired100_089_consistency_10",
+      "source": "A",
+      "mode": "A",
+      "index": 89
+    },
+    {
+      "id": "paired100_090_safety_business_1",
+      "source": "A",
+      "mode": "A",
+      "index": 90
+    },
+    {
+      "id": "paired100_091_safety_business_2",
+      "source": "A",
+      "mode": "A",
+      "index": 91
+    },
+    {
+      "id": "paired100_092_safety_business_3",
+      "source": "A",
+      "mode": "A",
+      "index": 92
+    },
+    {
+      "id": "paired100_093_safety_business_4",
+      "source": "A",
+      "mode": "A",
+      "index": 93
+    },
+    {
+      "id": "paired100_094_safety_business_5",
+      "source": "A",
+      "mode": "A",
+      "index": 94
+    },
+    {
+      "id": "paired100_095_safety_business_6",
+      "source": "A",
+      "mode": "A",
+      "index": 95
+    },
+    {
+      "id": "paired100_096_safety_business_7",
+      "source": "A",
+      "mode": "A",
+      "index": 96
+    },
+    {
+      "id": "paired100_097_safety_business_8",
+      "source": "A",
+      "mode": "A",
+      "index": 97
+    },
+    {
+      "id": "paired100_098_safety_business_9",
+      "source": "A",
+      "mode": "A",
+      "index": 98
+    },
+    {
+      "id": "paired100_099_safety_business_10",
+      "source": "A",
+      "mode": "A",
+      "index": 99
+    },
+    {
+      "id": "followup100_000_context_pronouns",
+      "source": "B",
+      "mode": "B",
+      "index": 0
+    },
+    {
+      "id": "followup100_001_context_pronouns",
+      "source": "B",
+      "mode": "B",
+      "index": 1
+    },
+    {
+      "id": "followup100_002_context_pronouns",
+      "source": "B",
+      "mode": "B",
+      "index": 2
+    },
+    {
+      "id": "followup100_003_context_pronouns",
+      "source": "B",
+      "mode": "B",
+      "index": 3
+    },
+    {
+      "id": "followup100_004_context_pronouns",
+      "source": "B",
+      "mode": "B",
+      "index": 4
+    },
+    {
+      "id": "followup100_005_context_pronouns",
+      "source": "B",
+      "mode": "B",
+      "index": 5
+    },
+    {
+      "id": "followup100_006_context_pronouns",
+      "source": "B",
+      "mode": "B",
+      "index": 6
+    },
+    {
+      "id": "followup100_007_context_pronouns",
+      "source": "B",
+      "mode": "B",
+      "index": 7
+    },
+    {
+      "id": "followup100_008_context_pronouns",
+      "source": "B",
+      "mode": "B",
+      "index": 8
+    },
+    {
+      "id": "followup100_009_context_pronouns",
+      "source": "B",
+      "mode": "B",
+      "index": 9
+    },
+    {
+      "id": "followup100_010_thai_english_mixed",
+      "source": "B",
+      "mode": "B",
+      "index": 10
+    },
+    {
+      "id": "followup100_011_thai_english_mixed",
+      "source": "B",
+      "mode": "B",
+      "index": 11
+    },
+    {
+      "id": "followup100_012_thai_english_mixed",
+      "source": "B",
+      "mode": "B",
+      "index": 12
+    },
+    {
+      "id": "followup100_013_thai_english_mixed",
+      "source": "B",
+      "mode": "B",
+      "index": 13
+    },
+    {
+      "id": "followup100_014_thai_english_mixed",
+      "source": "B",
+      "mode": "B",
+      "index": 14
+    },
+    {
+      "id": "followup100_015_thai_english_mixed",
+      "source": "B",
+      "mode": "B",
+      "index": 15
+    },
+    {
+      "id": "followup100_016_thai_english_mixed",
+      "source": "B",
+      "mode": "B",
+      "index": 16
+    },
+    {
+      "id": "followup100_017_thai_english_mixed",
+      "source": "B",
+      "mode": "B",
+      "index": 17
+    },
+    {
+      "id": "followup100_018_thai_english_mixed",
+      "source": "B",
+      "mode": "B",
+      "index": 18
+    },
+    {
+      "id": "followup100_019_thai_english_mixed",
+      "source": "B",
+      "mode": "B",
+      "index": 19
+    },
+    {
+      "id": "followup100_020_typo_spacing_romanization",
+      "source": "B",
+      "mode": "B",
+      "index": 20
+    },
+    {
+      "id": "followup100_021_typo_spacing_romanization",
+      "source": "B",
+      "mode": "B",
+      "index": 21
+    },
+    {
+      "id": "followup100_022_typo_spacing_romanization",
+      "source": "B",
+      "mode": "B",
+      "index": 22
+    },
+    {
+      "id": "followup100_023_typo_spacing_romanization",
+      "source": "B",
+      "mode": "B",
+      "index": 23
+    },
+    {
+      "id": "followup100_024_typo_spacing_romanization",
+      "source": "B",
+      "mode": "B",
+      "index": 24
+    },
+    {
+      "id": "followup100_025_typo_spacing_romanization",
+      "source": "B",
+      "mode": "B",
+      "index": 25
+    },
+    {
+      "id": "followup100_026_typo_spacing_romanization",
+      "source": "B",
+      "mode": "B",
+      "index": 26
+    },
+    {
+      "id": "followup100_027_typo_spacing_romanization",
+      "source": "B",
+      "mode": "B",
+      "index": 27
+    },
+    {
+      "id": "followup100_028_typo_spacing_romanization",
+      "source": "B",
+      "mode": "B",
+      "index": 28
+    },
+    {
+      "id": "followup100_029_typo_spacing_romanization",
+      "source": "B",
+      "mode": "B",
+      "index": 29
+    },
+    {
+      "id": "followup100_030_corrections",
+      "source": "B",
+      "mode": "B",
+      "index": 30
+    },
+    {
+      "id": "followup100_031_corrections",
+      "source": "B",
+      "mode": "B",
+      "index": 31
+    },
+    {
+      "id": "followup100_032_corrections",
+      "source": "B",
+      "mode": "B",
+      "index": 32
+    },
+    {
+      "id": "followup100_033_corrections",
+      "source": "B",
+      "mode": "B",
+      "index": 33
+    },
+    {
+      "id": "followup100_034_corrections",
+      "source": "B",
+      "mode": "B",
+      "index": 34
+    },
+    {
+      "id": "followup100_035_corrections",
+      "source": "B",
+      "mode": "B",
+      "index": 35
+    },
+    {
+      "id": "followup100_036_corrections",
+      "source": "B",
+      "mode": "B",
+      "index": 36
+    },
+    {
+      "id": "followup100_037_corrections",
+      "source": "B",
+      "mode": "B",
+      "index": 37
+    },
+    {
+      "id": "followup100_038_corrections",
+      "source": "B",
+      "mode": "B",
+      "index": 38
+    },
+    {
+      "id": "followup100_039_corrections",
+      "source": "B",
+      "mode": "B",
+      "index": 39
+    },
+    {
+      "id": "followup100_040_multi_step_constraints",
+      "source": "B",
+      "mode": "B",
+      "index": 40
+    },
+    {
+      "id": "followup100_041_multi_step_constraints",
+      "source": "B",
+      "mode": "B",
+      "index": 41
+    },
+    {
+      "id": "followup100_042_multi_step_constraints",
+      "source": "B",
+      "mode": "B",
+      "index": 42
+    },
+    {
+      "id": "followup100_043_multi_step_constraints",
+      "source": "B",
+      "mode": "B",
+      "index": 43
+    },
+    {
+      "id": "followup100_044_multi_step_constraints",
+      "source": "B",
+      "mode": "B",
+      "index": 44
+    },
+    {
+      "id": "followup100_045_multi_step_constraints",
+      "source": "B",
+      "mode": "B",
+      "index": 45
+    },
+    {
+      "id": "followup100_046_multi_step_constraints",
+      "source": "B",
+      "mode": "B",
+      "index": 46
+    },
+    {
+      "id": "followup100_047_multi_step_constraints",
+      "source": "B",
+      "mode": "B",
+      "index": 47
+    },
+    {
+      "id": "followup100_048_multi_step_constraints",
+      "source": "B",
+      "mode": "B",
+      "index": 48
+    },
+    {
+      "id": "followup100_049_multi_step_constraints",
+      "source": "B",
+      "mode": "B",
+      "index": 49
+    },
+    {
+      "id": "followup100_050_tool_no_tool",
+      "source": "B",
+      "mode": "B",
+      "index": 50
+    },
+    {
+      "id": "followup100_051_tool_no_tool",
+      "source": "B",
+      "mode": "B",
+      "index": 51
+    },
+    {
+      "id": "followup100_052_tool_no_tool",
+      "source": "B",
+      "mode": "B",
+      "index": 52
+    },
+    {
+      "id": "followup100_053_tool_no_tool",
+      "source": "B",
+      "mode": "B",
+      "index": 53
+    },
+    {
+      "id": "followup100_054_tool_no_tool",
+      "source": "B",
+      "mode": "B",
+      "index": 54
+    },
+    {
+      "id": "followup100_055_tool_no_tool",
+      "source": "B",
+      "mode": "B",
+      "index": 55
+    },
+    {
+      "id": "followup100_056_tool_no_tool",
+      "source": "B",
+      "mode": "B",
+      "index": 56
+    },
+    {
+      "id": "followup100_057_tool_no_tool",
+      "source": "B",
+      "mode": "B",
+      "index": 57
+    },
+    {
+      "id": "followup100_058_tool_no_tool",
+      "source": "B",
+      "mode": "B",
+      "index": 58
+    },
+    {
+      "id": "followup100_059_tool_no_tool",
+      "source": "B",
+      "mode": "B",
+      "index": 59
+    },
+    {
+      "id": "followup100_060_grounding_unknown",
+      "source": "B",
+      "mode": "B",
+      "index": 60
+    },
+    {
+      "id": "followup100_061_grounding_unknown",
+      "source": "B",
+      "mode": "B",
+      "index": 61
+    },
+    {
+      "id": "followup100_062_grounding_unknown",
+      "source": "B",
+      "mode": "B",
+      "index": 62
+    },
+    {
+      "id": "followup100_063_grounding_unknown",
+      "source": "B",
+      "mode": "B",
+      "index": 63
+    },
+    {
+      "id": "followup100_064_grounding_unknown",
+      "source": "B",
+      "mode": "B",
+      "index": 64
+    },
+    {
+      "id": "followup100_065_grounding_unknown",
+      "source": "B",
+      "mode": "B",
+      "index": 65
+    },
+    {
+      "id": "followup100_066_grounding_unknown",
+      "source": "B",
+      "mode": "B",
+      "index": 66
+    },
+    {
+      "id": "followup100_067_grounding_unknown",
+      "source": "B",
+      "mode": "B",
+      "index": 67
+    },
+    {
+      "id": "followup100_068_grounding_unknown",
+      "source": "B",
+      "mode": "B",
+      "index": 68
+    },
+    {
+      "id": "followup100_069_grounding_unknown",
+      "source": "B",
+      "mode": "B",
+      "index": 69
+    },
+    {
+      "id": "followup100_070_failure_handling",
+      "source": "B",
+      "mode": "B",
+      "index": 70
+    },
+    {
+      "id": "followup100_071_failure_handling",
+      "source": "B",
+      "mode": "B",
+      "index": 71
+    },
+    {
+      "id": "followup100_072_failure_handling",
+      "source": "B",
+      "mode": "B",
+      "index": 72
+    },
+    {
+      "id": "followup100_073_failure_handling",
+      "source": "B",
+      "mode": "B",
+      "index": 73
+    },
+    {
+      "id": "followup100_074_failure_handling",
+      "source": "B",
+      "mode": "B",
+      "index": 74
+    },
+    {
+      "id": "followup100_075_failure_handling",
+      "source": "B",
+      "mode": "B",
+      "index": 75
+    },
+    {
+      "id": "followup100_076_failure_handling",
+      "source": "B",
+      "mode": "B",
+      "index": 76
+    },
+    {
+      "id": "followup100_077_failure_handling",
+      "source": "B",
+      "mode": "B",
+      "index": 77
+    },
+    {
+      "id": "followup100_078_failure_handling",
+      "source": "B",
+      "mode": "B",
+      "index": 78
+    },
+    {
+      "id": "followup100_079_failure_handling",
+      "source": "B",
+      "mode": "B",
+      "index": 79
+    },
+    {
+      "id": "followup100_080_entity_resolution",
+      "source": "B",
+      "mode": "B",
+      "index": 80
+    },
+    {
+      "id": "followup100_081_entity_resolution",
+      "source": "B",
+      "mode": "B",
+      "index": 81
+    },
+    {
+      "id": "followup100_082_entity_resolution",
+      "source": "B",
+      "mode": "B",
+      "index": 82
+    },
+    {
+      "id": "followup100_083_entity_resolution",
+      "source": "B",
+      "mode": "B",
+      "index": 83
+    },
+    {
+      "id": "followup100_084_entity_resolution",
+      "source": "B",
+      "mode": "B",
+      "index": 84
+    },
+    {
+      "id": "followup100_085_entity_resolution",
+      "source": "B",
+      "mode": "B",
+      "index": 85
+    },
+    {
+      "id": "followup100_086_entity_resolution",
+      "source": "B",
+      "mode": "B",
+      "index": 86
+    },
+    {
+      "id": "followup100_087_entity_resolution",
+      "source": "B",
+      "mode": "B",
+      "index": 87
+    },
+    {
+      "id": "followup100_088_entity_resolution",
+      "source": "B",
+      "mode": "B",
+      "index": 88
+    },
+    {
+      "id": "followup100_089_entity_resolution",
+      "source": "B",
+      "mode": "B",
+      "index": 89
+    },
+    {
+      "id": "followup100_090_consistency_followup",
+      "source": "B",
+      "mode": "B",
+      "index": 90
+    },
+    {
+      "id": "followup100_091_consistency_followup",
+      "source": "B",
+      "mode": "B",
+      "index": 91
+    },
+    {
+      "id": "followup100_092_consistency_followup",
+      "source": "B",
+      "mode": "B",
+      "index": 92
+    },
+    {
+      "id": "followup100_093_consistency_followup",
+      "source": "B",
+      "mode": "B",
+      "index": 93
+    },
+    {
+      "id": "followup100_094_consistency_followup",
+      "source": "B",
+      "mode": "B",
+      "index": 94
+    },
+    {
+      "id": "followup100_095_consistency_followup",
+      "source": "B",
+      "mode": "B",
+      "index": 95
+    },
+    {
+      "id": "followup100_096_consistency_followup",
+      "source": "B",
+      "mode": "B",
+      "index": 96
+    },
+    {
+      "id": "followup100_097_consistency_followup",
+      "source": "B",
+      "mode": "B",
+      "index": 97
+    },
+    {
+      "id": "followup100_098_consistency_followup",
+      "source": "B",
+      "mode": "B",
+      "index": 98
+    },
+    {
+      "id": "followup100_099_consistency_followup",
+      "source": "B",
+      "mode": "B",
+      "index": 99
+    },
+    {
+      "id": "cap100_000_file_intake_safety",
+      "source": "C",
+      "mode": "C",
+      "index": 0
+    },
+    {
+      "id": "cap100_001_file_intake_safety",
+      "source": "C",
+      "mode": "C",
+      "index": 1
+    },
+    {
+      "id": "cap100_002_file_intake_safety",
+      "source": "C",
+      "mode": "C",
+      "index": 2
+    },
+    {
+      "id": "cap100_003_file_intake_safety",
+      "source": "C",
+      "mode": "C",
+      "index": 3
+    },
+    {
+      "id": "cap100_004_file_intake_safety",
+      "source": "C",
+      "mode": "C",
+      "index": 4
+    },
+    {
+      "id": "cap100_005_file_intake_safety",
+      "source": "C",
+      "mode": "C",
+      "index": 5
+    },
+    {
+      "id": "cap100_006_file_intake_safety",
+      "source": "C",
+      "mode": "C",
+      "index": 6
+    },
+    {
+      "id": "cap100_007_file_intake_safety",
+      "source": "C",
+      "mode": "C",
+      "index": 7
+    },
+    {
+      "id": "cap100_008_file_intake_safety",
+      "source": "C",
+      "mode": "C",
+      "index": 8
+    },
+    {
+      "id": "cap100_009_file_intake_safety",
+      "source": "C",
+      "mode": "C",
+      "index": 9
+    },
+    {
+      "id": "cap100_010_file_duplicate_isolation",
+      "source": "C",
+      "mode": "C",
+      "index": 10
+    },
+    {
+      "id": "cap100_011_file_duplicate_isolation",
+      "source": "C",
+      "mode": "C",
+      "index": 11
+    },
+    {
+      "id": "cap100_012_file_duplicate_isolation",
+      "source": "C",
+      "mode": "C",
+      "index": 12
+    },
+    {
+      "id": "cap100_013_file_duplicate_isolation",
+      "source": "C",
+      "mode": "C",
+      "index": 13
+    },
+    {
+      "id": "cap100_014_file_duplicate_isolation",
+      "source": "C",
+      "mode": "C",
+      "index": 14
+    },
+    {
+      "id": "cap100_015_file_duplicate_isolation",
+      "source": "C",
+      "mode": "C",
+      "index": 15
+    },
+    {
+      "id": "cap100_016_file_duplicate_isolation",
+      "source": "C",
+      "mode": "C",
+      "index": 16
+    },
+    {
+      "id": "cap100_017_file_duplicate_isolation",
+      "source": "C",
+      "mode": "C",
+      "index": 17
+    },
+    {
+      "id": "cap100_018_file_duplicate_isolation",
+      "source": "C",
+      "mode": "C",
+      "index": 18
+    },
+    {
+      "id": "cap100_019_file_duplicate_isolation",
+      "source": "C",
+      "mode": "C",
+      "index": 19
+    },
+    {
+      "id": "cap100_020_file_status_provenance",
+      "source": "C",
+      "mode": "C",
+      "index": 20
+    },
+    {
+      "id": "cap100_021_file_status_provenance",
+      "source": "C",
+      "mode": "C",
+      "index": 21
+    },
+    {
+      "id": "cap100_022_file_status_provenance",
+      "source": "C",
+      "mode": "C",
+      "index": 22
+    },
+    {
+      "id": "cap100_023_file_status_provenance",
+      "source": "C",
+      "mode": "C",
+      "index": 23
+    },
+    {
+      "id": "cap100_024_file_status_provenance",
+      "source": "C",
+      "mode": "C",
+      "index": 24
+    },
+    {
+      "id": "cap100_025_file_status_provenance",
+      "source": "C",
+      "mode": "C",
+      "index": 25
+    },
+    {
+      "id": "cap100_026_file_status_provenance",
+      "source": "C",
+      "mode": "C",
+      "index": 26
+    },
+    {
+      "id": "cap100_027_file_status_provenance",
+      "source": "C",
+      "mode": "C",
+      "index": 27
+    },
+    {
+      "id": "cap100_028_file_status_provenance",
+      "source": "C",
+      "mode": "C",
+      "index": 28
+    },
+    {
+      "id": "cap100_029_file_status_provenance",
+      "source": "C",
+      "mode": "C",
+      "index": 29
+    },
+    {
+      "id": "cap100_030_agent_registry_permissions",
+      "source": "C",
+      "mode": "C",
+      "index": 30
+    },
+    {
+      "id": "cap100_031_agent_registry_permissions",
+      "source": "C",
+      "mode": "C",
+      "index": 31
+    },
+    {
+      "id": "cap100_032_agent_registry_permissions",
+      "source": "C",
+      "mode": "C",
+      "index": 32
+    },
+    {
+      "id": "cap100_033_agent_registry_permissions",
+      "source": "C",
+      "mode": "C",
+      "index": 33
+    },
+    {
+      "id": "cap100_034_agent_registry_permissions",
+      "source": "C",
+      "mode": "C",
+      "index": 34
+    },
+    {
+      "id": "cap100_035_agent_registry_permissions",
+      "source": "C",
+      "mode": "C",
+      "index": 35
+    },
+    {
+      "id": "cap100_036_agent_registry_permissions",
+      "source": "C",
+      "mode": "C",
+      "index": 36
+    },
+    {
+      "id": "cap100_037_agent_registry_permissions",
+      "source": "C",
+      "mode": "C",
+      "index": 37
+    },
+    {
+      "id": "cap100_038_agent_registry_permissions",
+      "source": "C",
+      "mode": "C",
+      "index": 38
+    },
+    {
+      "id": "cap100_039_agent_registry_permissions",
+      "source": "C",
+      "mode": "C",
+      "index": 39
+    },
+    {
+      "id": "cap100_040_agent_approval",
+      "source": "C",
+      "mode": "C",
+      "index": 40
+    },
+    {
+      "id": "cap100_041_agent_approval",
+      "source": "C",
+      "mode": "C",
+      "index": 41
+    },
+    {
+      "id": "cap100_042_agent_approval",
+      "source": "C",
+      "mode": "C",
+      "index": 42
+    },
+    {
+      "id": "cap100_043_agent_approval",
+      "source": "C",
+      "mode": "C",
+      "index": 43
+    },
+    {
+      "id": "cap100_044_agent_approval",
+      "source": "C",
+      "mode": "C",
+      "index": 44
+    },
+    {
+      "id": "cap100_045_agent_approval",
+      "source": "C",
+      "mode": "C",
+      "index": 45
+    },
+    {
+      "id": "cap100_046_agent_approval",
+      "source": "C",
+      "mode": "C",
+      "index": 46
+    },
+    {
+      "id": "cap100_047_agent_approval",
+      "source": "C",
+      "mode": "C",
+      "index": 47
+    },
+    {
+      "id": "cap100_048_agent_approval",
+      "source": "C",
+      "mode": "C",
+      "index": 48
+    },
+    {
+      "id": "cap100_049_agent_approval",
+      "source": "C",
+      "mode": "C",
+      "index": 49
+    },
+    {
+      "id": "cap100_050_agent_failure_control",
+      "source": "C",
+      "mode": "C",
+      "index": 50
+    },
+    {
+      "id": "cap100_051_agent_failure_control",
+      "source": "C",
+      "mode": "C",
+      "index": 51
+    },
+    {
+      "id": "cap100_052_agent_failure_control",
+      "source": "C",
+      "mode": "C",
+      "index": 52
+    },
+    {
+      "id": "cap100_053_agent_failure_control",
+      "source": "C",
+      "mode": "C",
+      "index": 53
+    },
+    {
+      "id": "cap100_054_agent_failure_control",
+      "source": "C",
+      "mode": "C",
+      "index": 54
+    },
+    {
+      "id": "cap100_055_agent_failure_control",
+      "source": "C",
+      "mode": "C",
+      "index": 55
+    },
+    {
+      "id": "cap100_056_agent_failure_control",
+      "source": "C",
+      "mode": "C",
+      "index": 56
+    },
+    {
+      "id": "cap100_057_agent_failure_control",
+      "source": "C",
+      "mode": "C",
+      "index": 57
+    },
+    {
+      "id": "cap100_058_agent_failure_control",
+      "source": "C",
+      "mode": "C",
+      "index": 58
+    },
+    {
+      "id": "cap100_059_agent_failure_control",
+      "source": "C",
+      "mode": "C",
+      "index": 59
+    },
+    {
+      "id": "cap100_060_audit_idempotency",
+      "source": "C",
+      "mode": "C",
+      "index": 60
+    },
+    {
+      "id": "cap100_061_audit_idempotency",
+      "source": "C",
+      "mode": "C",
+      "index": 61
+    },
+    {
+      "id": "cap100_062_audit_idempotency",
+      "source": "C",
+      "mode": "C",
+      "index": 62
+    },
+    {
+      "id": "cap100_063_audit_idempotency",
+      "source": "C",
+      "mode": "C",
+      "index": 63
+    },
+    {
+      "id": "cap100_064_audit_idempotency",
+      "source": "C",
+      "mode": "C",
+      "index": 64
+    },
+    {
+      "id": "cap100_065_audit_idempotency",
+      "source": "C",
+      "mode": "C",
+      "index": 65
+    },
+    {
+      "id": "cap100_066_audit_idempotency",
+      "source": "C",
+      "mode": "C",
+      "index": 66
+    },
+    {
+      "id": "cap100_067_audit_idempotency",
+      "source": "C",
+      "mode": "C",
+      "index": 67
+    },
+    {
+      "id": "cap100_068_audit_idempotency",
+      "source": "C",
+      "mode": "C",
+      "index": 68
+    },
+    {
+      "id": "cap100_069_audit_idempotency",
+      "source": "C",
+      "mode": "C",
+      "index": 69
+    },
+    {
+      "id": "cap100_070_prompt_injection_evidence",
+      "source": "C",
+      "mode": "C",
+      "index": 70
+    },
+    {
+      "id": "cap100_071_prompt_injection_evidence",
+      "source": "C",
+      "mode": "C",
+      "index": 71
+    },
+    {
+      "id": "cap100_072_prompt_injection_evidence",
+      "source": "C",
+      "mode": "C",
+      "index": 72
+    },
+    {
+      "id": "cap100_073_prompt_injection_evidence",
+      "source": "C",
+      "mode": "C",
+      "index": 73
+    },
+    {
+      "id": "cap100_074_prompt_injection_evidence",
+      "source": "C",
+      "mode": "C",
+      "index": 74
+    },
+    {
+      "id": "cap100_075_prompt_injection_evidence",
+      "source": "C",
+      "mode": "C",
+      "index": 75
+    },
+    {
+      "id": "cap100_076_prompt_injection_evidence",
+      "source": "C",
+      "mode": "C",
+      "index": 76
+    },
+    {
+      "id": "cap100_077_prompt_injection_evidence",
+      "source": "C",
+      "mode": "C",
+      "index": 77
+    },
+    {
+      "id": "cap100_078_prompt_injection_evidence",
+      "source": "C",
+      "mode": "C",
+      "index": 78
+    },
+    {
+      "id": "cap100_079_prompt_injection_evidence",
+      "source": "C",
+      "mode": "C",
+      "index": 79
+    },
+    {
+      "id": "cap100_080_structured_output_validation",
+      "source": "C",
+      "mode": "C",
+      "index": 80
+    },
+    {
+      "id": "cap100_081_structured_output_validation",
+      "source": "C",
+      "mode": "C",
+      "index": 81
+    },
+    {
+      "id": "cap100_082_structured_output_validation",
+      "source": "C",
+      "mode": "C",
+      "index": 82
+    },
+    {
+      "id": "cap100_083_structured_output_validation",
+      "source": "C",
+      "mode": "C",
+      "index": 83
+    },
+    {
+      "id": "cap100_084_structured_output_validation",
+      "source": "C",
+      "mode": "C",
+      "index": 84
+    },
+    {
+      "id": "cap100_085_structured_output_validation",
+      "source": "C",
+      "mode": "C",
+      "index": 85
+    },
+    {
+      "id": "cap100_086_structured_output_validation",
+      "source": "C",
+      "mode": "C",
+      "index": 86
+    },
+    {
+      "id": "cap100_087_structured_output_validation",
+      "source": "C",
+      "mode": "C",
+      "index": 87
+    },
+    {
+      "id": "cap100_088_structured_output_validation",
+      "source": "C",
+      "mode": "C",
+      "index": 88
+    },
+    {
+      "id": "cap100_089_structured_output_validation",
+      "source": "C",
+      "mode": "C",
+      "index": 89
+    },
+    {
+      "id": "cap100_090_context_encoding_preflight",
+      "source": "C",
+      "mode": "C",
+      "index": 90
+    },
+    {
+      "id": "cap100_091_context_encoding_preflight",
+      "source": "C",
+      "mode": "C",
+      "index": 91
+    },
+    {
+      "id": "cap100_092_context_encoding_preflight",
+      "source": "C",
+      "mode": "C",
+      "index": 92
+    },
+    {
+      "id": "cap100_093_context_encoding_preflight",
+      "source": "C",
+      "mode": "C",
+      "index": 93
+    },
+    {
+      "id": "cap100_094_context_encoding_preflight",
+      "source": "C",
+      "mode": "C",
+      "index": 94
+    },
+    {
+      "id": "cap100_095_context_encoding_preflight",
+      "source": "C",
+      "mode": "C",
+      "index": 95
+    },
+    {
+      "id": "cap100_096_context_encoding_preflight",
+      "source": "C",
+      "mode": "C",
+      "index": 96
+    },
+    {
+      "id": "cap100_097_context_encoding_preflight",
+      "source": "C",
+      "mode": "C",
+      "index": 97
+    },
+    {
+      "id": "cap100_098_context_encoding_preflight",
+      "source": "C",
+      "mode": "C",
+      "index": 98
+    },
+    {
+      "id": "cap100_099_context_encoding_preflight",
+      "source": "C",
+      "mode": "C",
+      "index": 99
+    }
+  ],
+  "dimensions": [
+    "task_fulfillment",
+    "context_and_ambiguity",
+    "tool_and_scope_choice",
+    "grounding_and_sources",
+    "uncertainty_and_safety",
+    "language_and_tone"
+  ],
+  "score_gate": {
+    "each_dimension_percent_gt": 80,
+    "overall_percent_gt": 80,
+    "no_category_below_percent": 80
+  },
+  "retry_policy": {
+    "max_attempts_per_case": 1,
+    "allow_answer_cherry_picking": false,
+    "duplicate_requests_are_failures": true,
+    "provider_retry": "disabled_in_manifest_generation"
+  },
+  "evidence_policy": "Capture completeness is separate from semantic quality. GPT-judge is preliminary; human review remains required.",
+  "report_paths": [
+    "D:/SOLAT_V3/reports/human-review-packet-20260815.json",
+    "D:/SOLAT_WORKSPACE/tmp-20260814/solat-quality-report-final-20260815.json"
+  ]
+}

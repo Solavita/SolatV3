@@ -1,0 +1,18 @@
+{
+  "schema_version": "solat.paired-corpus-limitations.v1",
+  "corpus": "D:/SOLAT_WORKSPACE/tmp-20260814/paired-100-corpus.json",
+  "status": "PASS_WITH_DECLARED_LIMITATIONS",
+  "policy": "The original A corpus is immutable. These cases intentionally require prior context but have no history fixture; they must be scored only for truthful clarification/insufficient-context handling, not reference resolution.",
+  "declared_missing_history": [
+    { "id": "paired100_022_context_3", "expected_behavior": "clarify_or_state_insufficient_context" },
+    { "id": "paired100_023_context_4", "expected_behavior": "clarify_or_state_insufficient_context" },
+    { "id": "paired100_024_context_5", "expected_behavior": "clarify_or_state_insufficient_context" },
+    { "id": "paired100_025_context_6", "expected_behavior": "clarify_or_state_insufficient_context" },
+    { "id": "paired100_029_context_10", "expected_behavior": "clarify_or_state_insufficient_context" },
+    { "id": "paired100_033_multilingual_4", "expected_behavior": "clarify_or_state_insufficient_context" },
+    { "id": "paired100_042_ambiguity_3", "expected_behavior": "clarify_or_state_insufficient_context" },
+    { "id": "paired100_043_ambiguity_4", "expected_behavior": "clarify_or_state_insufficient_context" },
+    { "id": "paired100_046_ambiguity_7", "expected_behavior": "clarify_or_state_insufficient_context" },
+    { "id": "paired100_048_ambiguity_9", "expected_behavior": "clarify_or_state_insufficient_context" }
+  ]
+}

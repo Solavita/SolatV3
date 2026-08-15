@@ -11,6 +11,31 @@ contextBridge.exposeInMainWorld('solat', Object.freeze({
     }
     return result?.value;
   },
+  agentCreate: async request => {
+    const result = await ipcRenderer.invoke('solat:agent-create', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Agent plan could not be created.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
+  agentInspect: async request => {
+    const result = await ipcRenderer.invoke('solat:agent-inspect', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Agent plan could not be inspected.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
+  agentApprove: async request => {
+    const result = await ipcRenderer.invoke('solat:agent-approve', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Agent plan could not be approved.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
+  agentCancel: async request => {
+    const result = await ipcRenderer.invoke('solat:agent-cancel', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Agent plan could not be cancelled.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
+  agentRun: async request => {
+    const result = await ipcRenderer.invoke('solat:agent-run', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Agent plan could not run.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
   saveConversation: async request => {
     const result = await ipcRenderer.invoke('solat:save-conversation', request);
     if (result?.ok === false) {

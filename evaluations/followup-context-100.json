@@ -1,0 +1,2415 @@
+{
+  "schema_version": "solat.followup-context-corpus.v1",
+  "case_count": 100,
+  "purpose": "Supplemental follow-up benchmark with real user seed turns; does not alter the original fixed 100-case corpus.",
+  "cases": [
+    {
+      "id": "followup100_000_context_pronouns",
+      "category": "context_pronouns",
+      "history": [
+        {
+          "role": "user",
+          "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “มัน” สำหรับรายการที่ 0 (FU100-000)"
+        }
+      ],
+      "content": "ต่อจากข้อความก่อนหน้า (รายการ 0) ช่วยอธิบายว่า “มัน” หมายถึงอะไรในบริบทนี้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-000"
+    },
+    {
+      "id": "followup100_001_context_pronouns",
+      "category": "context_pronouns",
+      "history": [
+        {
+          "role": "user",
+          "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “เขา” สำหรับรายการที่ 1 (FU100-001)"
+        }
+      ],
+      "content": "ต่อจากข้อความก่อนหน้า (รายการ 1) ช่วยอธิบายว่า “เขา” หมายถึงอะไรในบริบทนี้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-001"
+    },
+    {
+      "id": "followup100_002_context_pronouns",
+      "category": "context_pronouns",
+      "history": [
+        {
+          "role": "user",
+          "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “อันนั้น” สำหรับรายการที่ 2 (FU100-002)"
+        }
+      ],
+      "content": "ต่อจากข้อความก่อนหน้า (รายการ 2) ช่วยอธิบายว่า “อันนั้น” หมายถึงอะไรในบริบทนี้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-002"
+    },
+    {
+      "id": "followup100_003_context_pronouns",
+      "category": "context_pronouns",
+      "history": [
+        {
+          "role": "user",
+          "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “แบบเดิม” สำหรับรายการที่ 3 (FU100-003)"
+        }
+      ],
+      "content": "ต่อจากข้อความก่อนหน้า (รายการ 3) ช่วยอธิบายว่า “แบบเดิม” หมายถึงอะไรในบริบทนี้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-003"
+    },
+    {
+      "id": "followup100_004_context_pronouns",
+      "category": "context_pronouns",
+      "history": [
+        {
+          "role": "user",
+          "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “คนแรก” สำหรับรายการที่ 4 (FU100-004)"
+        }
+      ],
+      "content": "ต่อจากข้อความก่อนหน้า (รายการ 4) ช่วยอธิบายว่า “คนแรก” หมายถึงอะไรในบริบทนี้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-004"
+    },
+    {
+      "id": "followup100_005_context_pronouns",
+      "category": "context_pronouns",
+      "history": [
+        {
+          "role": "user",
+          "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “มัน” สำหรับรายการที่ 5 (FU100-005)"
+        }
+      ],
+      "content": "ต่อจากข้อความก่อนหน้า (รายการ 5) ช่วยอธิบายว่า “มัน” หมายถึงอะไรในบริบทนี้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-005"
+    },
+    {
+      "id": "followup100_006_context_pronouns",
+      "category": "context_pronouns",
+      "history": [
+        {
+          "role": "user",
+          "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “เขา” สำหรับรายการที่ 6 (FU100-006)"
+        }
+      ],
+      "content": "ต่อจากข้อความก่อนหน้า (รายการ 6) ช่วยอธิบายว่า “เขา” หมายถึงอะไรในบริบทนี้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-006"
+    },
+    {
+      "id": "followup100_007_context_pronouns",
+      "category": "context_pronouns",
+      "history": [
+        {
+          "role": "user",
+          "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “อันนั้น” สำหรับรายการที่ 7 (FU100-007)"
+        }
+      ],
+      "content": "ต่อจากข้อความก่อนหน้า (รายการ 7) ช่วยอธิบายว่า “อันนั้น” หมายถึงอะไรในบริบทนี้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-007"
+    },
+    {
+      "id": "followup100_008_context_pronouns",
+      "category": "context_pronouns",
+      "history": [
+        {
+          "role": "user",
+          "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “แบบเดิม” สำหรับรายการที่ 8 (FU100-008)"
+        },
+        {
+          "role": "user",
+          "content": "รายละเอียดเพิ่มเติมของรายการ 8: ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก "
+        }
+      ],
+      "content": "ต่อจากข้อความก่อนหน้า (รายการ 8) ช่วยอธิบายว่า “แบบเดิม” หมายถึงอะไรในบริบทนี้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-008"
+    },
+    {
+      "id": "followup100_009_context_pronouns",
+      "category": "context_pronouns",
+      "history": [
+        {
+          "role": "user",
+          "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “คนแรก” สำหรับรายการที่ 9 (FU100-009)"
+        },
+        {
+          "role": "user",
+          "content": "รายละเอียดเพิ่มเติมของรายการ 9: ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก "
+        }
+      ],
+      "content": "ต่อจากข้อความก่อนหน้า (รายการ 9) ช่วยอธิบายว่า “คนแรก” หมายถึงอะไรในบริบทนี้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-009"
+    },
+    {
+      "id": "followup100_010_thai_english_mixed",
+      "category": "thai_english_mixed",
+      "history": [
+        {
+          "role": "user",
+          "content": "For this case (FU100-010), please keep the subject “สรุป” and answer in the requested mixed language."
+        }
+      ],
+      "content": "Now follow up for item 10: สรุป — give the answer with the same language preference and scope.",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-010"
+    },
+    {
+      "id": "followup100_011_thai_english_mixed",
+      "category": "thai_english_mixed",
+      "history": [
+        {
+          "role": "user",
+          "content": "For this case (FU100-011), please keep the subject “compare” and answer in the requested mixed language."
+        }
+      ],
+      "content": "Now follow up for item 11: compare — give the answer with the same language preference and scope.",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-011"
+    },
+    {
+      "id": "followup100_012_thai_english_mixed",
+      "category": "thai_english_mixed",
+      "history": [
+        {
+          "role": "user",
+          "content": "For this case (FU100-012), please keep the subject “latest” and answer in the requested mixed language."
+        }
+      ],
+      "content": "Now follow up for item 12: latest — give the answer with the same language preference and scope.",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-012"
+    },
+    {
+      "id": "followup100_013_thai_english_mixed",
+      "category": "thai_english_mixed",
+      "history": [
+        {
+          "role": "user",
+          "content": "For this case (FU100-013), please keep the subject “แปล” and answer in the requested mixed language."
+        }
+      ],
+      "content": "Now follow up for item 13: แปล — give the answer with the same language preference and scope.",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-013"
+    },
+    {
+      "id": "followup100_014_thai_english_mixed",
+      "category": "thai_english_mixed",
+      "history": [
+        {
+          "role": "user",
+          "content": "For this case (FU100-014), please keep the subject “source” and answer in the requested mixed language."
+        }
+      ],
+      "content": "Now follow up for item 14: source — give the answer with the same language preference and scope.",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-014"
+    },
+    {
+      "id": "followup100_015_thai_english_mixed",
+      "category": "thai_english_mixed",
+      "history": [
+        {
+          "role": "user",
+          "content": "For this case (FU100-015), please keep the subject “สรุป” and answer in the requested mixed language."
+        }
+      ],
+      "content": "Now follow up for item 15: สรุป — give the answer with the same language preference and scope.",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-015"
+    },
+    {
+      "id": "followup100_016_thai_english_mixed",
+      "category": "thai_english_mixed",
+      "history": [
+        {
+          "role": "user",
+          "content": "For this case (FU100-016), please keep the subject “compare” and answer in the requested mixed language."
+        }
+      ],
+      "content": "Now follow up for item 16: compare — give the answer with the same language preference and scope.",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-016"
+    },
+    {
+      "id": "followup100_017_thai_english_mixed",
+      "category": "thai_english_mixed",
+      "history": [
+        {
+          "role": "user",
+          "content": "For this case (FU100-017), please keep the subject “latest” and answer in the requested mixed language."
+        }
+      ],
+      "content": "Now follow up for item 17: latest — give the answer with the same language preference and scope.",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-017"
+    },
+    {
+      "id": "followup100_018_thai_english_mixed",
+      "category": "thai_english_mixed",
+      "history": [
+        {
+          "role": "user",
+          "content": "For this case (FU100-018), please keep the subject “แปล” and answer in the requested mixed language."
+        }
+      ],
+      "content": "Now follow up for item 18: แปล — give the answer with the same language preference and scope.",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-018"
+    },
+    {
+      "id": "followup100_019_thai_english_mixed",
+      "category": "thai_english_mixed",
+      "history": [
+        {
+          "role": "user",
+          "content": "For this case (FU100-019), please keep the subject “source” and answer in the requested mixed language."
+        }
+      ],
+      "content": "Now follow up for item 19: source — give the answer with the same language preference and scope.",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-019"
+    },
+    {
+      "id": "followup100_020_typo_spacing_romanization",
+      "category": "typo_spacing_romanization",
+      "history": [
+        {
+          "role": "user",
+          "content": "ฉันกำลังค้นชื่อ “ParkDayoung” ในเคส FU100-020; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+        }
+      ],
+      "content": "ช่วยตรวจคำค้น “ParkDayoung” ต่อในรายการ 20 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-020"
+    },
+    {
+      "id": "followup100_021_typo_spacing_romanization",
+      "category": "typo_spacing_romanization",
+      "history": [
+        {
+          "role": "user",
+          "content": "ฉันกำลังค้นชื่อ “p ark dayoung” ในเคส FU100-021; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+        }
+      ],
+      "content": "ช่วยตรวจคำค้น “p ark dayoung” ต่อในรายการ 21 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-021"
+    },
+    {
+      "id": "followup100_022_typo_spacing_romanization",
+      "category": "typo_spacing_romanization",
+      "history": [
+        {
+          "role": "user",
+          "content": "ฉันกำลังค้นชื่อ “ฮันนารี” ในเคส FU100-022; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+        }
+      ],
+      "content": "ช่วยตรวจคำค้น “ฮันนารี” ต่อในรายการ 22 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-022"
+    },
+    {
+      "id": "followup100_023_typo_spacing_romanization",
+      "category": "typo_spacing_romanization",
+      "history": [
+        {
+          "role": "user",
+          "content": "ฉันกำลังค้นชื่อ “han nari” ในเคส FU100-023; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+        }
+      ],
+      "content": "ช่วยตรวจคำค้น “han nari” ต่อในรายการ 23 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-023"
+    },
+    {
+      "id": "followup100_024_typo_spacing_romanization",
+      "category": "typo_spacing_romanization",
+      "history": [
+        {
+          "role": "user",
+          "content": "ฉันกำลังค้นชื่อ “ค้น ห า” ในเคส FU100-024; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+        }
+      ],
+      "content": "ช่วยตรวจคำค้น “ค้น ห า” ต่อในรายการ 24 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-024"
+    },
+    {
+      "id": "followup100_025_typo_spacing_romanization",
+      "category": "typo_spacing_romanization",
+      "history": [
+        {
+          "role": "user",
+          "content": "ฉันกำลังค้นชื่อ “ParkDayoung” ในเคส FU100-025; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+        }
+      ],
+      "content": "ช่วยตรวจคำค้น “ParkDayoung” ต่อในรายการ 25 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-025"
+    },
+    {
+      "id": "followup100_026_typo_spacing_romanization",
+      "category": "typo_spacing_romanization",
+      "history": [
+        {
+          "role": "user",
+          "content": "ฉันกำลังค้นชื่อ “p ark dayoung” ในเคส FU100-026; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+        }
+      ],
+      "content": "ช่วยตรวจคำค้น “p ark dayoung” ต่อในรายการ 26 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-026"
+    },
+    {
+      "id": "followup100_027_typo_spacing_romanization",
+      "category": "typo_spacing_romanization",
+      "history": [
+        {
+          "role": "user",
+          "content": "ฉันกำลังค้นชื่อ “ฮันนารี” ในเคส FU100-027; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+        }
+      ],
+      "content": "ช่วยตรวจคำค้น “ฮันนารี” ต่อในรายการ 27 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-027"
+    },
+    {
+      "id": "followup100_028_typo_spacing_romanization",
+      "category": "typo_spacing_romanization",
+      "history": [
+        {
+          "role": "user",
+          "content": "ฉันกำลังค้นชื่อ “han nari” ในเคส FU100-028; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+        }
+      ],
+      "content": "ช่วยตรวจคำค้น “han nari” ต่อในรายการ 28 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-028"
+    },
+    {
+      "id": "followup100_029_typo_spacing_romanization",
+      "category": "typo_spacing_romanization",
+      "history": [
+        {
+          "role": "user",
+          "content": "ฉันกำลังค้นชื่อ “ค้น ห า” ในเคส FU100-029; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+        }
+      ],
+      "content": "ช่วยตรวจคำค้น “ค้น ห า” ต่อในรายการ 29 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-029"
+    },
+    {
+      "id": "followup100_030_corrections",
+      "category": "corrections",
+      "history": [
+        {
+          "role": "user",
+          "content": "ข้อมูลตั้งต้นของเคส FU100-030 คือ “แก้เป็นชื่อแรก”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+        }
+      ],
+      "content": "แก้คำขอของฉันในรายการ 30 ตามนี้: “แก้เป็นชื่อแรก” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-030"
+    },
+    {
+      "id": "followup100_031_corrections",
+      "category": "corrections",
+      "history": [
+        {
+          "role": "user",
+          "content": "ข้อมูลตั้งต้นของเคส FU100-031 คือ “ไม่ใช่คนเดิม”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+        }
+      ],
+      "content": "แก้คำขอของฉันในรายการ 31 ตามนี้: “ไม่ใช่คนเดิม” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-031"
+    },
+    {
+      "id": "followup100_032_corrections",
+      "category": "corrections",
+      "history": [
+        {
+          "role": "user",
+          "content": "ข้อมูลตั้งต้นของเคส FU100-032 คือ “ใช้ข้อมูลล่าสุด”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+        }
+      ],
+      "content": "แก้คำขอของฉันในรายการ 32 ตามนี้: “ใช้ข้อมูลล่าสุด” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-032"
+    },
+    {
+      "id": "followup100_033_corrections",
+      "category": "corrections",
+      "history": [
+        {
+          "role": "user",
+          "content": "ข้อมูลตั้งต้นของเคส FU100-033 คือ “ตัดข้อสอง”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+        }
+      ],
+      "content": "แก้คำขอของฉันในรายการ 33 ตามนี้: “ตัดข้อสอง” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-033"
+    },
+    {
+      "id": "followup100_034_corrections",
+      "category": "corrections",
+      "history": [
+        {
+          "role": "user",
+          "content": "ข้อมูลตั้งต้นของเคส FU100-034 คือ “เปลี่ยนภาษา”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+        }
+      ],
+      "content": "แก้คำขอของฉันในรายการ 34 ตามนี้: “เปลี่ยนภาษา” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-034"
+    },
+    {
+      "id": "followup100_035_corrections",
+      "category": "corrections",
+      "history": [
+        {
+          "role": "user",
+          "content": "ข้อมูลตั้งต้นของเคส FU100-035 คือ “แก้เป็นชื่อแรก”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+        }
+      ],
+      "content": "แก้คำขอของฉันในรายการ 35 ตามนี้: “แก้เป็นชื่อแรก” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-035"
+    },
+    {
+      "id": "followup100_036_corrections",
+      "category": "corrections",
+      "history": [
+        {
+          "role": "user",
+          "content": "ข้อมูลตั้งต้นของเคส FU100-036 คือ “ไม่ใช่คนเดิม”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+        }
+      ],
+      "content": "แก้คำขอของฉันในรายการ 36 ตามนี้: “ไม่ใช่คนเดิม” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-036"
+    },
+    {
+      "id": "followup100_037_corrections",
+      "category": "corrections",
+      "history": [
+        {
+          "role": "user",
+          "content": "ข้อมูลตั้งต้นของเคส FU100-037 คือ “ใช้ข้อมูลล่าสุด”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+        }
+      ],
+      "content": "แก้คำขอของฉันในรายการ 37 ตามนี้: “ใช้ข้อมูลล่าสุด” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-037"
+    },
+    {
+      "id": "followup100_038_corrections",
+      "category": "corrections",
+      "history": [
+        {
+          "role": "user",
+          "content": "ข้อมูลตั้งต้นของเคส FU100-038 คือ “ตัดข้อสอง”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+        }
+      ],
+      "content": "แก้คำขอของฉันในรายการ 38 ตามนี้: “ตัดข้อสอง” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-038"
+    },
+    {
+      "id": "followup100_039_corrections",
+      "category": "corrections",
+      "history": [
+        {
+          "role": "user",
+          "content": "ข้อมูลตั้งต้นของเคส FU100-039 คือ “เปลี่ยนภาษา”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+        }
+      ],
+      "content": "แก้คำขอของฉันในรายการ 39 ตามนี้: “เปลี่ยนภาษา” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-039"
+    },
+    {
+      "id": "followup100_040_multi_step_constraints",
+      "category": "multi_step_constraints",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-040 ต้องทำงานเป็นขั้น โดยมีเงื่อนไขเรื่อง “หนึ่ง” และห้ามข้ามลำดับ"
+        }
+      ],
+      "content": "ทำขั้น “หนึ่ง” ของรายการ 40 ต่อจากงานเดิมตามลำดับ และระบุขั้นที่ยังทำไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-040"
+    },
+    {
+      "id": "followup100_041_multi_step_constraints",
+      "category": "multi_step_constraints",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-041 ต้องทำงานเป็นขั้น โดยมีเงื่อนไขเรื่อง “สอง” และห้ามข้ามลำดับ"
+        }
+      ],
+      "content": "ทำขั้น “สอง” ของรายการ 41 ต่อจากงานเดิมตามลำดับ และระบุขั้นที่ยังทำไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-041"
+    },
+    {
+      "id": "followup100_042_multi_step_constraints",
+      "category": "multi_step_constraints",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-042 ต้องทำงานเป็นขั้น โดยมีเงื่อนไขเรื่อง “สาม” และห้ามข้ามลำดับ"
+        }
+      ],
+      "content": "ทำขั้น “สาม” ของรายการ 42 ต่อจากงานเดิมตามลำดับ และระบุขั้นที่ยังทำไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-042"
+    },
+    {
+      "id": "followup100_043_multi_step_constraints",
+      "category": "multi_step_constraints",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-043 ต้องทำงานเป็นขั้น โดยมีเงื่อนไขเรื่อง “ตามลำดับ” และห้ามข้ามลำดับ"
+        }
+      ],
+      "content": "ทำขั้น “ตามลำดับ” ของรายการ 43 ต่อจากงานเดิมตามลำดับ และระบุขั้นที่ยังทำไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-043"
+    },
+    {
+      "id": "followup100_044_multi_step_constraints",
+      "category": "multi_step_constraints",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-044 ต้องทำงานเป็นขั้น โดยมีเงื่อนไขเรื่อง “ห้ามแต่งข้อมูล” และห้ามข้ามลำดับ"
+        }
+      ],
+      "content": "ทำขั้น “ห้ามแต่งข้อมูล” ของรายการ 44 ต่อจากงานเดิมตามลำดับ และระบุขั้นที่ยังทำไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-044"
+    },
+    {
+      "id": "followup100_045_multi_step_constraints",
+      "category": "multi_step_constraints",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-045 ต้องทำงานเป็นขั้น โดยมีเงื่อนไขเรื่อง “หนึ่ง” และห้ามข้ามลำดับ"
+        }
+      ],
+      "content": "ทำขั้น “หนึ่ง” ของรายการ 45 ต่อจากงานเดิมตามลำดับ และระบุขั้นที่ยังทำไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-045"
+    },
+    {
+      "id": "followup100_046_multi_step_constraints",
+      "category": "multi_step_constraints",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-046 ต้องทำงานเป็นขั้น โดยมีเงื่อนไขเรื่อง “สอง” และห้ามข้ามลำดับ"
+        }
+      ],
+      "content": "ทำขั้น “สอง” ของรายการ 46 ต่อจากงานเดิมตามลำดับ และระบุขั้นที่ยังทำไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-046"
+    },
+    {
+      "id": "followup100_047_multi_step_constraints",
+      "category": "multi_step_constraints",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-047 ต้องทำงานเป็นขั้น โดยมีเงื่อนไขเรื่อง “สาม” และห้ามข้ามลำดับ"
+        }
+      ],
+      "content": "ทำขั้น “สาม” ของรายการ 47 ต่อจากงานเดิมตามลำดับ และระบุขั้นที่ยังทำไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-047"
+    },
+    {
+      "id": "followup100_048_multi_step_constraints",
+      "category": "multi_step_constraints",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-048 ต้องทำงานเป็นขั้น โดยมีเงื่อนไขเรื่อง “ตามลำดับ” และห้ามข้ามลำดับ"
+        }
+      ],
+      "content": "ทำขั้น “ตามลำดับ” ของรายการ 48 ต่อจากงานเดิมตามลำดับ และระบุขั้นที่ยังทำไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-048"
+    },
+    {
+      "id": "followup100_049_multi_step_constraints",
+      "category": "multi_step_constraints",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-049 ต้องทำงานเป็นขั้น โดยมีเงื่อนไขเรื่อง “ห้ามแต่งข้อมูล” และห้ามข้ามลำดับ"
+        }
+      ],
+      "content": "ทำขั้น “ห้ามแต่งข้อมูล” ของรายการ 49 ต่อจากงานเดิมตามลำดับ และระบุขั้นที่ยังทำไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-049"
+    },
+    {
+      "id": "followup100_050_tool_no_tool",
+      "category": "tool_no_tool",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-050 มีคำขอเกี่ยวกับ “ค้นหา”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+        }
+      ],
+      "content": "จากบริบทเดิมของรายการ 50 ขอให้จัดการ “ค้นหา” และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-050"
+    },
+    {
+      "id": "followup100_051_tool_no_tool",
+      "category": "tool_no_tool",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-051 มีคำขอเกี่ยวกับ “ไม่ต้องค้น”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+        }
+      ],
+      "content": "จากบริบทเดิมของรายการ 51 ขอให้จัดการ “ไม่ต้องค้น” และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-051"
+    },
+    {
+      "id": "followup100_052_tool_no_tool",
+      "category": "tool_no_tool",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-052 มีคำขอเกี่ยวกับ “อ่านหน้านี้”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+        }
+      ],
+      "content": "จากบริบทเดิมของรายการ 52 ขอให้จัดการ “อ่านหน้านี้” และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-052"
+    },
+    {
+      "id": "followup100_053_tool_no_tool",
+      "category": "tool_no_tool",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-053 มีคำขอเกี่ยวกับ “สรุปจากข้อความ”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+        }
+      ],
+      "content": "จากบริบทเดิมของรายการ 53 ขอให้จัดการ “สรุปจากข้อความ” และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-053"
+    },
+    {
+      "id": "followup100_054_tool_no_tool",
+      "category": "tool_no_tool",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-054 มีคำขอเกี่ยวกับ “เลือก tool”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+        }
+      ],
+      "content": "จากบริบทเดิมของรายการ 54 ขอให้จัดการ “เลือก tool” และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-054"
+    },
+    {
+      "id": "followup100_055_tool_no_tool",
+      "category": "tool_no_tool",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-055 มีคำขอเกี่ยวกับ “ค้นหา”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+        }
+      ],
+      "content": "จากบริบทเดิมของรายการ 55 ขอให้จัดการ “ค้นหา” และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-055"
+    },
+    {
+      "id": "followup100_056_tool_no_tool",
+      "category": "tool_no_tool",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-056 มีคำขอเกี่ยวกับ “ไม่ต้องค้น”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+        }
+      ],
+      "content": "จากบริบทเดิมของรายการ 56 ขอให้จัดการ “ไม่ต้องค้น” และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-056"
+    },
+    {
+      "id": "followup100_057_tool_no_tool",
+      "category": "tool_no_tool",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-057 มีคำขอเกี่ยวกับ “อ่านหน้านี้”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+        }
+      ],
+      "content": "จากบริบทเดิมของรายการ 57 ขอให้จัดการ “อ่านหน้านี้” และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-057"
+    },
+    {
+      "id": "followup100_058_tool_no_tool",
+      "category": "tool_no_tool",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-058 มีคำขอเกี่ยวกับ “สรุปจากข้อความ”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+        }
+      ],
+      "content": "จากบริบทเดิมของรายการ 58 ขอให้จัดการ “สรุปจากข้อความ” และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-058"
+    },
+    {
+      "id": "followup100_059_tool_no_tool",
+      "category": "tool_no_tool",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-059 มีคำขอเกี่ยวกับ “เลือก tool”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+        }
+      ],
+      "content": "จากบริบทเดิมของรายการ 59 ขอให้จัดการ “เลือก tool” และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-059"
+    },
+    {
+      "id": "followup100_060_grounding_unknown",
+      "category": "grounding_unknown",
+      "history": [
+        {
+          "role": "user",
+          "content": "สำหรับเคส FU100-060 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “หลักฐาน”"
+        }
+      ],
+      "content": "สรุปรายการ 60 เรื่อง “หลักฐาน” โดยใส่หลักฐานที่มี แยก inference และบอกสิ่งที่ยืนยันไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-060"
+    },
+    {
+      "id": "followup100_061_grounding_unknown",
+      "category": "grounding_unknown",
+      "history": [
+        {
+          "role": "user",
+          "content": "สำหรับเคส FU100-061 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “ไม่ทราบ”"
+        }
+      ],
+      "content": "สรุปรายการ 61 เรื่อง “ไม่ทราบ” โดยใส่หลักฐานที่มี แยก inference และบอกสิ่งที่ยืนยันไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-061"
+    },
+    {
+      "id": "followup100_062_grounding_unknown",
+      "category": "grounding_unknown",
+      "history": [
+        {
+          "role": "user",
+          "content": "สำหรับเคส FU100-062 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “อ้างอิง”"
+        }
+      ],
+      "content": "สรุปรายการ 62 เรื่อง “อ้างอิง” โดยใส่หลักฐานที่มี แยก inference และบอกสิ่งที่ยืนยันไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-062"
+    },
+    {
+      "id": "followup100_063_grounding_unknown",
+      "category": "grounding_unknown",
+      "history": [
+        {
+          "role": "user",
+          "content": "สำหรับเคส FU100-063 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “แยก fact”"
+        }
+      ],
+      "content": "สรุปรายการ 63 เรื่อง “แยก fact” โดยใส่หลักฐานที่มี แยก inference และบอกสิ่งที่ยืนยันไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-063"
+    },
+    {
+      "id": "followup100_064_grounding_unknown",
+      "category": "grounding_unknown",
+      "history": [
+        {
+          "role": "user",
+          "content": "สำหรับเคส FU100-064 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “ยืนยัน”"
+        }
+      ],
+      "content": "สรุปรายการ 64 เรื่อง “ยืนยัน” โดยใส่หลักฐานที่มี แยก inference และบอกสิ่งที่ยืนยันไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-064"
+    },
+    {
+      "id": "followup100_065_grounding_unknown",
+      "category": "grounding_unknown",
+      "history": [
+        {
+          "role": "user",
+          "content": "สำหรับเคส FU100-065 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “หลักฐาน”"
+        }
+      ],
+      "content": "สรุปรายการ 65 เรื่อง “หลักฐาน” โดยใส่หลักฐานที่มี แยก inference และบอกสิ่งที่ยืนยันไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-065"
+    },
+    {
+      "id": "followup100_066_grounding_unknown",
+      "category": "grounding_unknown",
+      "history": [
+        {
+          "role": "user",
+          "content": "สำหรับเคส FU100-066 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “ไม่ทราบ”"
+        }
+      ],
+      "content": "สรุปรายการ 66 เรื่อง “ไม่ทราบ” โดยใส่หลักฐานที่มี แยก inference และบอกสิ่งที่ยืนยันไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-066"
+    },
+    {
+      "id": "followup100_067_grounding_unknown",
+      "category": "grounding_unknown",
+      "history": [
+        {
+          "role": "user",
+          "content": "สำหรับเคส FU100-067 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “อ้างอิง”"
+        }
+      ],
+      "content": "สรุปรายการ 67 เรื่อง “อ้างอิง” โดยใส่หลักฐานที่มี แยก inference และบอกสิ่งที่ยืนยันไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-067"
+    },
+    {
+      "id": "followup100_068_grounding_unknown",
+      "category": "grounding_unknown",
+      "history": [
+        {
+          "role": "user",
+          "content": "สำหรับเคส FU100-068 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “แยก fact”"
+        }
+      ],
+      "content": "สรุปรายการ 68 เรื่อง “แยก fact” โดยใส่หลักฐานที่มี แยก inference และบอกสิ่งที่ยืนยันไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-068"
+    },
+    {
+      "id": "followup100_069_grounding_unknown",
+      "category": "grounding_unknown",
+      "history": [
+        {
+          "role": "user",
+          "content": "สำหรับเคส FU100-069 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “ยืนยัน”"
+        }
+      ],
+      "content": "สรุปรายการ 69 เรื่อง “ยืนยัน” โดยใส่หลักฐานที่มี แยก inference และบอกสิ่งที่ยืนยันไม่ได้",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-069"
+    },
+    {
+      "id": "followup100_070_failure_handling",
+      "category": "failure_handling",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-070 จำลองสถานการณ์ “timeout”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+        }
+      ],
+      "content": "ดำเนินการรายการ 70 ต่อกับ “timeout” แต่ห้ามรายงานสำเร็จหากยังไม่มีผลตรวจจริง",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-070"
+    },
+    {
+      "id": "followup100_071_failure_handling",
+      "category": "failure_handling",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-071 จำลองสถานการณ์ “malformed”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+        }
+      ],
+      "content": "ดำเนินการรายการ 71 ต่อกับ “malformed” แต่ห้ามรายงานสำเร็จหากยังไม่มีผลตรวจจริง",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-071"
+    },
+    {
+      "id": "followup100_072_failure_handling",
+      "category": "failure_handling",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-072 จำลองสถานการณ์ “ล้มเหลว”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+        }
+      ],
+      "content": "ดำเนินการรายการ 72 ต่อกับ “ล้มเหลว” แต่ห้ามรายงานสำเร็จหากยังไม่มีผลตรวจจริง",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-072"
+    },
+    {
+      "id": "followup100_073_failure_handling",
+      "category": "failure_handling",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-073 จำลองสถานการณ์ “retry”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+        }
+      ],
+      "content": "ดำเนินการรายการ 73 ต่อกับ “retry” แต่ห้ามรายงานสำเร็จหากยังไม่มีผลตรวจจริง",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-073"
+    },
+    {
+      "id": "followup100_074_failure_handling",
+      "category": "failure_handling",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-074 จำลองสถานการณ์ “หยุดเมื่อเกิน limit”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+        }
+      ],
+      "content": "ดำเนินการรายการ 74 ต่อกับ “หยุดเมื่อเกิน limit” แต่ห้ามรายงานสำเร็จหากยังไม่มีผลตรวจจริง",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-074"
+    },
+    {
+      "id": "followup100_075_failure_handling",
+      "category": "failure_handling",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-075 จำลองสถานการณ์ “timeout”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+        }
+      ],
+      "content": "ดำเนินการรายการ 75 ต่อกับ “timeout” แต่ห้ามรายงานสำเร็จหากยังไม่มีผลตรวจจริง",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-075"
+    },
+    {
+      "id": "followup100_076_failure_handling",
+      "category": "failure_handling",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-076 จำลองสถานการณ์ “malformed”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+        }
+      ],
+      "content": "ดำเนินการรายการ 76 ต่อกับ “malformed” แต่ห้ามรายงานสำเร็จหากยังไม่มีผลตรวจจริง",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-076"
+    },
+    {
+      "id": "followup100_077_failure_handling",
+      "category": "failure_handling",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-077 จำลองสถานการณ์ “ล้มเหลว”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+        }
+      ],
+      "content": "ดำเนินการรายการ 77 ต่อกับ “ล้มเหลว” แต่ห้ามรายงานสำเร็จหากยังไม่มีผลตรวจจริง",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-077"
+    },
+    {
+      "id": "followup100_078_failure_handling",
+      "category": "failure_handling",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-078 จำลองสถานการณ์ “retry”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+        }
+      ],
+      "content": "ดำเนินการรายการ 78 ต่อกับ “retry” แต่ห้ามรายงานสำเร็จหากยังไม่มีผลตรวจจริง",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-078"
+    },
+    {
+      "id": "followup100_079_failure_handling",
+      "category": "failure_handling",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-079 จำลองสถานการณ์ “หยุดเมื่อเกิน limit”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+        }
+      ],
+      "content": "ดำเนินการรายการ 79 ต่อกับ “หยุดเมื่อเกิน limit” แต่ห้ามรายงานสำเร็จหากยังไม่มีผลตรวจจริง",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-079"
+    },
+    {
+      "id": "followup100_080_entity_resolution",
+      "category": "entity_resolution",
+      "history": [
+        {
+          "role": "user",
+          "content": "ในเคส FU100-080 คำว่า “ตัวละคร” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+        }
+      ],
+      "content": "ต่อจากเอนทิตีเดิมของรายการ 80 ช่วยตอบเรื่อง “ตัวละคร” โดยอธิบายความกำกวมถ้ามี",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-080"
+    },
+    {
+      "id": "followup100_081_entity_resolution",
+      "category": "entity_resolution",
+      "history": [
+        {
+          "role": "user",
+          "content": "ในเคส FU100-081 คำว่า “นักร้อง” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+        }
+      ],
+      "content": "ต่อจากเอนทิตีเดิมของรายการ 81 ช่วยตอบเรื่อง “นักร้อง” โดยอธิบายความกำกวมถ้ามี",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-081"
+    },
+    {
+      "id": "followup100_082_entity_resolution",
+      "category": "entity_resolution",
+      "history": [
+        {
+          "role": "user",
+          "content": "ในเคส FU100-082 คำว่า “สินค้า A” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+        }
+      ],
+      "content": "ต่อจากเอนทิตีเดิมของรายการ 82 ช่วยตอบเรื่อง “สินค้า A” โดยอธิบายความกำกวมถ้ามี",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-082"
+    },
+    {
+      "id": "followup100_083_entity_resolution",
+      "category": "entity_resolution",
+      "history": [
+        {
+          "role": "user",
+          "content": "ในเคส FU100-083 คำว่า “ลูกค้าคนแรก” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+        }
+      ],
+      "content": "ต่อจากเอนทิตีเดิมของรายการ 83 ช่วยตอบเรื่อง “ลูกค้าคนแรก” โดยอธิบายความกำกวมถ้ามี",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-083"
+    },
+    {
+      "id": "followup100_084_entity_resolution",
+      "category": "entity_resolution",
+      "history": [
+        {
+          "role": "user",
+          "content": "ในเคส FU100-084 คำว่า “ออเดอร์ล่าสุด” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+        }
+      ],
+      "content": "ต่อจากเอนทิตีเดิมของรายการ 84 ช่วยตอบเรื่อง “ออเดอร์ล่าสุด” โดยอธิบายความกำกวมถ้ามี",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-084"
+    },
+    {
+      "id": "followup100_085_entity_resolution",
+      "category": "entity_resolution",
+      "history": [
+        {
+          "role": "user",
+          "content": "ในเคส FU100-085 คำว่า “ตัวละคร” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+        }
+      ],
+      "content": "ต่อจากเอนทิตีเดิมของรายการ 85 ช่วยตอบเรื่อง “ตัวละคร” โดยอธิบายความกำกวมถ้ามี",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-085"
+    },
+    {
+      "id": "followup100_086_entity_resolution",
+      "category": "entity_resolution",
+      "history": [
+        {
+          "role": "user",
+          "content": "ในเคส FU100-086 คำว่า “นักร้อง” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+        }
+      ],
+      "content": "ต่อจากเอนทิตีเดิมของรายการ 86 ช่วยตอบเรื่อง “นักร้อง” โดยอธิบายความกำกวมถ้ามี",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-086"
+    },
+    {
+      "id": "followup100_087_entity_resolution",
+      "category": "entity_resolution",
+      "history": [
+        {
+          "role": "user",
+          "content": "ในเคส FU100-087 คำว่า “สินค้า A” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+        }
+      ],
+      "content": "ต่อจากเอนทิตีเดิมของรายการ 87 ช่วยตอบเรื่อง “สินค้า A” โดยอธิบายความกำกวมถ้ามี",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-087"
+    },
+    {
+      "id": "followup100_088_entity_resolution",
+      "category": "entity_resolution",
+      "history": [
+        {
+          "role": "user",
+          "content": "ในเคส FU100-088 คำว่า “ลูกค้าคนแรก” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+        }
+      ],
+      "content": "ต่อจากเอนทิตีเดิมของรายการ 88 ช่วยตอบเรื่อง “ลูกค้าคนแรก” โดยอธิบายความกำกวมถ้ามี",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-088"
+    },
+    {
+      "id": "followup100_089_entity_resolution",
+      "category": "entity_resolution",
+      "history": [
+        {
+          "role": "user",
+          "content": "ในเคส FU100-089 คำว่า “ออเดอร์ล่าสุด” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+        }
+      ],
+      "content": "ต่อจากเอนทิตีเดิมของรายการ 89 ช่วยตอบเรื่อง “ออเดอร์ล่าสุด” โดยอธิบายความกำกวมถ้ามี",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-089"
+    },
+    {
+      "id": "followup100_090_consistency_followup",
+      "category": "consistency_followup",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-090 กำหนดรูปแบบคำตอบเกี่ยวกับ “ทำแบบเดิม” ไว้ก่อน"
+        }
+      ],
+      "content": "ทำรายการ 90 เรื่อง “ทำแบบเดิม” ต่อโดยคงรูปแบบและข้อจำกัดจากข้อความก่อนหน้า",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-090"
+    },
+    {
+      "id": "followup100_091_consistency_followup",
+      "category": "consistency_followup",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-091 กำหนดรูปแบบคำตอบเกี่ยวกับ “สั้นลง” ไว้ก่อน"
+        }
+      ],
+      "content": "ทำรายการ 91 เรื่อง “สั้นลง” ต่อโดยคงรูปแบบและข้อจำกัดจากข้อความก่อนหน้า",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-091"
+    },
+    {
+      "id": "followup100_092_consistency_followup",
+      "category": "consistency_followup",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-092 กำหนดรูปแบบคำตอบเกี่ยวกับ “ขยายข้อสาม” ไว้ก่อน"
+        }
+      ],
+      "content": "ทำรายการ 92 เรื่อง “ขยายข้อสาม” ต่อโดยคงรูปแบบและข้อจำกัดจากข้อความก่อนหน้า",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-092"
+    },
+    {
+      "id": "followup100_093_consistency_followup",
+      "category": "consistency_followup",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-093 กำหนดรูปแบบคำตอบเกี่ยวกับ “คงรูปแบบ” ไว้ก่อน"
+        }
+      ],
+      "content": "ทำรายการ 93 เรื่อง “คงรูปแบบ” ต่อโดยคงรูปแบบและข้อจำกัดจากข้อความก่อนหน้า",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-093"
+    },
+    {
+      "id": "followup100_094_consistency_followup",
+      "category": "consistency_followup",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-094 กำหนดรูปแบบคำตอบเกี่ยวกับ “ตรวจซ้ำ” ไว้ก่อน"
+        }
+      ],
+      "content": "ทำรายการ 94 เรื่อง “ตรวจซ้ำ” ต่อโดยคงรูปแบบและข้อจำกัดจากข้อความก่อนหน้า",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-094"
+    },
+    {
+      "id": "followup100_095_consistency_followup",
+      "category": "consistency_followup",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-095 กำหนดรูปแบบคำตอบเกี่ยวกับ “ทำแบบเดิม” ไว้ก่อน"
+        }
+      ],
+      "content": "ทำรายการ 95 เรื่อง “ทำแบบเดิม” ต่อโดยคงรูปแบบและข้อจำกัดจากข้อความก่อนหน้า",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-095"
+    },
+    {
+      "id": "followup100_096_consistency_followup",
+      "category": "consistency_followup",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-096 กำหนดรูปแบบคำตอบเกี่ยวกับ “สั้นลง” ไว้ก่อน"
+        }
+      ],
+      "content": "ทำรายการ 96 เรื่อง “สั้นลง” ต่อโดยคงรูปแบบและข้อจำกัดจากข้อความก่อนหน้า",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-096"
+    },
+    {
+      "id": "followup100_097_consistency_followup",
+      "category": "consistency_followup",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-097 กำหนดรูปแบบคำตอบเกี่ยวกับ “ขยายข้อสาม” ไว้ก่อน"
+        }
+      ],
+      "content": "ทำรายการ 97 เรื่อง “ขยายข้อสาม” ต่อโดยคงรูปแบบและข้อจำกัดจากข้อความก่อนหน้า",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-097"
+    },
+    {
+      "id": "followup100_098_consistency_followup",
+      "category": "consistency_followup",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-098 กำหนดรูปแบบคำตอบเกี่ยวกับ “คงรูปแบบ” ไว้ก่อน"
+        }
+      ],
+      "content": "ทำรายการ 98 เรื่อง “คงรูปแบบ” ต่อโดยคงรูปแบบและข้อจำกัดจากข้อความก่อนหน้า",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-098"
+    },
+    {
+      "id": "followup100_099_consistency_followup",
+      "category": "consistency_followup",
+      "history": [
+        {
+          "role": "user",
+          "content": "เคส FU100-099 กำหนดรูปแบบคำตอบเกี่ยวกับ “ตรวจซ้ำ” ไว้ก่อน"
+        }
+      ],
+      "content": "ทำรายการ 99 เรื่อง “ตรวจซ้ำ” ต่อโดยคงรูปแบบและข้อจำกัดจากข้อความก่อนหน้า",
+      "expected_behavior": [
+        "resolve_followup_against_case_history",
+        "preserve_case_scope",
+        "answer_in_requested_language_or_style",
+        "state_unknowns_without_invention"
+      ],
+      "forbidden_behavior": [
+        "use_context_from_another_case",
+        "invent_evidence",
+        "claim_tool_success_without_evidence",
+        "ignore_latest_correction"
+      ],
+      "case_marker": "FU100-099"
+    }
+  ]
+}

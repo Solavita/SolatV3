@@ -14,6 +14,7 @@ const CORRECTION_TERMS = /\b(?:actually|correction|i\s+mean|not\s+that|rather)\b
 const NAMED_LOOKUP_STOPWORDS = new Set(['hi', 'hello', 'hey', 'thanks', 'thank', 'ok', 'okay', 'yes', 'no', 'please', 'help', 'solat']);
 // Use Unicode escapes for Thai terms so the router is stable across Windows
 // console/file encodings; the original user message remains untouched.
+const DIRECT_TRANSFORM_TERMS = /(?:สร้าง\s+query|build\s+(?:a\s+)?query|query\s+carefully|คำเว้นวรรค|spacing|keep\s+the\s+thai\s+name\s+unchanged|ตรวจคำพิมพ์ผิด|\btypo\b|เริ่มค้นข้อมูลจากอะไร)/iu;
 const COMMERCE_TERMS = /(?:business|company|store|shop|customer|product|inventory|stock|order|sales|payment|shipping|follow[- ]?up|crm|\u0e18\u0e38\u0e23\u0e01\u0e34\u0e08|\u0e1a\u0e23\u0e34\u0e29\u0e31\u0e17|\u0e23\u0e49\u0e32\u0e19\u0e04\u0e49\u0e32|\u0e23\u0e49\u0e32\u0e19|\u0e25\u0e39\u0e01\u0e04\u0e49\u0e32|\u0e2a\u0e34\u0e19\u0e04\u0e49\u0e32|\u0e2a\u0e15\u0e47\u0e2d\u0e01|\u0e2d\u0e2d\u0e40\u0e14\u0e2d\u0e23\u0e4c|\u0e04\u0e33\u0e2a\u0e31\u0e48\u0e07\u0e0b\u0e37\u0e49\u0e2d|\u0e22\u0e2d\u0e14\u0e02\u0e32\u0e22|\u0e0a\u0e33\u0e23\u0e30\u0e40\u0e07\u0e34\u0e19|\u0e08\u0e31\u0e14\u0e2a\u0e48\u0e07|\u0e15\u0e34\u0e14\u0e15\u0e32\u0e21\u0e25\u0e39\u0e01\u0e04\u0e49\u0e32|\u0e42\u0e1b\u0e23\u0e44\u0e1f\u0e25\u0e4c\u0e18\u0e38\u0e23\u0e01\u0e34\u0e08|\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e18\u0e38\u0e23\u0e01\u0e34\u0e08)/iu;
 
 const SEARCH_TERMS = /\b(search|find|look\s*up|latest|current|news|source|wikipedia|tiktok|pinterest|instagram|youtube|facebook)\b|ค้นหา|เสิร์ช|ล่าสุด|แหล่งที่มา|วิกิ|ติ๊กต็อก|พินเทอเรสต์/iu;
@@ -242,8 +243,8 @@ function referenceResolution(value, history) {
   // Keep the user text intact, but recognize common Thai follow-up forms as
   // well as English pronouns. The resolution is advisory and only succeeds
   // when a single recent named entity is available.
-  const hasReference = /\b(it|this|that|these|those|they|them|he|she|her|him|his|its|there|one|former|latter)\b/iu.test(String(value || ''))
-    || /(?:\u0e21\u0e31\u0e19|\u0e2d\u0e31\u0e19\u0e19\u0e35\u0e49|\u0e2d\u0e31\u0e19\u0e19\u0e31\u0e49\u0e19|\u0e40\u0e02\u0e32|\u0e40\u0e18\u0e2d|\u0e2a\u0e34\u0e48\u0e07\u0e19\u0e35\u0e49|\u0e04\u0e19\u0e19\u0e35\u0e49|\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e19\u0e35\u0e49|\u0e15\u0e31\u0e27\u0e19\u0e35\u0e49)/u.test(String(value || ''));
+  const hasReference = /\b(it|this|that|these|those|they|them|he|she|her|him|his|its|there|one|former|latter|earlier|before|previous|previously|originally)\b/iu.test(String(value || ''))
+    || /(?:\u0e21\u0e31\u0e19|\u0e2d\u0e31\u0e19\u0e19\u0e35\u0e49|\u0e2d\u0e31\u0e19\u0e19\u0e31\u0e49\u0e19|\u0e40\u0e02\u0e32|\u0e40\u0e18\u0e2d|\u0e2a\u0e34\u0e48\u0e07\u0e19\u0e35\u0e49|\u0e04\u0e19\u0e19\u0e35\u0e49|\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e19\u0e35\u0e49|\u0e15\u0e31\u0e27\u0e19\u0e35\u0e49|\u0e01\u0e48\u0e2d\u0e19\u0e2b\u0e19\u0e49\u0e32|\u0e40\u0e14\u0e34\u0e21)/u.test(String(value || ''));
   const candidates = contextEntities(history);
   const ordinal = referenceOrdinal(value);
   const resolvedOrdinal = ordinal !== null && Boolean(candidates[ordinal]);
@@ -369,10 +370,11 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
   // the manhwa character" immediately overrides stale domain context.
   const qualifiers = contextQualifiers([...prior, { role: 'user', content: normalized }]);
   const signals = [];
+  const directTransform = DIRECT_TRANSFORM_TERMS.test(normalized);
   const selfReferential = /\b(?:you|your|we|our|i|my)\b/iu.test(normalized);
-  if (SEARCH_TERMS.test(normalized) || THAI_SEARCH_TERMS.test(normalized) || (FACTUAL_QUERY_TERMS.test(normalized) && !selfReferential)) signals.push('web_search');
+  if (!directTransform && (SEARCH_TERMS.test(normalized) || THAI_SEARCH_TERMS.test(normalized) || (FACTUAL_QUERY_TERMS.test(normalized) && !selfReferential))) signals.push('web_search');
   if (COMMERCE_TERMS.test(normalized)) signals.push('commerce');
-  if (looksLikeNamedLookup(normalized)) signals.push('web_search', 'named_lookup');
+  if (!directTransform && looksLikeNamedLookup(normalized)) signals.push('web_search', 'named_lookup');
   if (disambiguation.comparison) signals.push('web_search', 'clarification_candidate');
   if (FILE_TERMS.test(normalized) || attachments.length) signals.push('file_analysis');
   if (CREATIVE_TERMS.test(normalized)) signals.push('creative_workflow');
@@ -448,6 +450,8 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
     },
     task: {
       instruction_plan: buildInstructionPlan(original),
+      direct_transformation: directTransform,
+      direct_response_required: directTransform,
       needs_latest_information: needsLatest,
       goals: unique(signals),
       sequence: signals.includes('web_search') ? [disambiguation.comparison ? 'compare_candidates' : 'understand_intent', disambiguation.likely_ambiguous || unresolvedReference ? 'resolve_ambiguity' : 'search_if_needed', 'let_model_synthesize'] : ['understand_intent', 'let_model_respond'],
@@ -466,6 +470,7 @@ function analyzeIntent({ content, history = [], attachments = [] } = {}) {
     routing: {
       mode: ambiguous || top.intent === 'general_chat' || top.intent === 'clarification' ? 'model_first' : 'model_first_with_tool_hints',
       hard_gate: false,
+      direct_transformation: directTransform,
       model_may_choose_tools: true,
       ask_clarification_if_unresolved: disambiguation.likely_ambiguous || unresolvedReference,
     },

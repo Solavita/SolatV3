@@ -226,7 +226,7 @@ function extractContent(payload) {
   const content = message.content;
   if (typeof content === 'string' && content.trim()) {
     const dsml = parseDsmlToolBlock(content.trim());
-    const visible = dsml ? dsml.prose : content.trim();
+    const visible = repairWindows874Mojibake(dsml ? dsml.prose : content.trim());
     if (visible) return visible;
   }
   if (Array.isArray(content)) {
@@ -235,9 +235,44 @@ function extractContent(payload) {
       .map(part => part.text)
       .join('')
       .trim();
-    if (text) return text;
+    if (text) return repairWindows874Mojibake(text);
   }
   throw new ProviderError('malformed_response', 'The model returned no usable text response.');
+}
+
+// A small number of compatible gateways have historically decoded UTF-8 model
+// text as Windows-874 before returning JSON. Repair only the distinctive
+// mojibake signature; normal Thai/Unicode text must pass through untouched.
+// This stays local and dependency-free so the provider boundary is stable.
+function repairWindows874Mojibake(value) {
+  let text = String(value || '');
+  for (let pass = 0; pass < 3; pass += 1) {
+    const repaired = repairWindows874Pass(text);
+    if (repaired === text) return text;
+    text = repaired;
+  }
+  return text;
+}
+
+function repairWindows874Pass(text) {
+  const signatureCount = (text.match(/เน€/gu) || []).length
+    + (text.match(/เธ[\u0080-\u00ff]/gu) || []).length
+    + (text.match(/โ[\u0080-\u00ff]/gu) || []).length;
+  if (signatureCount < 2) return text;
+  const decoder = new TextDecoder('windows-874');
+  const reverse = new Map();
+  for (let byte = 0; byte <= 0xff; byte += 1) {
+    const decoded = decoder.decode(Uint8Array.of(byte));
+    if (!reverse.has(decoded)) reverse.set(decoded, byte);
+  }
+  const bytes = [];
+  for (const character of text) {
+    const byte = reverse.get(character);
+    if (byte === undefined) return text;
+    bytes.push(byte);
+  }
+  const repaired = new TextDecoder('utf-8').decode(Uint8Array.from(bytes));
+  return repaired.includes('\ufffd') ? text : repaired;
 }
 
 function parseStructuredJson(content) {
@@ -564,6 +599,7 @@ module.exports = {
   createProvider,
   extractContent,
   parseStructuredJson,
+  repairWindows874Mojibake,
   serializeToolOutcome,
   validateStructuredData,
   validateToolCallsAgainstDefinitions,

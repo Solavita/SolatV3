@@ -41,8 +41,57 @@ const { analyzeIntent, contextEntities } = require('../src/core/intent-router');
 const { WebSearchService, analyzeSearchQuery, directlyIdentifiesQuery, evidenceAuthorityLevel, isAllowedUrl, minimumRelevance, namedEntityInQuery, providerCapability, rankResults, relevanceFor } = require('../src/core/web-search');
 const { createReport, runLiveSearchSmoke, safeReadiness } = require('../src/core/live-search-smoke');
 const { evaluateCorpus } = require('../src/core/conversation-evaluator');
-const { indexExternalBaselines, languageHint, runThreeWayCapture, validateSemanticReview } = require('../src/core/three-way-evaluator');
+const { captureSolat, indexExternalBaselines, languageHint, runThreeWayCapture, validateSemanticReview } = require('../src/core/three-way-evaluator');
 const { CommerceClient } = require('../src/core/commerce-client');
+const { AgentContractError, AgentOrchestrator, createAgentPlan } = require('../src/core/agent-orchestrator');
+
+test('agent orchestration enforces approval, timeout, retry limit, idempotency and audit scope', async () => {
+  let calls = 0;
+  const orchestrator = new AgentOrchestrator({
+    toolRegistry: {
+      flaky: { side_effect_level: 'read', validate_arguments: value => value && typeof value === 'object', validate_output: value => value.status === 'ready' },
+      read: { side_effect_level: 'read' },
+      write: { side_effect_level: 'write' },
+      slow: { side_effect_level: 'read' },
+    },
+    executeTool: async ({ tool }) => {
+      calls += 1;
+      if (tool === 'slow') await new Promise(resolve => setTimeout(resolve, 30));
+      if (tool === 'flaky' && calls < 2) throw Object.assign(new Error('temporary'), { code: 'timeout' });
+      return { status: 'ready', tool };
+    },
+  });
+  const plan = orchestrator.createPlan({
+    ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'once',
+    steps: [{ step_id: 'flaky', tool: 'flaky', side_effect_level: 'read', max_retries: 1 }, { step_id: 'read', tool: 'read', side_effect_level: 'read' }, { step_id: 'write', tool: 'write', side_effect_level: 'write', max_retries: 1 }],
+    limits: { timeoutMs: 100, retryLimit: 1 },
+  });
+  assert.equal((await orchestrator.run({ ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'once' })).plan.status, 'PAUSED_APPROVAL');
+  orchestrator.approve({ ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'once', approvalToken: plan.approval_token });
+  const result = await orchestrator.run({ ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'once' });
+  assert.equal(result.plan.status, 'SUCCEEDED');
+  assert.ok(result.audit.some(entry => entry.event === 'plan_approved'));
+  assert.equal(orchestrator.createPlan({ ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'once', steps: [{ step_id: 'flaky', tool: 'flaky', side_effect_level: 'read', max_retries: 1 }, { step_id: 'read', tool: 'read', side_effect_level: 'read' }, { step_id: 'write', tool: 'write', side_effect_level: 'write', max_retries: 1 }], limits: { timeoutMs: 100, retryLimit: 1 } }).plan_id, plan.plan_id);
+  assert.throws(() => orchestrator.createPlan({ ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'once', steps: [{ tool: 'read' }] }), error => error.code === 'idempotency_conflict');
+  assert.equal(orchestrator.getPlan({ ownerId: 'owner-b', sessionId: 'session-a', idempotencyKey: 'once' }), null, 'plans are isolated by owner/session');
+
+  const timeoutPlan = orchestrator.createPlan({ ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'slow', steps: [{ tool: 'slow' }], approvalRequired: false, limits: { timeoutMs: 5 } });
+  const timeout = await orchestrator.run({ ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'slow' });
+  assert.equal(timeout.plan.status, 'FAILED');
+  assert.equal(timeout.plan.failure.code, 'timeout');
+  assert.equal(timeoutPlan.owner_id, 'owner-a');
+  assert.ok(calls >= 4);
+  assert.throws(() => createAgentPlan({ ownerId: 'owner-a', steps: [{ tool: 'x' }], idempotencyKey: 'x', limits: { maxIterations: 101 } }), error => error instanceof AgentContractError);
+  assert.throws(() => createAgentPlan({ ownerId: 'owner-a', idempotencyKey: 'missing-steps' }), error => error.code === 'invalid_plan');
+  const unsafe = orchestrator.createPlan({ ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'unsafe-write', approvalRequired: false, steps: [{ tool: 'write', side_effect_level: 'read' }] });
+  assert.equal((await orchestrator.run({ ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'unsafe-write' })).plan.status, 'PAUSED_APPROVAL');
+  assert.equal(unsafe.approval_required, false);
+  const unknown = orchestrator.createPlan({ ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'unknown-tool', approvalRequired: false, steps: [{ tool: 'not-registered' }] });
+  const unknownResult = await orchestrator.run({ ownerId: 'owner-a', sessionId: 'session-a', idempotencyKey: 'unknown-tool' });
+  assert.equal(unknownResult.plan.status, 'FAILED');
+  assert.equal(unknownResult.plan.failure.code, 'unauthorized_tool');
+  assert.equal(unknown.status, 'PLANNED');
+});
 
 const fixedNow = new Date('2026-08-11T00:00:00.000Z');
 const evaluationCorpus = require('../evaluations/conversation-search-corpus.json');
@@ -212,6 +261,9 @@ test('completionUrl and extractContent validate provider response shapes', () =>
   assert.equal(completionUrl('https://example.test/chat/completions'), 'https://example.test/chat/completions');
   assert.equal(extractContent({ choices: [{ message: { content: ' hello ' } }] }), 'hello');
   assert.equal(extractContent({ choices: [{ message: { content: [{ type: 'text', text: 'a' }, { type: 'text', text: 'b' }] } }] }), 'ab');
+  const mojibake = new TextDecoder('windows-874').decode(new TextEncoder().encode('เปรียบเทียบตัวเลือก'));
+  assert.equal(extractContent({ choices: [{ message: { content: mojibake } }] }), 'เปรียบเทียบตัวเลือก');
+  assert.equal(extractContent({ choices: [{ message: { content: 'เธอเลือกอันไหน' } }] }), 'เธอเลือกอันไหน');
   assert.throws(() => extractContent({ choices: [] }), error => error instanceof ProviderError && error.code === 'malformed_response');
   assert.deepEqual(parseStructuredJson('{"ok":true}'), { ok: true });
   assert.deepEqual(parseStructuredJson('```json\n{"ok":true}\n```'), { ok: true });
@@ -526,10 +578,69 @@ test('conversation core preserves context while isolating sessions', async () =>
   assert.match(calls[0][0].content, /Respond in the language used by the user's latest message/i);
   assert.match(calls[0][0].content, /natural respectful Thai/i);
   assert.match(calls[0][0].content, /If a reference is unresolved or conflicts with the visible history/i);
+  assert.match(calls[0][0].content, /Do not switch languages merely because a tool or prior turn used another language/i);
+  assert.match(calls[0][0].content, /source count only when it is explicitly present/i);
+  assert.match(calls[0][0].content, /repeat or restate a prior policy/i);
   assert.match(calls[0][0].content, /hello/);
   assert.deepEqual(calls[1].slice(1).map(message => message.content), ['hello', 'reply-1', 'follow up']);
+  assert.match(calls[1][0].content, /VISIBLE_CONVERSATION_CONTEXT/);
+  assert.match(calls[1][0].content, /reply-1/);
+  assert.doesNotMatch(calls[1][0].content, /no prior conversation turns are available/i);
   assert.deepEqual(calls[2].slice(1).map(message => message.content), ['separate']);
   assert.equal(second.intentHints.conversational_context.prior_turn_count, 2);
+});
+
+test('conversation core preserves significant whitespace in the original user turn', async () => {
+  let providerMessages;
+  const provider = {
+    status: () => ({ provider: 'test', model: 'test-model', configured: true, baseHost: 'test.local' }),
+    async complete(messages) { providerMessages = messages; return { content: 'ok', provider: 'test', model: 'test-model', usage: null }; },
+  };
+  const core = new ConversationCore({ config: {}, provider });
+  const submitted = '  keep this spacing  ';
+  const result = await core.send({ sessionId: 'whitespace', content: submitted, requestId: 'whitespace-1' });
+  assert.equal(result.user, submitted);
+  assert.equal(core.sessions.get('whitespace')[0].content, submitted);
+  assert.equal(providerMessages.at(-1).content, submitted);
+});
+
+test('conversation core repairs recognizable input mojibake for routing while preserving the original turn', async () => {
+  let providerMessages;
+  const provider = {
+    status: () => ({ provider: 'test', model: 'test-model', configured: true, baseHost: 'test.local' }),
+    async complete(messages) { providerMessages = messages; return { content: 'ตอบแล้ว', provider: 'test', model: 'test-model', usage: null }; },
+  };
+  const original = new TextDecoder('windows-874').decode(new TextEncoder().encode('ตอบเป็นภาษาไทยแบบสั้น ๆ ว่าควรเริ่มค้นข้อมูลจากอะไร'));
+  const core = new ConversationCore({ config: {}, provider });
+  const response = await core.send({ sessionId: 'encoding-repair', content: original, requestId: 'encoding-repair-1' });
+  assert.equal(response.user, original);
+  assert.equal(providerMessages.at(-1).content, 'ตอบเป็นภาษาไทยแบบสั้น ๆ ว่าควรเริ่มค้นข้อมูลจากอะไร');
+  assert.doesNotMatch(providerMessages.at(-1).content, /เธ[-ÿ]/u);
+});
+
+test('conversation core repairs recognizable provider output before persistence and UI response', async () => {
+  const corrupted = new TextDecoder('windows-874').decode(new TextEncoder().encode('คำตอบภาษาไทยที่อ่านได้'));
+  const provider = {
+    status: () => ({ provider: 'test', model: 'test-model', configured: true, baseHost: 'test.local' }),
+    async complete() { return { content: corrupted, provider: 'test', model: 'test-model', usage: null }; },
+  };
+  const core = new ConversationCore({ config: {}, provider });
+  const response = await core.send({ sessionId: 'output-encoding-repair', content: 'ตอบภาษาไทย', requestId: 'output-encoding-repair-1' });
+  assert.equal(response.assistant, 'คำตอบภาษาไทยที่อ่านได้');
+  assert.doesNotMatch(response.assistant, /เธ[-ÿ]/u);
+  assert.equal(core.sessions.get('output-encoding-repair').at(-1).content, 'คำตอบภาษาไทยที่อ่านได้');
+});
+
+test('conversation system prompt explicitly blocks invention when a reference has no history', async () => {
+  let messages;
+  const provider = {
+    status: () => ({ provider: 'test', model: 'test-model', configured: true, baseHost: 'test.local' }),
+    async complete(input) { messages = input; return { content: 'I need the missing context.', provider: 'test', model: 'test-model', usage: null }; },
+  };
+  const core = new ConversationCore({ config: {}, provider });
+  await core.send({ sessionId: 'no-history-reference', content: 'repeat the policy you gave me earlier', requestId: 'no-history-reference-1' });
+  assert.match(messages[0].content, /no prior conversation turns are available/i);
+  assert.match(messages[0].content, /do not infer or invent the missing subject, policy, evidence, order, or decision/i);
 });
 
 test('conversation core tells the model when a follow-up reference is already resolved', async () => {
@@ -558,6 +669,7 @@ test('conversation system prompt is versioned and keeps structured hints separat
     intentHints,
     resolvedReferenceInstruction: 'The reference is unresolved; ask before guessing.',
     assetIds: ['asset-1', '  '],
+    history: [{ role: 'user', content: 'The tracked entity is item 42.' }],
   });
   assert.equal(CONVERSATION_PROMPT_VERSION, 'solat.conversation-system.v3');
   assert.match(prompt, /^Prompt version: solat\.conversation-system\.v3\./u);
@@ -569,6 +681,20 @@ test('conversation system prompt is versioned and keeps structured hints separat
   assert.match(prompt, /"schema_version":"solat\.grounded-answer-policy\.v1"/u);
   assert.match(prompt, /"evidence_state":"runtime_determined"/u);
   assert.match(prompt, /"unknown_policy":"state_unknown_or_insufficient_instead_of_guessing"/u);
+  assert.match(prompt, /When visible prior user or assistant turns are present/u);
+  assert.match(prompt, /explicitly say that nothing changed/u);
+  assert.match(prompt, /มัน.*เขา.*อันนั้น.*คนแรก.*แบบเดิม/u);
+  assert.match(prompt, /resolve the reference from the nearest compatible visible/u);
+  assert.match(prompt, /For a self-contained request, answer using the request and visible context/u);
+  assert.match(prompt, /never claim a persistent change unless a tool actually performed and verified it/u);
+  assert.match(prompt, /For a multi-step request or a request with explicit acceptance criteria/u);
+  assert.match(prompt, /Do not stop at a plan when the requested work can be performed locally/u);
+  assert.match(prompt, /For read-only status, explanation, comparison, or inspection requests/u);
+  assert.match(prompt, /confirmation is required only before an actual side effect/u);
+  assert.match(prompt, /VISIBLE_CONVERSATION_CONTEXT/u);
+  assert.match(prompt, /tracked entity is item 42/u);
+  assert.match(prompt, /trusted conversation context from this session/u);
+  assert.match(prompt, /authoritative evidence of what the user and assistant already said/u);
 });
 
 test('intent router keeps ambiguous/general chat model-first and exposes non-authoritative tool hints', () => {
@@ -713,6 +839,22 @@ test('intent router keeps ambiguous/general chat model-first and exposes non-aut
   assert.equal(thaiFollowUp.task.search_query_variants.at(-1).query, 'Ada Lovelace');
 });
 
+test('intent router keeps direct multilingual transformations out of search recovery', () => {
+  for (const content of [
+    'ตอบเป็นภาษาไทยแบบสั้น ๆ ว่าควรเริ่มค้นข้อมูลจากอะไร',
+    'Explain this in English but keep the Thai name unchanged: พัค ดายอง.',
+    'ช่วยแก้คำเว้นวรรคของ ParkDayoung โดยไม่สรุปว่าเป็นคนเดียวกับชื่ออื่น',
+    'ฉันพิมพ์ว่า “ค้นหาอาดาโลเวส” ช่วยสร้าง query ที่ระมัดระวัง',
+    'ช่วยตรวจคำพิมพ์ผิด แต่ห้ามเปลี่ยนชื่อบุคคลโดยไม่มีหลักฐาน',
+  ]) {
+    const hints = analyzeIntent({ content });
+    assert.equal(hints.allowed_tools.includes('web_search'), false, content);
+    assert.notEqual(hints.top_intent, 'web_search', content);
+    assert.equal(hints.task.direct_transformation, true, content);
+    assert.equal(hints.routing.direct_transformation, true, content);
+  }
+});
+
 test('deterministic conversation corpus reports every required class and separates live parity evidence', () => {
   const report = evaluateCorpus(evaluationCorpus);
   assert.equal(report.results.length, 25);
@@ -753,6 +895,10 @@ test('three-way capture retains visible evidence and never fabricates semantic p
   assert.equal(report.rows[0].captures.chatgpt.latency_ms, null);
   assert.equal(report.rows[0].captures.deepseek.latency_ms, 0);
   assert.equal(report.rows[0].captures.solat.latency_ms, 0);
+  assert.equal(report.rows[0].captures.solat.context_mode, 'temporary_chat');
+  assert.equal(report.rows[0].captures.solat.history_count, 0);
+  assert.deepEqual(report.rows[0].captures.solat.history, []);
+  assert.match(report.rows[0].captures.solat.isolation_id, /^three-way-case-a-/u);
   assert.equal(report.rows[0].captures.solat.sources.length, 1);
   assert.deepEqual(report.rows[0].captures.solat.search_evidence, [{ status: 'ready', source_scope: 'encyclopedic', result_count: 1, error_count: 0, quality: { status: 'sufficient', ambiguity: 'none', authority_level: 'encyclopedic', agreement_status: 'single_source' } }]);
   assert.deepEqual(report.rows[0].captures.solat.search_summary.candidate_source_scopes_used, ['encyclopedic']);
@@ -821,12 +967,57 @@ test('three-way capture uses the recorded matched-history baseline for both mode
     chatgptBaselines: { cases: [{ id: 'follow-up', context_mode: 'matched_history', response: 'ChatGPT answer.', history }] },
     deepseekProvider: provider, solatCore: core, now: () => fixedNow,
   });
+  assert.equal(report.rows[0].captures.solat.context_mode, 'matched_history');
+  assert.equal(report.rows[0].captures.solat.history_count, history.length);
+  assert.deepEqual(report.rows[0].captures.solat.history, history);
   assert.deepEqual(report.rows[0].evaluation_history, history);
   assert.deepEqual(observed.provider.slice(1, 3), history);
   assert.deepEqual(observed.core, history);
   assert.equal(report.rows[0].captures.deepseek.source_trace, 'raw_deepseek_baseline_without_solat_router');
   assert.equal(report.rows[0].captures.solat.source_trace, 'solat_router_provider_and_model_selected_tools');
   assert.equal(report.rows[0].comparison.status, 'NOT VERIFIED');
+});
+
+test('SOLAT B replay runs each user seed and records its alternating assistant transcript before follow-up', async () => {
+  const calls = [];
+  const core = { sessions: new Map(), async send({ sessionId, content }) {
+    calls.push({ sessionId, content });
+    return { assistant: `reply:${content}`, provider: 'local-test', model: 'contract', sources: [] };
+  } };
+  const result = await captureSolat(core, { id: 'b-seed', content: 'follow up now', history: [{ role: 'user', content: 'seed question' }] }, () => fixedNow, { replayUserSeeds: true });
+  assert.equal(calls.length, 2);
+  assert.deepEqual(calls.map(call => call.content), ['seed question', 'follow up now']);
+  assert.deepEqual(result.seed_transcript, [
+    { role: 'user', content: 'seed question' },
+    { role: 'assistant', content: 'reply:seed question' },
+  ]);
+  assert.equal(result.seed_request_count, 1);
+  assert.equal(result.context_mode, 'matched_history');
+});
+
+test('paired-history replay preserves significant whitespace in seed turns', async () => {
+  const calls = [];
+  const core = { sessions: new Map(), async send({ content }) {
+    calls.push(content);
+    return { assistant: 'seed reply', provider: 'local-test', model: 'contract', sources: [] };
+  } };
+  const result = await captureSolat(core, {
+    id: 'b-whitespace',
+    content: 'follow up',
+    history: [{ role: 'user', content: 'seed with trailing space ' }],
+  }, () => fixedNow, { replayUserSeeds: true });
+  assert.deepEqual(calls, ['seed with trailing space ', 'follow up']);
+  assert.equal(result.history[0].content, 'seed with trailing space ');
+  assert.equal(result.seed_transcript[0].content, 'seed with trailing space ');
+});
+
+test('agent run turns an unregistered tool into a visible authorization failure', async () => {
+  const { AgentOrchestrator } = require('../src/core/agent-orchestrator');
+  const orchestrator = new AgentOrchestrator({ toolRegistry: { read: { side_effect_level: 'read' } }, executeTool: async () => ({ status: 'ready' }) });
+  orchestrator.createPlan({ ownerId: 'owner-auth', sessionId: 'session-auth', idempotencyKey: 'unknown-tool', steps: [{ tool: 'write' }] });
+  const result = await orchestrator.run({ ownerId: 'owner-auth', sessionId: 'session-auth', idempotencyKey: 'unknown-tool' });
+  assert.equal(result.plan.status, 'FAILED');
+  assert.equal(result.plan.failure.code, 'unauthorized_tool');
 });
 
 test('web search ranks, deduplicates, filters unsafe sources, and reports disabled/degraded states', async t => {
@@ -1517,6 +1708,7 @@ test('merged multi-scope evidence preserves corroboration and authority metadata
   assert.equal(merged.quality.authority_level, 'mixed_with_encyclopedic');
   assert.deepEqual(merged.quality.matched_entities, ['Ada Lovelace']);
   assert.equal(merged.quality.dropped_unrelated_count, 1);
+  assert.equal(merged.source_count, 2);
 });
 
 test('conversation core merges bounded multi-scope evidence while preserving model-first search control', async () => {
