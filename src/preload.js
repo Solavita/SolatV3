@@ -36,9 +36,35 @@ contextBridge.exposeInMainWorld('solat', Object.freeze({
     if (result?.ok === false) { const error = new Error(result.error?.message || 'Agent plan could not run.'); error.code = result.error?.code || 'agent_error'; throw error; }
     return result?.value;
   },
+  computerTaskContinue: async request => {
+    const result = await ipcRenderer.invoke('solat:computer-task-continue', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Computer task could not continue.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
+  computerTaskApproveAndContinue: async request => {
+    const result = await ipcRenderer.invoke('solat:computer-task-approve-and-continue', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Computer task approval could not continue.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
+  computerTaskCancel: async request => {
+    const result = await ipcRenderer.invoke('solat:computer-task-cancel', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Computer task could not be cancelled.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
+  onComputerTaskEvent: listener => {
+    if (typeof listener !== 'function') throw new TypeError('A computer task event listener is required.');
+    const handler = (_event, payload) => listener(payload);
+    ipcRenderer.on('solat:computer-task-event', handler);
+    return () => ipcRenderer.removeListener('solat:computer-task-event', handler);
+  },
   agentReadArtifact: async request => {
     const result = await ipcRenderer.invoke('solat:agent-read-artifact', request);
     if (result?.ok === false) { const error = new Error(result.error?.message || 'Agent file could not be opened.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
+  agentExportArtifact: async request => {
+    const result = await ipcRenderer.invoke('solat:agent-export-artifact', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Agent file could not be downloaded.'); error.code = result.error?.code || 'agent_error'; throw error; }
     return result?.value;
   },
   saveConversation: async request => {

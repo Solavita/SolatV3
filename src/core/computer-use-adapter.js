@@ -6,6 +6,16 @@ const COMPUTER_RESULT_SCHEMA_VERSION = 'solat.computer-result.v1';
 const MAX_OUTPUT_BYTES = 512 * 1024;
 const DEFAULT_TIMEOUT_MS = 15_000;
 const YOUTUBE_SEARCH_BASE_URL = 'https://www.youtube.com/results?search_query=';
+const SAFE_WEBSITES = Object.freeze({
+  google: 'https://www.google.com/',
+  google_classroom: 'https://classroom.google.com/',
+  youtube: 'https://www.youtube.com/',
+});
+const WEBSITE_TITLE_HINTS = Object.freeze({
+  google: /\bgoogle\b/iu,
+  google_classroom: /\b(?:google\s+classroom|classroom)\b/iu,
+  youtube: /\byoutube\b/iu,
+});
 const DENIED_PROCESSES = new Set(['lockapp', 'logonui', 'credentialuibroker', 'taskmgr', 'regedit']);
 const SENSITIVE_TITLE_THAI = /(?:บัตร|รหัสผ่าน|ธนาคาร|ชำระเงิน)/iu;
 const SENSITIVE_ELEMENT = /(?:password|passcode|credential|isPassword\s*[=:]\s*true|รหัสผ่าน|เลขบัตร|บัญชีธนาคาร)/iu;
@@ -34,7 +44,75 @@ function validHwnd(value) {
 }
 
 function isStaleElementError(error) {
-  return error instanceof ComputerUseError && /stale_element|no longer accessible/iu.test(`${error.code || ''} ${error.message || ''}`);
+  // Chromium/UIA can replace a media control between inspection and invoke.
+  // WinApp reports that replacement as either stale_element or a transient
+  // element_not_found; both must re-inspect within the bounded deadline.
+  return error instanceof ComputerUseError && /stale_element|no longer accessible|element_not_found|no element found/iu.test(`${error.code || ''} ${error.message || ''}`);
+}
+
+function waitWithAbort(ms, signal) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    const abort = () => { clearTimeout(timer); reject(new ComputerUseError('cancelled', 'Computer action was cancelled.')); };
+    signal?.addEventListener('abort', abort, { once: true });
+  });
+}
+
+function normalizeYoutubeText(value) {
+  return String(value || '').toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
+function levenshtein(left, right) {
+  const a = String(left || ''); const b = String(right || '');
+  const row = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let index = 1; index <= a.length; index += 1) {
+    let diagonal = row[0]; row[0] = index;
+    for (let column = 1; column <= b.length; column += 1) {
+      const previous = row[column];
+      row[column] = Math.min(row[column] + 1, row[column - 1] + 1, diagonal + (a[index - 1] === b[column - 1] ? 0 : 1));
+      diagonal = previous;
+    }
+  }
+  return row[b.length];
+}
+
+function youtubeResultScore(name, query) {
+  const normalizedName = normalizeYoutubeText(name);
+  const normalizedQuery = normalizeYoutubeText(query);
+  if (!normalizedName || !normalizedQuery) return 0;
+  if (normalizedName.includes(normalizedQuery)) return 10_000 + normalizedQuery.length;
+  // YouTube often renders stylised titles with punctuation between letters
+  // (for example "L-L-Lies"), while users type the compact form ("Lllies").
+  // Punctuation and spacing are presentation differences, not a new title.
+  const compactName = normalizedName.replace(/\s+/gu, '');
+  const compactQuery = normalizedQuery.replace(/\s+/gu, '');
+  if (compactQuery.length >= 3 && compactName.includes(compactQuery)) {
+    return 9_000 + compactQuery.length;
+  }
+  const allowedDistance = Math.max(1, Math.floor(normalizedQuery.length * 0.2));
+  const nearest = normalizedName.split(/\s+/u).reduce((best, word) => Math.min(best, levenshtein(word, normalizedQuery)), Number.POSITIVE_INFINITY);
+  return nearest <= allowedDistance ? 1_000 - nearest : 0;
+}
+
+function isYoutubeResultLink(value) {
+  const type = String(value?.type || value?.controlType || value?.control_type || value?.role || '').trim();
+  const url = String(value?.value || value?.url || value?.href || '').trim();
+  // Chrome UIA frequently exposes a result as a semantic Hyperlink without
+  // its href.  A matching, visible link is sufficient; a non-link card or
+  // arbitrary button is never promoted into a click target.
+  const youtubeWatchUrl = /(?:^https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=/iu.test(url);
+  if (youtubeWatchUrl) return true;
+  return /(?:^|\b)(?:hyperlink|link)(?:$|\b)/iu.test(type);
+}
+
+function isYoutubeResultCandidate(value) {
+  if (isYoutubeResultLink(value)) return true;
+  const type = String(value?.type || value?.controlType || value?.control_type || value?.role || '').trim();
+  const selector = String(value?.selector || '').trim();
+  // Some Chromium UIA versions expose video cards as buttons/static nodes
+  // with no href. Keep this narrow: only semantic result selectors qualify.
+  return /(?:button|static|text)/iu.test(type)
+    && /(?:result|video|watch|link|title)/iu.test(selector);
 }
 
 function sanitizeWindow(window) {
@@ -45,7 +123,7 @@ function sanitizeWindow(window) {
     title: String(window.title || '').slice(0, 300),
     width: Number(window.width) || 0,
     height: Number(window.height) || 0,
-    is_foreground: Boolean(window.isForeground),
+    is_foreground: typeof window.isForeground === 'boolean' ? window.isForeground : null,
   };
 }
 
@@ -180,7 +258,19 @@ class WinAppComputerUseAdapter {
 
   async launchApp({ appId, signal } = {}) {
     const target = this.appResolver(appId);
-    const launched = await this.launcher(target.executable, { args: [], signal, timeoutMs: this.timeoutMs });
+    const before = (await this.listWindows({ signal })).windows;
+    const previousHwnds = new Set(before
+      .filter(window => String(window.process_name).toLowerCase() === String(target.process_name).toLowerCase())
+      .map(window => window.hwnd));
+    const args = target.app_id === 'chrome'
+      ? ['--profile-directory=Default', '--new-window', 'about:blank']
+      : [];
+    const launched = await this.launcher(target.executable, { args, signal, timeoutMs: this.timeoutMs });
+    const window = await this.#waitForApplicationWindow(signal, {
+      processName: target.process_name,
+      processId: Number(launched?.pid) || null,
+      previousHwnds,
+    });
     return {
       schema_version: COMPUTER_RESULT_SCHEMA_VERSION,
       status: 'ready',
@@ -188,17 +278,115 @@ class WinAppComputerUseAdapter {
       app_id: target.app_id,
       process_name: target.process_name,
       launched: true,
-      process_id: Number(launched?.pid) || null,
+      process_id: window.process_id || Number(launched?.pid) || null,
+      hwnd: window.hwnd,
+      window_title: window.title,
+      verified: true,
     };
   }
 
-  async #waitForChromeYoutube(signal, { titleMustNotMatch = null } = {}) {
+  async #waitForApplicationWindow(signal, { processName, processId = null, previousHwnds = new Set() } = {}) {
+    const deadline = Date.now() + Math.max(this.timeoutMs, 15_000);
+    const normalizedProcess = String(processName || '').trim().toLowerCase();
+    while (Date.now() < deadline) {
+      const windows = (await this.listWindows({ signal })).windows;
+      const ranked = windows
+        .filter(window => String(window.process_name).toLowerCase() === normalizedProcess)
+        .map(window => ({
+          window,
+          score: (previousHwnds.has(window.hwnd) ? 0 : 1_000)
+            + (processId && window.process_id === processId ? 100 : 0)
+            + (window.is_foreground ? 1 : 0),
+        }))
+        .sort((left, right) => right.score - left.score);
+      if (ranked.length && (!previousHwnds.has(ranked[0].window.hwnd) || ranked[0].window.process_id === processId)) {
+        return ranked[0].window;
+      }
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(resolve, 250);
+        const abort = () => { clearTimeout(timer); reject(new ComputerUseError('cancelled', 'Computer action was cancelled.')); };
+        signal?.addEventListener('abort', abort, { once: true });
+      });
+    }
+    throw new ComputerUseError('verification_failed', 'The approved application launched, but no matching visible window was verified.');
+  }
+
+  async #chromeWindowBaseline(signal) {
+    const windows = (await this.listWindows({ signal })).windows;
+    return new Set(windows
+      .filter(window => String(window.process_name).toLowerCase() === 'chrome')
+      .map(window => window.hwnd));
+  }
+
+  async #waitForChromeWindow(signal, { site = null, previousHwnds = new Set() } = {}) {
+    const titleHint = site ? WEBSITE_TITLE_HINTS[site] : null;
     const deadline = Date.now() + Math.max(this.timeoutMs, 15_000);
     while (Date.now() < deadline) {
       const windows = (await this.listWindows({ signal })).windows;
-      const match = windows.find(window => String(window.process_name).toLowerCase() === 'chrome'
+      const candidates = windows.filter(window => String(window.process_name).toLowerCase() === 'chrome');
+      // A Chrome process alone is not proof that the requested page opened:
+      // stale tabs are common.  Require the expected site title once it is
+      // observable, then prefer a new HWND and foreground state as tie-breaks.
+      const matching = titleHint ? candidates.filter(window => titleHint.test(window.title)) : candidates;
+      const ranked = matching.map(window => ({
+        window,
+        score: (previousHwnds.has(window.hwnd) ? 0 : 100) + (window.is_foreground ? 1 : 0),
+      })).sort((left, right) => right.score - left.score);
+      if (ranked.length) return ranked[0].window;
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(resolve, 250);
+        const abort = () => { clearTimeout(timer); reject(new ComputerUseError('cancelled', 'Computer action was cancelled.')); };
+        signal?.addEventListener('abort', abort, { once: true });
+      });
+    }
+    throw new ComputerUseError('verification_failed', 'Chrome did not open a visible window.');
+  }
+
+  async openWebsite({ site, signal } = {}) {
+    const normalizedSite = String(site || '').trim().toLowerCase();
+    const url = SAFE_WEBSITES[normalizedSite];
+    if (!url) throw new ComputerUseError('website_not_allowed', 'Only an explicitly allowlisted website can be opened.');
+    const target = this.appResolver('chrome');
+    const previousHwnds = await this.#chromeWindowBaseline(signal);
+    const launched = await this.launcher(target.executable, {
+      args: ['--profile-directory=Default', '--new-window', url],
+      signal,
+      timeoutMs: this.timeoutMs,
+    });
+    const window = await this.#waitForChromeWindow(signal, { site: normalizedSite, previousHwnds });
+    return {
+      schema_version: COMPUTER_RESULT_SCHEMA_VERSION,
+      status: 'ready',
+      operation: 'open_website',
+      site: normalizedSite,
+      url,
+      app_id: 'chrome',
+      process_id: Number(launched?.pid) || window.process_id || null,
+      hwnd: window.hwnd,
+      window_title: window.title,
+      verified: true,
+    };
+  }
+
+  async #waitForChromeYoutube(signal, { titleMustNotMatch = null, query = '', previousHwnds = new Set() } = {}) {
+    const deadline = Date.now() + Math.max(this.timeoutMs, 15_000);
+    while (Date.now() < deadline) {
+      const windows = (await this.listWindows({ signal })).windows;
+      const matches = windows.filter(window => String(window.process_name).toLowerCase() === 'chrome'
         && /youtube/iu.test(window.title)
         && (!titleMustNotMatch || !titleMustNotMatch.test(window.title)));
+      // More than one YouTube window is normal.  Never blindly reuse the
+      // first row from UI Automation: favor the newly foregrounded window and
+      // then its title's similarity to the requested track.
+      const match = matches.map(window => ({
+        window,
+        // A foreground stale YouTube tab must not beat the newly opened
+        // result page whose title contains the requested track. Foreground
+        // is only a tie-breaker after semantic title similarity.
+        score: (youtubeResultScore(window.title, query) * 1_000)
+          + (previousHwnds.has(window.hwnd) ? 0 : 100)
+          + (window.is_foreground ? 1 : 0),
+      })).sort((left, right) => right.score - left.score)[0]?.window;
       if (match) return match;
       await new Promise((resolve, reject) => {
         const timer = setTimeout(resolve, 300);
@@ -223,13 +411,17 @@ class WinAppComputerUseAdapter {
       const visit = value => {
         if (Array.isArray(value)) return value.forEach(visit);
         if (!value || typeof value !== 'object') return;
-        if (value.type === 'Hyperlink' && typeof value.name === 'string' && typeof value.selector === 'string'
-          && /^https:\/\/www\.youtube\.com\/watch\?v=/iu.test(String(value.value || ''))
+        if (isYoutubeResultCandidate(value) && typeof value.name === 'string' && typeof value.selector === 'string'
           && value.isOffscreen !== true) candidates.push(value);
         Object.values(value).forEach(visit);
       };
       visit(inspected.tree);
-      const selected = candidates[0];
+      // Search pages may place ads, mixes, or recommendations before the
+      // requested track. Pick only a title that matches the user's query.
+      const selected = candidates
+        .map(candidate => ({ candidate, score: youtubeResultScore(candidate.name, query) }))
+        .filter(item => item.score > 0)
+        .sort((left, right) => right.score - left.score)[0]?.candidate;
       if (selected) {
         try {
           await this.#run(['invoke', selected.selector, '--window', String(validHwnd(hwnd))], { signal });
@@ -241,7 +433,7 @@ class WinAppComputerUseAdapter {
           if (!isStaleElementError(error)) throw error;
         }
       }
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await waitWithAbort(300, signal);
     }
     throw new ComputerUseError('youtube_result_not_found', `No playable YouTube result was found for “${query}”.`);
   }
@@ -269,20 +461,62 @@ class WinAppComputerUseAdapter {
       };
       visit(inspected.tree);
       const pause = candidates.find(element => /^(?:pause|หยุดชั่วคราว)(?:\s|\(|$)/iu.test(element.name));
-      if (pause) return { selector: pause.selector, state: 'playing' };
+      if (pause) {
+        // A single Pause label can be a transient autoplay frame. Require
+        // three fresh observations across a bounded stability window and do
+        // not invoke the toggle while it already represents active playback.
+        let stablePause = pause;
+        for (let sample = 0; sample < 3; sample += 1) {
+          await waitWithAbort(1_000, signal);
+          let confirmation;
+          try {
+            confirmation = await this.inspect({ hwnd, selector: 'RootWebArea', depth: 8, signal });
+          } catch (error) {
+            if (isStaleElementError(error)) { stablePause = null; break; }
+            throw error;
+          }
+          const confirmationCandidates = [];
+          const visitConfirmation = value => {
+            if (Array.isArray(value)) return value.forEach(visitConfirmation);
+            if (!value || typeof value !== 'object') return;
+            if (typeof value.name === 'string' && typeof value.selector === 'string') confirmationCandidates.push(value);
+            Object.values(value).forEach(visitConfirmation);
+          };
+          visitConfirmation(confirmation.tree);
+          stablePause = confirmationCandidates.find(element => /^(?:pause|หยุดชั่วคราว)(?:\s|\(|$)/iu.test(element.name));
+          if (!stablePause) break;
+        }
+        if (stablePause) return { selector: stablePause.selector, state: 'playing', stable_for_ms: 3_000, samples: 4 };
+        continue;
+      }
       const play = candidates.find(element => /^(?:play|เล่น)(?:\s|\(|$)/iu.test(element.name));
       if (play) {
         try {
           await this.#run(['invoke', play.selector, '--window', String(validHwnd(hwnd))], { signal });
+          // Chromium can advertise InvokePattern while silently ignoring it
+          // for the YouTube media surface. Re-observe before a guarded
+          // semantic mouse fallback so a successful invoke is never clicked
+          // again (which would pause playback).
+          await waitWithAbort(500, signal);
+          const afterInvoke = await this.inspect({ hwnd, selector: 'RootWebArea', depth: 8, signal });
+          const afterCandidates = [];
+          const visitAfter = value => {
+            if (Array.isArray(value)) return value.forEach(visitAfter);
+            if (!value || typeof value !== 'object') return;
+            if (typeof value.name === 'string' && typeof value.selector === 'string') afterCandidates.push(value);
+            Object.values(value).forEach(visitAfter);
+          };
+          visitAfter(afterInvoke.tree);
+          const nowPaused = afterCandidates.some(element => /^(?:pause|หยุดชั่วคราว)(?:\s|\(|$)/iu.test(element.name));
+          const freshPlay = afterCandidates.find(element => /^(?:play|เล่น)(?:\s|\(|$)/iu.test(element.name));
+          if (!nowPaused && freshPlay) {
+            await this.#run(['click', freshPlay.selector, '--window', String(validHwnd(hwnd))], { signal });
+          }
         } catch (error) {
           if (!isStaleElementError(error)) throw error;
         }
       }
-      await new Promise((resolve, reject) => {
-        const timer = setTimeout(resolve, 350);
-        const abort = () => { clearTimeout(timer); reject(new ComputerUseError('cancelled', 'Computer action was cancelled.')); };
-        signal?.addEventListener('abort', abort, { once: true });
-      });
+      await waitWithAbort(350, signal);
     }
     throw new ComputerUseError('verification_failed', 'YouTube opened, but active music playback was not verified.');
   }
@@ -291,12 +525,13 @@ class WinAppComputerUseAdapter {
     const requestedQuery = boundedText(query, 'query', 160);
     const target = this.appResolver('chrome');
     const searchUrl = `${YOUTUBE_SEARCH_BASE_URL}${encodeURIComponent(requestedQuery)}`;
+    const previousHwnds = await this.#chromeWindowBaseline(signal);
     const launched = await this.launcher(target.executable, {
       args: ['--profile-directory=Default', '--new-window', searchUrl],
       signal,
       timeoutMs: this.timeoutMs,
     });
-    const window = await this.#waitForChromeYoutube(signal);
+    const window = await this.#waitForChromeYoutube(signal, { query: requestedQuery, previousHwnds });
     const selectedResult = await this.#selectYoutubeResult(window.hwnd, requestedQuery, signal);
     const playback = await this.#youtubePlaybackControl(window.hwnd, signal);
     const finalWindow = (await this.listWindows({ signal })).windows.find(candidate => candidate.hwnd === window.hwnd) || window;
@@ -312,6 +547,8 @@ class WinAppComputerUseAdapter {
       query: requestedQuery,
       selected_result: selectedResult.name,
       playback: playback.state,
+      playback_stable_for_ms: playback.stable_for_ms || 0,
+      playback_samples: playback.samples || 0,
       verified: true,
     };
   }
@@ -321,6 +558,10 @@ class WinAppComputerUseAdapter {
     const target = windows.find(window => window.hwnd === validHwnd(hwnd));
     if (!target) throw new ComputerUseError('target_not_allowed', 'Target window is unknown, closed, or sensitive.');
     return target;
+  }
+
+  async assertTarget({ hwnd, signal } = {}) {
+    return this.#assertTarget(hwnd, signal);
   }
 
   async #verify({ hwnd, selector, state, value, signal }) {
@@ -352,7 +593,14 @@ class WinAppComputerUseAdapter {
   }
 
   async inspect({ hwnd, selector, depth = 5, signal } = {}) {
-    const target = await this.#assertTarget(hwnd, signal);
+    let target = await this.#assertTarget(hwnd, signal);
+    // Chromium may expose only its caption controls while the window is in
+    // the background. Bring the already allowlisted target to the foreground
+    // before taking the semantic snapshot, then re-bind its identity.
+    if (target.is_foreground === false) {
+      await this.#run(['focus', '--window', String(target.hwnd)], { signal });
+      target = await this.#assertTarget(target.hwnd, signal);
+    }
     const boundedDepth = Number(depth);
     if (!Number.isInteger(boundedDepth) || boundedDepth < 1 || boundedDepth > 8) throw new ComputerUseError('invalid_arguments', 'depth must be between 1 and 8.');
     const args = ['inspect'];
@@ -384,6 +632,35 @@ class WinAppComputerUseAdapter {
     const verification = await this.#verify({ hwnd: target.hwnd, selector: element, state: 'value', value: text, signal });
     return { schema_version: COMPUTER_RESULT_SCHEMA_VERSION, status: 'ready', operation: 'set_value', target, selector: element, value_length: text.length, verified: true, verification };
   }
+
+  async pressEnter({ hwnd, selector, verifyTitleContains, signal } = {}) {
+    const target = await this.#assertTarget(hwnd, signal);
+    const element = boundedText(selector, 'selector', 300);
+    const expectedTitle = boundedText(verifyTitleContains, 'expected title', 200).toLocaleLowerCase();
+    const before = await this.inspect({ hwnd: target.hwnd, selector: element, depth: 2, signal });
+    if (SENSITIVE_ELEMENT.test(JSON.stringify(before.tree))) throw new ComputerUseError('sensitive_target', 'Password or credential fields cannot be controlled.');
+    await this.#run(['send-keys', 'enter', '--window', String(target.hwnd), '--target', element], { signal });
+    const deadline = Date.now() + 5_000;
+    do {
+      const current = (await this.listWindows({ signal })).windows.find(window => window.hwnd === target.hwnd);
+      if (current && current.title.toLocaleLowerCase().includes(expectedTitle)) {
+        return { schema_version: COMPUTER_RESULT_SCHEMA_VERSION, status: 'ready', operation: 'press_enter', target: current, selector: element, key: 'enter', verified: true, verification: { title_contains: verifyTitleContains } };
+      }
+      await waitWithAbort(250, signal);
+    } while (Date.now() < deadline);
+    throw new ComputerUseError('verification_failed', 'Enter was pressed but the expected window title was not verified.');
+  }
+
+  async scrollIntoView({ hwnd, selector, signal } = {}) {
+    const target = await this.#assertTarget(hwnd, signal);
+    const element = boundedText(selector, 'selector', 300);
+    const before = await this.inspect({ hwnd: target.hwnd, selector: element, depth: 2, signal });
+    if (SENSITIVE_ELEMENT.test(JSON.stringify(before.tree))) throw new ComputerUseError('sensitive_target', 'Password or credential fields cannot be controlled.');
+    await this.#run(['scroll-into-view', element, '--window', String(target.hwnd)], { signal });
+    const after = await this.inspect({ hwnd: target.hwnd, selector: element, depth: 2, signal });
+    if (!after?.tree) throw new ComputerUseError('verification_failed', 'The target was not visible after scrolling.');
+    return { schema_version: COMPUTER_RESULT_SCHEMA_VERSION, status: 'ready', operation: 'scroll_into_view', target, selector: element, verified: true, tree: after.tree };
+  }
 }
 
-module.exports = { COMPUTER_RESULT_SCHEMA_VERSION, ComputerUseError, WinAppComputerUseAdapter, defaultRunner, defaultLaunchRunner, isSensitiveWindow, resolveLaunchableApp, YOUTUBE_SEARCH_BASE_URL };
+module.exports = { COMPUTER_RESULT_SCHEMA_VERSION, ComputerUseError, SAFE_WEBSITES, WinAppComputerUseAdapter, defaultRunner, defaultLaunchRunner, isSensitiveWindow, resolveLaunchableApp, YOUTUBE_SEARCH_BASE_URL };

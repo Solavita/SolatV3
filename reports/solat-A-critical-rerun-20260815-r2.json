@@ -1,0 +1,262 @@
+{
+  "schema_version": "solat.provider-suite-capture.v1",
+  "provider": "deepseek_api",
+  "model": "deepseek-v4-flash",
+  "mode": "A",
+  "corpus_path": "D:\\SOLAT_V3\\evaluations\\paired-100-baseline.json",
+  "started_at": "2026-08-15T04:59:56.389Z",
+  "finished_at": "2026-08-15T05:00:13.462Z",
+  "run_id": "cca7f014-c777-4433-ac68-0d8dbec62039",
+  "case_count": 4,
+  "counts": {
+    "PASS": 4,
+    "FAIL": 0,
+    "NOT VERIFIED": 0
+  },
+  "rows": [
+    {
+      "id": "paired100_002_conversation_3",
+      "prompt": "Explain photosynthesis in simple language.",
+      "index": 0,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T04:59:56.391Z",
+        "finished_at": "2026-08-15T05:00:00.511Z",
+        "latency_ms": 4120,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-paired100_002_conversation_3-744fe48d-ae18-4058-ac51-8b1401cc0e59",
+        "context_mode": "temporary_chat",
+        "history": [],
+        "history_count": 0,
+        "seed_transcript": [],
+        "seed_request_count": 0,
+        "response": "I'll provide a simple explanation of photosynthesis.\n\n## What is photosynthesis?\n\nPhotosynthesis is how **plants make their own food**, using sunlight, water, and air.\n\n### The simple recipe:\n\n**Ingredients:**\n- ☀️ Sunlight\n- 💧 Water (from the roots)\n- 🌬️ Carbon dioxide (from the air)\n\n**Result:**\n- 🍬 Sugar/glucose (the plant's food)\n- 💨 Oxygen (released into the air)\n\n### How it works — step by step:\n\n1. **Absorb sunlight** — Leaves have a green pigment called chlorophyll (that's what makes plants green) that captures energy from sunlight.\n2. **Take in water** — Roots pull water up from the soil into the leaves.\n3. **Breathe in air** — Tiny openings on leaves (stomata) take in carbon dioxide from the air.\n4. **Convert to food** — The sunlight energy combines water and carbon dioxide to make sugar.\n5. **Release oxygen** — Oxygen is given off as a byproduct.\n\n### Why it matters to us:\n\n- Plants get their energy from the sugar they make.\n- **We get oxygen** — nearly all the oxygen in the air comes from photosynthesis.\n- It's the **base of the food chain** — almost all food energy on Earth traces back to this process.\n- It also helps absorb carbon dioxide from the atmosphere.\n\n### One-line summary:\nPlants turn sunlight, water, and carbon dioxide into food (sugar) and oxygen — and in doing so, they feed nearly all life on Earth.",
+        "usage": {
+          "prompt_tokens": 2087,
+          "completion_tokens": 326,
+          "total_tokens": 2413
+        },
+        "mode": "model_without_requested_search",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "available_not_used",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": true,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "paired100_023_context_4",
+      "prompt": "The previous answer gave two possible meanings. What clarification should I ask?",
+      "index": 1,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T05:00:00.512Z",
+        "finished_at": "2026-08-15T05:00:02.556Z",
+        "latency_ms": 2044,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-paired100_023_context_4-8d1bd23b-9917-4c7f-820f-d7a8a33b8431",
+        "context_mode": "temporary_chat",
+        "history": [],
+        "history_count": 0,
+        "seed_transcript": [],
+        "seed_request_count": 0,
+        "response": "ผมไม่เห็นข้อความก่อนหน้านี้ในบทสนทนานี้ครับ ดังนั้นไม่ทราบว่าสองความหมายที่คุณหมายถึงคืออะไร\n\nรบกวนช่วยวางข้อความหรือสรุปเนื้อหาสั้น ๆ ของคำตอบก่อนหน้านั้นมาให้หน่อยได้ไหมครับ แล้วผมจะช่วยเสนอคำถามเพื่อขอความกระจ่างที่เหมาะสมให้ครับ",
+        "usage": {
+          "prompt_tokens": 1568,
+          "completion_tokens": 79,
+          "total_tokens": 1647
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "paired100_036_multilingual_7",
+      "prompt": "ฉันพิมพ์ว่า “ค้นหาอาดาโลเวส” ช่วยสร้าง query ที่ระมัดระวัง",
+      "index": 2,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T05:00:02.556Z",
+        "finished_at": "2026-08-15T05:00:11.107Z",
+        "latency_ms": 8551,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-paired100_036_multilingual_7-000c8bab-da9c-4502-8057-6614bab5c3df",
+        "context_mode": "temporary_chat",
+        "history": [],
+        "history_count": 0,
+        "seed_transcript": [],
+        "seed_request_count": 0,
+        "response": "ขออภัยครับ การค้นหาไม่พบผลลัพธ์ที่เกี่ยวข้องกับ “อาดาโลเวส” ครับ\n\nเพื่อช่วยคุณได้แม่นยำขึ้น รบกวนเพิ่มข้อมูลเล็กน้อย:\n\n1. **“อาดาโลเวส” คืออะไร** เช่น ชื่อยา/ผลิตภัณฑ์ ชื่อบุคคล สถานที่ องค์กร หรือชื่อเฉพาะอื่นๆ\n2. **ต้องการค้นหาข้อมูลด้านใด** เช่น ประโยชน์ ราคา รีวิว ข่าว หรือเอกสารอ้างอิง\n\nเมื่อคุณให้รายละเอียดเพิ่ม ระบบจะสร้าง query ที่ระมัดระวังและตรงประเด็นให้ครับ",
+        "usage": {
+          "prompt_tokens": 1800,
+          "completion_tokens": 143,
+          "total_tokens": 1943
+        },
+        "mode": "search_and_model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "empty",
+        "sources": [],
+        "search_evidence": [
+          {
+            "status": "empty",
+            "source_scope": "auto",
+            "provider_query": "ฉันพิมพ์ว่า “ค้นหาอาดาโลเวส” ช่วยสร้าง query ที่ระมัดระวัง",
+            "result_count": 0,
+            "error_count": 0,
+            "quality": {
+              "status": "insufficient_relevance",
+              "ambiguity": "none",
+              "authority_level": "none",
+              "agreement_status": "not_assessed"
+            }
+          }
+        ],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": true,
+          "search_used": true,
+          "search_recovery_used": true,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [
+            "auto"
+          ],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [
+            "auto"
+          ],
+          "candidate_source_scope_status": "used",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": [
+            "none"
+          ]
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "paired100_082_consistency_3",
+      "prompt": "Repeat the evidence policy and keep the same ordering.",
+      "index": 3,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T05:00:11.108Z",
+        "finished_at": "2026-08-15T05:00:13.462Z",
+        "latency_ms": 2354,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-paired100_082_consistency_3-20ab1b15-8cf7-4913-8702-74f928a90f93",
+        "context_mode": "temporary_chat",
+        "history": [],
+        "history_count": 0,
+        "seed_transcript": [],
+        "seed_request_count": 0,
+        "response": "I understand you're asking me to repeat an \"evidence policy\" that was supposedly provided earlier. However, I don't see any prior evidence policy in our conversation history — this is the first message in our exchange.\n\nThere is no user-supplied evidence policy in the visible context to repeat. I won't invent or reconstruct one.\n\nIf you're referring to a specific evidence policy or guideline you shared previously, could you paste it here or clarify which one you mean? I'd be happy to repeat it once I have the actual content.",
+        "usage": {
+          "prompt_tokens": 1559,
+          "completion_tokens": 107,
+          "total_tokens": 1666
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    }
+  ]
+}

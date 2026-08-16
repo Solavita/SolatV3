@@ -916,6 +916,18 @@ kbd {
 .act[aria-pressed="true"] .icon { animation: pop var(--d-3) var(--e-spring); }
 .act.done { color: var(--ok); }
 .act.done .icon { animation: pop var(--d-3) var(--e-spring); }
+.act:disabled,
+.act[aria-disabled="true"] {
+  cursor: default;
+  opacity: .42;
+  filter: none !important;
+  transform: none !important;
+}
+.act:disabled:hover,
+.act[aria-disabled="true"]:hover {
+  color: var(--ink-3);
+  background: transparent;
+}
 @keyframes pop {
   0%   { transform: scale(.5); opacity: .4 }
   60%  { transform: scale(1.18) }
@@ -1354,7 +1366,11 @@ button.agent-file-card:hover { border-color: var(--cyan); background: var(--surf
 .agent-file-dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .5; }
 @keyframes agent-pulse { 50% { opacity: .35; transform: translateX(3px); } }
 .agent-artifact-viewer { position: fixed; inset: 0; margin: auto; width: min(860px, calc(100vw - 28px)); max-height: min(86vh, 760px); }
+.agent-artifact-toolbar { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
+.agent-artifact-toolbar .button.active { border-color: var(--cyan); background: color-mix(in srgb, var(--cyan) 16%, var(--surface)); color: var(--ink); }
 .agent-artifact-content { margin: 0; padding: 16px; max-height: 62vh; overflow: auto; border: 1px solid var(--line); border-radius: var(--r-md); background: #080a09; color: #f8f2e6; font: 500 .82rem/1.6 "JetBrains Mono", monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.agent-artifact-preview { display: block; width: 100%; min-height: 480px; max-height: 62vh; border: 1px solid var(--line); border-radius: var(--r-md); background: #fff; }
+.agent-artifact-preview[hidden] { display: none !important; }
 .dlg-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-4); }
 .dlg-foot {
   display: flex; align-items: center; justify-content: flex-end; gap: var(--s-2);
@@ -2224,13 +2240,17 @@ html.booting #chat { opacity: 0; }
   }
   .status .led { background: var(--solat-cyan); box-shadow: 0 0 12px var(--solat-cyan); }
   #themeBtn { background: var(--solat-paper); color: var(--solat-black); transform: rotate(3deg); }
-  .ui-mode-toggle { position: relative; overflow: hidden; width: 48px; height: 38px; padding: 0; }
-  .ui-mode-art { position: absolute; inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); object-fit: contain; transition: opacity var(--d-2) var(--e-out), transform var(--d-3) var(--e-spring), filter var(--d-2) var(--e-out); }
-  .ui-mode-art-blue { opacity: 1; transform: rotate(-3deg) scale(1); }
-  .ui-mode-art-red { opacity: 0; transform: rotate(5deg) scale(.72); }
+  .ui-mode-toggle { position: relative; overflow: hidden; width: 52px; height: 40px; padding: 3px; background: #10110f; border: 1px solid rgba(255,245,223,.28); clip-path: polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px); transition: background var(--d-2) var(--e-out), box-shadow var(--d-2) var(--e-out), transform var(--d-2) var(--e-spring); }
+  .ui-mode-art { position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; background: var(--solat-paper); border: 1px solid rgba(255,245,223,.55); transition: opacity var(--d-2) var(--e-out), transform var(--d-3) var(--e-spring), filter var(--d-2) var(--e-out); }
+  .ui-mode-art-blue { opacity: 1; transform: rotate(-3deg) scale(1); animation: uiModeBlueIdle 3.4s ease-in-out infinite; }
+  .ui-mode-art-red { opacity: 0; transform: rotate(5deg) scale(.72); animation: uiModeRedIdle 3.4s ease-in-out infinite; }
   .ui-mode-toggle[aria-pressed="true"] .ui-mode-art-blue { opacity: 0; transform: rotate(-12deg) scale(.72); }
   .ui-mode-toggle[aria-pressed="true"] .ui-mode-art-red { opacity: 1; transform: rotate(3deg) scale(1); }
-  .ui-mode-toggle:hover .ui-mode-art { filter: contrast(1.25) saturate(1.2) drop-shadow(0 0 7px rgba(39,237,238,.42)); }
+  .ui-mode-toggle:hover { transform: translateY(-2px) rotate(-1deg); box-shadow: 3px 3px 0 var(--solat-cyan); }
+  .ui-mode-toggle:hover .ui-mode-art { filter: contrast(1.35) saturate(1.3) brightness(1.08); }
+  .ui-mode-toggle:active { transform: translate(1px,1px); }
+  @keyframes uiModeBlueIdle { 0%,100% { filter: contrast(1.15) saturate(1.08); } 50% { filter: contrast(1.3) saturate(1.22) brightness(1.04); } }
+  @keyframes uiModeRedIdle { 0%,100% { filter: contrast(1.15) saturate(1.08); } 50% { filter: contrast(1.3) saturate(1.3) brightness(1.04); } }
   .ui-mode-fallback { display: none; }
   :root[data-ui-mode="alternate"] .ui-mode-toggle { background: var(--solat-red); box-shadow: 4px 4px 0 var(--solat-cyan); }
   :root[data-ui-mode="alternate"] #chat,
@@ -2802,18 +2822,8 @@ html.booting #chat { opacity: 0; }
     content: ""; position: absolute; inset: 0; background: var(--solat-paper);
     clip-path: polygon(0 0, 92% 64%, 56% 68%, 72% 100%, 55% 100%, 39% 70%, 14% 94%);
   }
-  #solatCursor::after {
-    content: ""; position: absolute; left: -10px; top: -10px; width: 30px; height: 30px;
-    border: 2px solid var(--solat-cyan); border-radius: 50%; opacity: .86;
-    animation: cursorEnergy 1.15s cubic-bezier(.3,0,.2,1) infinite;
-  }
   #solatCursor.on { opacity: 1; }
   #solatCursor.hit { filter: drop-shadow(7px 8px 0 var(--solat-cyan)); }
-  @keyframes cursorEnergy {
-    0% { transform: scale(.55) rotate(0); opacity: .95; }
-    55% { transform: scale(1.12) rotate(90deg); opacity: .34; }
-    100% { transform: scale(1.42) rotate(180deg); opacity: 0; }
-  }
 
   #energyField {
     position: fixed; inset: 0; z-index: 4; pointer-events: none; overflow: hidden;
@@ -3934,6 +3944,9 @@ html.booting #chat { opacity: 0; }
     clip-path: polygon(8px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 8px);
   }
   :root:not(.home-mode) .msg.error .bubble { border-color: var(--solat-red); border-left-color: var(--solat-red); background: rgba(44,8,7,.72); box-shadow: 6px 6px 0 rgba(255,33,24,.28); }
+  :root:not(.home-mode) .msg.agent-verified .bubble { border-color: var(--solat-cyan); border-left-color: var(--solat-cyan); background: rgba(5,32,32,.72); box-shadow: 6px 6px 0 rgba(39,237,238,.2); }
+  :root:not(.home-mode) .msg.agent-verified .who-line { color: var(--solat-cyan); }
+  :root:not(.home-mode) .msg.agent-cancelled .bubble { border-color: rgba(255,245,223,.34); border-left-color: rgba(255,245,223,.55); background: rgba(255,245,223,.06); }
   :root:not(.home-mode) .actions { opacity: .62; margin-top: 8px; gap: 4px; transition: opacity .18s ease; }
   :root:not(.home-mode) .msg:hover .actions { opacity: 1; }
   :root:not(.home-mode) .act { min-height: 28px; padding: 0 9px; border-color: rgba(255,245,223,.18); background: transparent; clip-path: none; font-size: .58rem; }
@@ -3967,17 +3980,7 @@ html.booting #chat { opacity: 0; }
 
   .inner-empty { width: 100%; max-width: 820px; margin: auto; padding: clamp(22px,3.2vh,36px) 28px 22px; }
   .inner-empty { position: relative; isolation: isolate; overflow: visible; }
-  .inner-empty::after {
-    content: ""; position: absolute; z-index: 0; pointer-events: none;
-    background: center / contain no-repeat; mix-blend-mode: screen; filter: contrast(1.22) saturate(1.34);
-    animation: ambientAssetDrift 10s ease-in-out infinite;
-  }
-  .inner-empty::after {
-    right: -22px; top: -36px; width: 136px; height: 178px;
-    background-image: url('./assets/persona-sparkle.jfif'); opacity: .25; animation-delay: -4s;
-    filter: invert(1) contrast(1.42) saturate(1.3);
-  }
-  @keyframes ambientAssetDrift { 0%,100% { translate: 0 0; opacity: .07; } 50% { translate: 4px -5px; opacity: .16; } }
+  .inner-empty::after { display: none !important; }
   .inner-art {
     position: absolute; z-index: 1; top: 8px; right: -18px; width: min(31%, 255px); aspect-ratio: 1; margin: 0;
     pointer-events: none; opacity: .52; mix-blend-mode: screen; transform: rotate(1.2deg);
@@ -3994,9 +3997,8 @@ html.booting #chat { opacity: 0; }
   .inner-starter-art { width: 28px; height: 28px; object-fit: contain; filter: contrast(1.24) saturate(1.3); mix-blend-mode: screen; }
   .inner-starter-create { position: relative; overflow: hidden; }
   .inner-empty-signal { display: flex; align-items: center; gap: 9px; margin-bottom: 13px; color: var(--solat-cyan); font: 700 .65rem/1 var(--f-mono); letter-spacing: .16em; animation: signalType 4.6s ease-in-out infinite; }
-  .inner-empty-signal::after { content: ""; width: 44px; height: 24px; background: center / contain no-repeat url('./assets/persona-mask.jfif'); mix-blend-mode: screen; opacity: .48; filter: contrast(1.2) saturate(1.2); animation: maskFlicker 3.2s steps(2,end) infinite; }
-  @keyframes maskFlicker { 0%,100% { opacity: .08; transform: translateX(0); } 48% { opacity: .22; transform: translateX(2px); } 52% { opacity: .12; transform: translateX(-1px); } }
-  .inner-live-dot { width: 7px; height: 7px; background: var(--solat-cyan); transform: rotate(45deg); box-shadow: 0 0 12px rgba(39,237,238,.78); animation: innerSignal 1.9s ease-in-out infinite; }
+  .inner-empty-signal::after { display: none !important; }
+  .inner-live-dot { width: 7px; height: 7px; background: var(--solat-cyan); transform: rotate(45deg); box-shadow: none; animation: innerSignal 1.9s ease-in-out infinite; }
   @keyframes innerSignal { 0%,100% { opacity: .38; transform: rotate(45deg) scale(.75); } 50% { opacity: 1; transform: rotate(45deg) scale(1); } }
   .inner-empty h2 { max-width: 680px; margin: 0; color: var(--inner-ink); font-family: var(--f-display); font-size: clamp(2.65rem,4.6vw,4.2rem); font-style: italic; line-height: .86; letter-spacing: -.045em; text-transform: uppercase; transform: skewX(-3deg); animation: headlineBreath 8s ease-in-out infinite; }
   .inner-empty h2 em { color: #ff4036; font-style: inherit; text-shadow: 4px 4px 0 rgba(39,237,238,.46); }
@@ -4094,6 +4096,133 @@ html.booting #chat { opacity: 0; }
     .inner-empty-signal, .inner-empty h2, .inner-starter, .inner-art, .inner-art::after, .composer-foot, .sheet.open { animation: none !important; }
   }
 }
+  /* SOLAT UI elevation pass: a restrained kinetic layer that keeps hierarchy
+     readable while making the workspace feel responsive before interaction. */
+  :root:not([data-motion="off"]) #topbar::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background: linear-gradient(105deg, transparent 18%, rgba(39,237,238,.08) 35%, transparent 48%);
+    background-size: 220% 100%; animation: topbarSweep 9s var(--e-soft) infinite;
+  }
+  @keyframes topbarSweep { 0%, 65%, 100% { background-position: 160% 0; } 78% { background-position: -20% 0; } }
+  :root:not([data-motion="off"]) #chat::before { animation: innerDepth 12s ease-in-out infinite alternate; }
+  @keyframes innerDepth { from { opacity: .55; transform: translateX(0); } to { opacity: .9; transform: translateX(-8px); } }
+  :root:not([data-motion="off"]) .inner-empty-signal .inner-live-dot { animation: innerSignal 1.9s ease-in-out infinite; box-shadow: none; }
+  :root:not([data-motion="off"]) .inner-starter { animation: innerCardIdle 6.8s ease-in-out infinite; will-change: transform; }
+  :root:not([data-motion="off"]) .inner-starter:nth-child(1) { animation-delay: -.4s; }
+  :root:not([data-motion="off"]) .inner-starter:nth-child(2) { animation-delay: -2.2s; }
+  :root:not([data-motion="off"]) .inner-starter:nth-child(3) { animation-delay: -4.1s; }
+  @keyframes innerCardIdle { 0%, 100% { transform: translate3d(0,0,0); } 50% { transform: translate3d(0,-2px,0); } }
+  .inner-starter:focus-visible { outline: 2px solid var(--solat-cyan); outline-offset: 3px; transform: translateX(6px); box-shadow: -5px 0 0 var(--solat-red), 0 0 18px rgba(39,237,238,.16); }
+  .inner-starter:hover .inner-starter-art { transform: rotate(-7deg) scale(1.12); filter: contrast(1.35) saturate(1.45) drop-shadow(0 0 7px rgba(255,33,24,.42)); }
+  .inner-starter-art { transition: transform var(--d-2) var(--e-spring), filter var(--d-2) var(--e-out); }
+  :root:not([data-motion="off"]) #composer { animation: composerBreath 7s ease-in-out infinite; }
+  @keyframes composerBreath { 0%,100% { box-shadow: 7px 7px 0 rgba(255,33,24,.42); } 50% { box-shadow: 7px 7px 0 rgba(255,33,24,.6), 0 0 23px rgba(39,237,238,.08); } }
+  :root:not([data-motion="off"]) #composer.focused { animation: composerFocus 2.8s ease-in-out infinite; }
+  @keyframes composerFocus { 0%,100% { box-shadow: 7px 7px 0 var(--solat-red), 0 0 12px rgba(39,237,238,.1); } 50% { box-shadow: 10px 10px 0 var(--solat-red), 0 0 30px rgba(39,237,238,.24); } }
+  .send:focus-visible, .newchat:focus-visible, .ui-mode-toggle:focus-visible { outline: 2px solid var(--solat-cyan); outline-offset: 4px; }
+  .send:hover:not(:disabled) .send-label { animation: labelNudge .45s var(--e-spring); }
+  @keyframes labelNudge { 0% { transform: translateX(0); } 55% { transform: translateX(3px); } 100% { transform: translateX(0); } }
+  @media (prefers-reduced-motion: reduce) {
+    #topbar::before, #chat::before, #composer, #composer.focused, .inner-starter, .inner-empty-signal .inner-live-dot, .send:hover:not(:disabled) .send-label { animation: none !important; }
+  }
+
+  /* Original SOLAT graphic layer: angular, high-contrast and kinetic without
+     importing third-party artwork. */
+  :root:not([data-motion="off"]) #energyField { opacity: .26; animation: fieldPulse 7s ease-in-out infinite; }
+  #energyField::before, #energyField::after {
+    border: 0; width: 42vw; height: 10px; background: var(--solat-red);
+    box-shadow: 0 18px 0 rgba(255,33,24,.38), 0 36px 0 rgba(39,237,238,.24);
+    clip-path: polygon(0 42%, 82% 0, 100% 36%, 25% 100%);
+    transform: rotate(-18deg) translateX(-12vw); opacity: .72;
+    animation: slashDrift 11s cubic-bezier(.25,.7,.3,1) infinite;
+  }
+  #energyField::after { background: var(--solat-cyan); box-shadow: 0 16px 0 rgba(39,237,238,.28); transform: rotate(24deg) translateX(18vw); animation-delay: -5.5s; animation-direction: reverse; opacity: .42; }
+  @keyframes slashDrift { 0%,100% { translate: -8vw 8vh; opacity: .16; } 45% { opacity: .72; } 50% { translate: 10vw -4vh; opacity: .46; } }
+  @keyframes fieldPulse { 0%,100% { filter: contrast(1) saturate(1); } 50% { filter: contrast(1.08) saturate(1.22); } }
+  :root:not(.home-mode) #chatHeader::after {
+    content: ""; position: absolute; right: 0; bottom: -1px; width: 38%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--solat-cyan), var(--solat-red), transparent);
+    background-size: 180% 100%; animation: headerRail 5.8s linear infinite; opacity: .72;
+  }
+  @keyframes headerRail { from { background-position: 120% 0; } to { background-position: -80% 0; } }
+  .inner-empty::before {
+    content: ""; position: absolute; z-index: 0; inset: 10px -12px auto 34%; height: 1px;
+    background: linear-gradient(90deg, var(--solat-cyan), transparent 68%); opacity: .55;
+    transform: skewX(-28deg); animation: accentLine 6s ease-in-out infinite;
+  }
+  @keyframes accentLine { 0%,100% { transform: skewX(-28deg) scaleX(.72); transform-origin: left; opacity: .28; } 50% { transform: skewX(-28deg) scaleX(1); opacity: .8; } }
+  .inner-starter::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .16;
+    background-image: radial-gradient(circle, var(--solat-cyan) 0 1px, transparent 1.4px);
+    background-size: 9px 9px; mask-image: linear-gradient(90deg, transparent 55%, #000 100%);
+    animation: halftoneShift 8s linear infinite;
+  }
+  @keyframes halftoneShift { from { background-position: 0 0; } to { background-position: 18px 9px; } }
+  :root[data-motion="off"] #energyField::before, :root[data-motion="off"] #energyField::after,
+  :root[data-motion="off"] #chatHeader::after, :root[data-motion="off"] .inner-empty::before,
+  :root[data-motion="off"] .inner-starter::after { animation: none !important; }
+
+  /* Downloaded visual plates: visible texture, kept behind interaction surfaces. */
+  #pinterestDecor { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; opacity: .78; }
+  #pinterestDecor::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 6px, rgba(39,237,238,.045) 7px, transparent 8px); mix-blend-mode: screen; opacity: .45; animation: decorScan 9s linear infinite; }
+  .pinterest-plate { position: absolute; display: block; object-fit: cover; object-position: center; mix-blend-mode: screen; filter: saturate(1.18) contrast(1.08); will-change: transform; }
+  .pinterest-plate-one { width: clamp(170px, 19vw, 310px); height: clamp(230px, 34vh, 470px); right: 2.5vw; top: 22vh; opacity: .19; clip-path: polygon(9% 0, 100% 5%, 92% 100%, 0 94%); translate: calc(var(--pointer-x, 0) * -0.55px) calc(var(--pointer-y, 0) * -0.55px); transform: rotate(6deg); animation: pinterestFloatOne 10s ease-in-out infinite; }
+  .pinterest-plate-two { width: clamp(150px, 17vw, 270px); height: clamp(190px, 27vh, 370px); left: -2vw; bottom: 10vh; opacity: .13; clip-path: polygon(0 7%, 91% 0, 100% 92%, 8% 100%); translate: calc(var(--pointer-x, 0) * .7px) calc(var(--pointer-y, 0) * .7px); transform: rotate(-8deg); animation: pinterestFloatTwo 12s ease-in-out -3s infinite; }
+  @keyframes pinterestFloatOne { 0%,100% { transform: translate3d(0,0,0) rotate(6deg); filter: saturate(1.05) contrast(1.04); } 50% { transform: translate3d(-9px,8px,0) rotate(4deg); filter: saturate(1.3) contrast(1.14); } }
+  @keyframes pinterestFloatTwo { 0%,100% { transform: translate3d(0,0,0) rotate(-8deg); } 50% { transform: translate3d(10px,-7px,0) rotate(-5deg); } }
+  @keyframes decorScan { from { transform: translateY(-18%); } to { transform: translateY(18%); } }
+  :root.home-mode .pinterest-plate { opacity: .16; }
+  :root[data-motion="off"] #pinterestDecor::before, :root[data-motion="off"] #pinterestDecor::after,
+  :root[data-motion="off"] .pinterest-plate { animation: none !important; }
+  @media (max-width: 760px) { .pinterest-plate-one { right: -54px; top: 25vh; } .pinterest-plate-two { left: -62px; bottom: 14vh; } }
+
+  /* Dense live layer: small signals make the surface feel active without stealing focus. */
+  #liveDecor { position: fixed; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+  .live-signal { position: absolute; display: block; color: var(--solat-cyan); font: 700 9px/1 var(--f-mono); letter-spacing: .16em; text-shadow: 0 0 9px rgba(39,237,238,.55); opacity: .56; white-space: nowrap; }
+  .live-signal::before { content: ""; display: inline-block; width: 5px; height: 5px; margin-right: 7px; background: currentColor; box-shadow: 0 0 9px currentColor; transform: rotate(45deg); animation: signalBlink 1.8s ease-in-out infinite; }
+  .live-signal-a { top: 17%; left: 7%; animation: signalDriftA 8s ease-in-out infinite; }
+  .live-signal-b { right: 8%; bottom: 18%; color: var(--solat-red); animation: signalDriftB 9s ease-in-out -2s infinite; }
+  .live-signal-c { top: 49%; right: 4%; animation: signalDriftC 7s ease-in-out -4s infinite; }
+  .live-cross { position: absolute; width: 18px; height: 18px; opacity: .5; animation: crossSpin 8s linear infinite; }
+  .live-cross::before, .live-cross::after { content: ""; position: absolute; background: var(--solat-cyan); box-shadow: 0 0 8px rgba(39,237,238,.55); }
+  .live-cross::before { width: 100%; height: 1px; top: 8px; }
+  .live-cross::after { width: 1px; height: 100%; left: 8px; }
+  .live-cross-a { top: 25%; left: 42%; animation-delay: -1s; }
+  .live-cross-b { right: 23%; bottom: 27%; transform: scale(.7); animation-delay: -4s; }
+  .live-cross-b::before, .live-cross-b::after { background: var(--solat-red); }
+  .live-bracket { position: absolute; width: 58px; height: 58px; border: 1px solid rgba(39,237,238,.3); clip-path: polygon(0 0, 22% 0, 22% 3%, 3% 3%, 3% 22%, 0 22%, 0 0, 100% 0, 100% 22%, 97% 22%, 97% 3%, 78% 3%, 78% 0); opacity: .45; animation: bracketPulse 5s ease-in-out infinite; }
+  .live-bracket-a { left: 4%; bottom: 31%; transform: rotate(-12deg); }
+  .live-bracket-b { right: 5%; top: 29%; transform: rotate(18deg) scale(.8); animation-delay: -2.5s; border-color: rgba(255,33,24,.44); }
+  .live-ticker { position: absolute; left: 26%; bottom: 7%; width: 31vw; height: 1px; overflow: hidden; background: rgba(39,237,238,.2); }
+  .live-ticker::after { content: "SOLAT / SIGNAL LOCKED / INPUT READY / LIVE CONTEXT"; position: absolute; left: 0; top: -7px; color: rgba(39,237,238,.45); font: 700 8px/1 var(--f-mono); letter-spacing: .2em; white-space: nowrap; animation: tickerSlide 15s linear infinite; }
+  .live-dots { position: absolute; width: 84px; height: 48px; right: 13%; top: 13%; opacity: .4; background-image: radial-gradient(circle, var(--solat-red) 0 1px, transparent 1.5px); background-size: 12px 12px; transform: skewX(-18deg); animation: dotShift 8s linear infinite; }
+  .live-pixel { position: absolute; width: 7px; height: 7px; background: var(--solat-cyan); box-shadow: 0 0 12px var(--solat-cyan); opacity: .65; transform: rotate(45deg); animation: pixelHop 4.8s ease-in-out infinite; }
+  .live-pixel-a { left: 29%; top: 21%; animation-delay: -1s; }
+  .live-pixel-b { right: 31%; bottom: 25%; background: var(--solat-red); box-shadow: 0 0 12px var(--solat-red); animation-delay: -3s; }
+  @keyframes signalBlink { 0%,100% { opacity: .35; } 50% { opacity: 1; } }
+  @keyframes signalDriftA { 0%,100% { transform: translate3d(0,0,0); } 50% { transform: translate3d(14px,-6px,0); } }
+  @keyframes signalDriftB { 0%,100% { transform: translate3d(0,0,0) skewX(-8deg); } 50% { transform: translate3d(-12px,8px,0) skewX(-8deg); } }
+  @keyframes signalDriftC { 0%,100% { transform: translateX(0); opacity: .32; } 50% { transform: translateX(-18px); opacity: .76; } }
+  @keyframes crossSpin { to { transform: rotate(360deg); } }
+  @keyframes bracketPulse { 0%,100% { opacity: .22; filter: brightness(.8); } 50% { opacity: .8; filter: brightness(1.5); } }
+  @keyframes tickerSlide { from { transform: translateX(31vw); } to { transform: translateX(-100%); } }
+  @keyframes dotShift { from { background-position: 0 0; opacity: .25; } 50% { opacity: .62; } to { background-position: 24px 12px; opacity: .25; } }
+  @keyframes pixelHop { 0%,100% { transform: translate3d(0,0,0) rotate(45deg); opacity: .25; } 50% { transform: translate3d(13px,-9px,0) rotate(135deg); opacity: .9; } }
+  :root[data-motion="off"] #liveDecor *, :root[data-motion="off"] #liveDecor::before,
+  :root[data-motion="off"] #liveDecor::after { animation: none !important; }
+  @media (max-width: 760px) { .live-signal, .live-dots { display: none; } .live-ticker { left: 18%; width: 55vw; } .live-bracket-b { right: -12px; } }
+
+  /* Final motion pass: tactile cursor and slow ambient atmosphere. */
+  #liveDecor::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at calc(50% + (var(--pointer-x, 0) * 1px)) calc(48% + (var(--pointer-y, 0) * 1px)), rgba(39,237,238,.08), transparent 24%); mix-blend-mode: screen; animation: atmosphereBreathe 8s ease-in-out infinite; }
+  #liveDecor::after { content: ""; position: absolute; inset: 5%; border: 1px solid rgba(255,245,223,.08); clip-path: polygon(0 0, 26% 0, 26% 1px, 0 1px, 0 24%, 1px 24%, 1px 0, 100% 0, 100% 32%, calc(100% - 1px) 32%, calc(100% - 1px) 0, 100% 0, 100% 100%, 71% 100%, 71% calc(100% - 1px), 100% calc(100% - 1px), 100% 74%, calc(100% - 1px) 74%, calc(100% - 1px) 100%, 0 100%, 0 66%, 1px 66%, 1px 100%, 0 100%); opacity: .38; animation: frameFlicker 5.5s steps(2,end) infinite; }
+  #solatCursor { will-change: transform; }
+  :root:not([data-motion="off"]) .inner-starter:hover,
+  :root:not([data-motion="off"]) .inner-starter:focus-visible { animation: cardLiveHit .5s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes atmosphereBreathe { 0%,100% { opacity: .35; transform: scale(.98); } 50% { opacity: .85; transform: scale(1.02); } }
+  @keyframes frameFlicker { 0%,92%,100% { opacity: .26; } 94% { opacity: .58; } 96% { opacity: .12; } }
+  @keyframes cardLiveHit { 0% { filter: brightness(1); } 35% { filter: brightness(1.26) drop-shadow(0 0 8px rgba(39,237,238,.32)); } 100% { filter: brightness(1); } }
+  :root[data-motion="off"] #liveDecor::before, :root[data-motion="off"] #liveDecor::after { animation: none !important; }
+
 </style>
 </head>
 <body>
@@ -4101,6 +4230,19 @@ html.booting #chat { opacity: 0; }
 <div id="solatCursor" aria-hidden="true" class="on" style="--cursor-x: 229.8000030517578px; --cursor-y: 470.38751220703125px;"></div>
 <div id="sendTransition" class="scene-transition" aria-hidden="true"><span>SOLAT // ENGAGE</span></div>
 <div id="newChatTransition" class="scene-transition" aria-hidden="true"><span>NEW // SIGNAL</span></div>
+<div id="pinterestDecor" aria-hidden="true">
+  <img class="pinterest-plate pinterest-plate-one" src="./assets/pinterest-persona-graphic-01.jpg" alt="">
+  <img class="pinterest-plate pinterest-plate-two" src="./assets/pinterest-persona-graphic-02.jpg" alt="">
+</div>
+<div id="liveDecor" aria-hidden="true">
+  <span class="live-signal live-signal-a" aria-label="Live signal"></span>
+  <span class="live-signal live-signal-b">SYNC // READY</span>
+  <i class="live-cross live-cross-a"></i><i class="live-cross live-cross-b"></i>
+  <i class="live-bracket live-bracket-a"></i><i class="live-bracket live-bracket-b"></i>
+  <i class="live-dots"></i>
+  <i class="live-pixel live-pixel-a"></i><i class="live-pixel live-pixel-b"></i>
+  <i class="live-ticker"></i>
+</div>
 <div id="energyField" aria-hidden="true"></div>
 
 <!-- ═══════════ ICON SPRITE ═══════════ -->
@@ -4299,7 +4441,6 @@ html.booting #chat { opacity: 0; }
               </g>
 
               <g class="jewel">
-                <circle class="jewel-halo" cx="260" cy="196" r="33" fill="url(#ame)" opacity=".2"></circle>
                 <circle class="jewel-bezel" cx="260" cy="196" r="19.5"></circle>
                 <circle class="jewel-stone" cx="260" cy="196" r="16" fill="url(#ame)"></circle>
                 <ellipse class="jewel-spec" cx="254" cy="190" rx="4.6" ry="3.2" transform="rotate(-28 254 190)" fill="#fff" opacity=".68"></ellipse>

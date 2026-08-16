@@ -2,6 +2,7 @@ node_modules/
 dist/
 dist-phase-*/
 release/
+archive-old-desktop-solat/
 .env
 .env.*
 !.env.example

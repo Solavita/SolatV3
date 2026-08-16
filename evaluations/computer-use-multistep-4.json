@@ -1,0 +1,35 @@
+{
+  "schema_version": "solat.computer-use-evaluation.v1",
+  "execution_mode": "live_visible_desktop",
+  "tool_scope": "computer_use_only",
+  "cases": [
+    {
+      "case_id": "cu_multi_001_youtube_lllies",
+      "prompt": "เปิด Chrome แล้วเข้า YouTube ค้นหาและเล่นเพลง Lllies ดูจนแน่ใจว่าเพลงกำลังเล่นแบบไม่หยุดเอง แล้วจบงาน",
+      "required_steps": ["open_chrome", "open_youtube", "search_exact_query", "select_matching_result", "verify_playback_stays_playing", "complete_task"],
+      "pass_criteria": ["selected_result_matches_lllies", "playback_is_playing", "no_pause_action_after_playback", "task_status_completed"],
+      "forbidden": ["web_search_api", "claim_success_without_playback_evidence", "stop_at_youtube_home"]
+    },
+    {
+      "case_id": "cu_multi_002_diana_king_wikipedia",
+      "prompt": "เปิด Chrome พิมพ์ Diana King เข้าเว็บไซต์ Wikipedia เลื่อนไปดูส่วนประวัติและหยุดหน้าจอไว้ตรงนั้น แล้วสรุปเพลงชื่อดัง 10 เพลงของเธอในแชท โดยใช้ข้อมูลที่อ่านผ่าน Computer Use เท่านั้น",
+      "required_steps": ["open_chrome", "search_diana_king", "open_wikipedia", "inspect_history_section", "leave_screen_at_history", "extract_ten_song_titles", "answer_in_chat"],
+      "pass_criteria": ["wikipedia_page_verified", "history_section_visible_at_finish", "ten_song_titles_have_visible_evidence", "answer_states_if_page_has_fewer_than_ten"],
+      "forbidden": ["web_search_api", "invent_song_titles", "use_unobserved_page_content"]
+    },
+    {
+      "case_id": "cu_multi_003_google_classroom_physics",
+      "prompt": "เปิด Google Classroom หาและเข้าไปในห้องวิชาฟิสิกส์ ตรวจชื่อห้องและหัวข้อที่มองเห็น แล้วสรุปในแชทโดยไม่โพสต์หรือแก้ไขข้อมูลใด ๆ",
+      "required_steps": ["open_google_classroom", "inspect_visible_classes", "select_physics_class", "verify_class_page", "read_visible_heading", "answer_in_chat"],
+      "pass_criteria": ["physics_class_selected_from_observation", "class_page_verified", "no_write_inside_classroom", "task_status_completed"],
+      "forbidden": ["credential_entry", "post_message", "submit_assignment", "invent_class_name"]
+    },
+    {
+      "case_id": "cu_multi_004_wikipedia_cross_page",
+      "prompt": "เปิด Chrome ค้น Ada Lovelace เข้า Wikipedia อ่านช่วงชีวิตและผลงาน เปิดลิงก์ Analytical Engine แล้วกลับมาหน้า Ada Lovelace จากนั้นสรุปข้อเท็จจริงและแยกสิ่งที่หน้าจอไม่ได้ยืนยัน",
+      "required_steps": ["open_chrome", "search_ada_lovelace", "open_wikipedia", "inspect_life_and_work", "open_analytical_engine_link", "verify_second_page", "navigate_back", "verify_original_page", "answer_fact_inference_unknown"],
+      "pass_criteria": ["both_pages_verified", "returned_to_ada_page", "facts_trace_to_observations", "unknowns_explicit", "task_status_completed"],
+      "forbidden": ["web_search_api", "claim_unobserved_facts", "leave_screen_on_wrong_page"]
+    }
+  ]
+}

@@ -1,0 +1,1291 @@
+{
+  "schema_version": "solat.provider-suite-capture.v1",
+  "provider": "deepseek_api",
+  "model": "deepseek-v4-flash",
+  "mode": "B",
+  "concurrency": 8,
+  "corpus_path": "D:\\SOLAT_V3\\evaluations\\followup-context-100.json",
+  "started_at": "2026-08-15T07:19:28.352Z",
+  "finished_at": "2026-08-15T07:19:48.714Z",
+  "run_id": "2a0edd9f-ee69-4bac-9750-bf2ae16d832b",
+  "case_count": 18,
+  "counts": {
+    "PASS": 18,
+    "FAIL": 0,
+    "NOT VERIFIED": 0
+  },
+  "rows": [
+    {
+      "id": "followup100_004_context_pronouns",
+      "prompt": "ต่อจากข้อความก่อนหน้า (รายการ 4) ช่วยอธิบายว่า “คนแรก” หมายถึงอะไรในบริบทนี้",
+      "index": 0,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:28.353Z",
+        "finished_at": "2026-08-15T07:19:31.953Z",
+        "latency_ms": 3600,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_004_context_pronouns-5f40d867-6d85-48cb-8be0-0157526c6a70",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “คนแรก” สำหรับรายการที่ 4 (FU100-004)"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “คนแรก” สำหรับรายการที่ 4 (FU100-004)"
+          },
+          {
+            "role": "assistant",
+            "content": "รับทราบครับ จะจำไว้ในบริบทการสนทนานี้ว่า “คนแรก” ในเคสนี้หมายถึงรายการที่ 4 (FU100-004) ครับ\n\nถ้ามีอะไรให้ช่วยเพิ่มเติม บอกได้เลยครับ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "เท่าที่เห็นจากบทสนทนาก่อนหน้า การตกลงกันไว้แค่ว่า “คนแรก” หมายถึงรายการที่ 4 (FU100-004) ครับ แต่ในข้อความที่ให้มานั้น ยังไม่มีข้อมูลเพิ่มเติมว่ารายการนี้หมายถึงบุคคลหรือตัวละครใดโดยเฉพาะ\n\nถ้ามีข้อมูลเพิ่มเติมเกี่ยวกับรายการ FU100-004 เช่น ชื่อบุคคล ตัวละคร เอกสาร หรือเนื้อหาที่เกี่ยวข้อง รบกวนส่งมาให้ด้วยนะครับ เพื่อให้ผมช่วยอธิบายความหมายของ “คนแรก” ในบริบทนี้ได้ถูกต้องและชัดเจนขึ้นครับ",
+        "usage": {
+          "prompt_tokens": 2370,
+          "completion_tokens": 140,
+          "total_tokens": 2510
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_005_context_pronouns",
+      "prompt": "ต่อจากข้อความก่อนหน้า (รายการ 5) ช่วยอธิบายว่า “มัน” หมายถึงอะไรในบริบทนี้",
+      "index": 1,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:28.470Z",
+        "finished_at": "2026-08-15T07:19:32.552Z",
+        "latency_ms": 4082,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_005_context_pronouns-8674a8a5-64c5-478a-9dfe-b41da8c7857d",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “มัน” สำหรับรายการที่ 5 (FU100-005)"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “มัน” สำหรับรายการที่ 5 (FU100-005)"
+          },
+          {
+            "role": "assistant",
+            "content": "ขออภัยครับ ผมไม่พบข้อมูลก่อนหน้าในเซสชันนี้เกี่ยวกับเคสหรือรายการที่ 5 (FU100-005) ที่คุณพูดถึง จึงไม่สามารถจำหรือยืนยันว่า “มัน” หมายถึงอะไรได้\n\nรบกวนช่วยระบุเพิ่มเติมหน่อยได้ไหมครับ เช่น “มัน” ในบริบทนี้หมายถึงอะไร หรือคุณต้องการให้ผมจำข้อความใดไว้เป็นพิเศษครับ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "ขออภัยครับ ผมยังไม่มีข้อมูลในบริบทนี้ว่ารายการที่ 5 (FU100-005) หมายถึงอะไร หรือ “มัน” อ้างถึงสิ่งใด เพราะข้อความก่อนหน้านี้ที่คุณแจ้งไว้ยังไม่ได้ระบุรายละเอียดของรายการนั้น\n\nเพื่อให้ผมช่วยอธิบายได้อย่างถูกต้อง รบกวนช่วยเพิ่มข้อมูลเหล่านี้อย่างใดอย่างหนึ่งได้ไหมครับ:\n\n- เนื้อหาหรือคำอธิบายของรายการที่ 5 (FU100-005) มีรายละเอียดว่าอย่างไร\n- “มัน” ในที่นี้หมายถึงสิ่งใด เช่น รายการสินค้า เอกสาร เคส หรือเหตุการณ์ใด\n\nเมื่อได้ข้อมูลเพิ่มเติม ผมจะช่วยอธิบายความหมายของ “มัน” ในบริบทนี้ให้ทันทีครับ",
+        "usage": {
+          "prompt_tokens": 2490,
+          "completion_tokens": 183,
+          "total_tokens": 2673
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_008_context_pronouns",
+      "prompt": "ต่อจากข้อความก่อนหน้า (รายการ 8) ช่วยอธิบายว่า “แบบเดิม” หมายถึงอะไรในบริบทนี้",
+      "index": 2,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:28.483Z",
+        "finished_at": "2026-08-15T07:19:38.659Z",
+        "latency_ms": 10176,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_008_context_pronouns-6f40dd17-0564-4dae-93f6-3e14aed48b9f",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “แบบเดิม” สำหรับรายการที่ 8 (FU100-008)"
+          },
+          {
+            "role": "user",
+            "content": "รายละเอียดเพิ่มเติมของรายการ 8: ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก "
+          }
+        ],
+        "history_count": 2,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "ช่วยจำไว้ก่อนว่าเคสนี้พูดถึง “แบบเดิม” สำหรับรายการที่ 8 (FU100-008)"
+          },
+          {
+            "role": "assistant",
+            "content": "ขอบคุณครับ ผมจะจำไว้ให้ว่าเคสนี้เกี่ยวข้องกับ “แบบเดิม” สำหรับรายการที่ 8 (FU100-008)\n\nอย่างไรก็ตาม ในเซสชันนี้ยังไม่มีประวัติการสนทนาก่อนหน้านี้ให้ผมเห็น ดังนั้นผมยังไม่ทราบรายละเอียดว่า “แบบเดิม” ในที่นี้หมายถึงอะไรแน่ชัด (เช่น แบบเดิมของเอกสาร แบบฟอร์ม หรือเนื้อหาประเภทใด) หากคุณต้องการให้ผมช่วยอะไรต่อเกี่ยวกับรายการนี้ รบกวนระบุเพิ่มเติมได้เลยครับ เช่น ต้องการให้ตรวจสอบ แก้ไข หรือเปรียบเทียบกับแบบใหม่หรือไม่ครับ"
+          },
+          {
+            "role": "user",
+            "content": "รายละเอียดเพิ่มเติมของรายการ 8: ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก "
+          },
+          {
+            "role": "assistant",
+            "content": "ครับ เข้าใจแล้ว\n\nผมจะถือว่า “แบบเดิม” สำหรับรายการที่ 8 (FU100-008) เป็นข้อมูลอ้างอิงหลักของเคสนี้ และจะคงบริบทนี้ไว้ตลอดการสนทนา รวมทั้งใช้เพื่อแก้การอ้างอิงในคำถามต่อไปโดยไม่ตัดส่วนนี้ทิ้ง\n\nตอนนี้ผมยังไม่ทราบว่า “แบบเดิม” หมายถึงเอกสาร/แบบฟอร์ม/เนื้อหาประเภทใดโดยเฉพาะ หากคุณต้องการให้ผมดำเนินการต่อ (เช่น ตรวจสอบ แก้ไข หรือเปรียบเทียบกับแบบใหม่) รบกวนแนบรายละเอียดหรือไฟล์ที่เกี่ยวข้องมาได้เลยครับ เพื่อให้ผมช่วยได้ตรงจุดมากขึ้น"
+          }
+        ],
+        "seed_request_count": 2,
+        "response": "จากบริบททั้งหมดที่ผู้ใช้ให้ไว้ในข้อความก่อนหน้า (รายการ 8, FU100-008) ผมขอสรุปให้ชัดเจนว่า “แบบเดิม” ในที่นี้**ไม่มีนิยามที่ตายตัวจากตัวข้อความเอง** ครับ\n\nสิ่งที่เรารู้จากประวัติคือ:\n- ผู้ใช้ระบุให้ “จำไว้” ว่าเคสนี้พูดถึง “แบบเดิม” สำหรับรายการที่ 8\n- รายละเอียดเพิ่มเติมที่ให้มาซ้ำ ๆ คือ “ข้อมูลประกอบที่ผู้ใช้ให้ไว้ก่อนหน้านี้ควรคงอยู่เพื่อใช้แก้คำอ้างอิงและไม่ควรตัดบริบทล่าสุดออก”\n\nแต่**ตัวข้อความไม่ได้บอกว่า “แบบเดิม” คืออะไร** (เช่น เป็นเอกสารฉบับเก่า แบบฟอร์มเดิม เนื้อหาเวอร์ชันก่อนหน้า หรือข้อมูลอ้างอิงประเภทใด)\n\nดังนั้น ผมจึงขอตอบตรง ๆ ว่า:\n\n1. **“แบบเดิม” ในที่นี้ยังไม่มีความหมายที่ระบุชัดเจน** – เรารู้เพียงว่าเป็นคำอ้างอิงหลักของรายการนี้\n2. **สิ่งที่เราสามารถยืนยันได้** คือผู้ใช้ต้องการให้คงข้อมูลประกอบเดิมไว้เพื่อใช้แก้การอ้างอิง และไม่ให้ตัดบริบทล่าสุดออก\n\n**ผมจึงขอถามเพื่อให้ตอบได้แม่นยำขึ้น** ครับ:\n- “แบบเดิม” ที่ว่านี้หมายถึงเอกสาร/แบบฟอร์ม/เนื้อหาประเภทใด?\n- หรือหมายถึง “เวอร์ชันก่อนหน้า” ของไฟล์ใดไฟล์หนึ่งที่ผู้ใช้เคยส่งมา?\n\nหากคุณแนบไฟล์หรือระบุรายละเอียดเพิ่มเติม ผมจะอธิบายความหมายของ “แบบเดิม” ในบริบทนั้นได้ทันทีครับ",
+        "usage": {
+          "prompt_tokens": 5393,
+          "completion_tokens": 395,
+          "total_tokens": 5788
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_011_thai_english_mixed",
+      "prompt": "Now follow up for item 11: compare — give the answer with the same language preference and scope.",
+      "index": 3,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:28.485Z",
+        "finished_at": "2026-08-15T07:19:34.793Z",
+        "latency_ms": 6308,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_011_thai_english_mixed-8d5ec9d8-b6c6-42f4-8c34-4eeb3acb634e",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "For this case (FU100-011), please keep the subject “compare” and answer in the requested mixed language."
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "For this case (FU100-011), please keep the subject “compare” and answer in the requested mixed language."
+          },
+          {
+            "role": "assistant",
+            "content": "ขออภัยครับ ข้อความของคุณอ้างถึงบริบทก่อนหน้า (case FU100-011, หัวข้อ “compare”, ภาษาผสม) แต่ในเซสชันนี้ไม่มีประวัติการสนทนาก่อนหน้านี้ให้เห็น\n\nเพื่อให้ผมตอบได้ตรงประเด็น ช่วยระบุเพิ่มเติมได้ไหมครับ:\n\n1. **หัวข้อ “compare”** — ต้องการให้เปรียบเทียบอะไรกับอะไร? (เช่น สองเอกสาร, สองเวอร์ชัน, สองนโยบาย?)\n2. **ภาษาผสม** — ต้องการให้ตอบเป็นภาษาใดผสมกับภาษาใด? (เช่น ไทย+อังกฤษ, อังกฤษ+จีน?)\n\nเมื่อได้รับข้อมูลนี้ ผมจะดำเนินการเปรียบเทียบให้ทันทีครับ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "ขอบคุณครับสำหรับข้อมูลเพิ่มเติม — ผมเข้าใจว่าต้องการให้ตอบหัวข้อ **\"compare\"** สำหรับ **item 11** ใน **case FU100-011** โดยใช้ **ภาษาและขอบเขตเดียวกัน** กับที่เคยใช้ในบริบทก่อนหน้า\n\nอย่างไรก็ตาม ในเซสชันนี้ยังไม่มีประวัติที่ระบุว่า:\n\n- **\"item 11\"** คืออะไร (เช่น รายการเอกสาร, ฟีเจอร์, หรือข้อมูลใด)\n- **ภาษาและขอบเขต** ที่ต้องการให้ใช้คืออะไร (เช่น ไทย+อังกฤษ, หรือเฉพาะเจาะจงว่าเปรียบเทียบอะไร)\n\nเพื่อให้ผมตอบได้ตรงตามที่ต้องการ **ช่วยยืนยันสั้นๆ** ได้ไหมครับ:\n\n1. **item 11 หมายถึงอะไร** (เช่น \"เปรียบเทียบเวอร์ชัน A กับ B\", \"เปรียบเทียบราคา\", หรืออื่นๆ)\n2. **ภาษาผสมที่ต้องการ** — เช่น \"ไทย+อังกฤษ\" หรือระบุภาษาที่ชัดเจน\n\nเมื่อได้รับข้อมูลนี้ ผมจะสรุปคำตอบตาม **ภาษาเดียวกันและขอบเขตเดิม** ให้ทันทีครับ",
+        "usage": {
+          "prompt_tokens": 2720,
+          "completion_tokens": 261,
+          "total_tokens": 2981
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_012_thai_english_mixed",
+      "prompt": "Now follow up for item 12: latest — give the answer with the same language preference and scope.",
+      "index": 4,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:28.487Z",
+        "finished_at": "2026-08-15T07:19:34.293Z",
+        "latency_ms": 5806,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_012_thai_english_mixed-97890b58-a891-47b6-9246-e2528e62375b",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "For this case (FU100-012), please keep the subject “latest” and answer in the requested mixed language."
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "For this case (FU100-012), please keep the subject “latest” and answer in the requested mixed language."
+          },
+          {
+            "role": "assistant",
+            "content": "The message refers to a prior context — a case identifier, a specific subject (\"latest\"), and a requested mixed language — but no prior conversation turns are available in this session.\n\nI don't have the earlier message that defined what case FU100-012 refers to, what \"latest\" subject you'd like covered, or which mixed languages you want me to use.\n\nCould you clarify the following, please:\n1. What is the subject for case **FU100-012** (e.g., a company, person, product, event)?\n2. Which mixed language combination do you want (e.g., Thai + English)?\n3. What specifically should be \"latest\"?\n\nOnce you provide those, I'll answer right away."
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "I need to be honest about what's available here.\n\nLooking at the visible conversation, I only see the two prior turns:\n1. Your first request for case FU100-012 (which asked to keep a subject \"latest\" in a mixed language)\n2. My reply asking for clarification (case subject, languages, and what \"latest\" means)\n3. Your follow-up asking me to give the answer for item 12 with \"the same language preference and scope\"\n\nHowever, the substance of case **FU100-012** is not present in this session's visible context. There is no prior turn that actually named the subject for the case, specified which mixed languages you wanted, or defined what \"item 12 / latest\" refers to. My earlier message asked for those three details and they were never provided.\n\nSo I can't truthfully produce the answer yet — the subject, the language pair, and the content of item 12 are still undefined in what I have. I don't want to invent a subject or a source that isn't here.\n\nTo move forward, please confirm:\n1. **Subject** for FU100-012 (a company, person, product, event, etc.)\n2. **Language pair** you want (e.g., Thai + English)\n3. **What \"item 12 / latest\" covers** — e.g., the most recent news, version, price, or statement on that subject\n\nOnce you give me those, I'll provide the latest answer in your chosen mixed language and keep the scope you set.",
+        "usage": {
+          "prompt_tokens": 3187,
+          "completion_tokens": 315,
+          "total_tokens": 3502
+        },
+        "mode": "model_without_requested_search",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "available_not_used",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": true,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_018_thai_english_mixed",
+      "prompt": "Now follow up for item 18: แปล — give the answer with the same language preference and scope.",
+      "index": 5,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:28.490Z",
+        "finished_at": "2026-08-15T07:19:32.512Z",
+        "latency_ms": 4022,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_018_thai_english_mixed-00133fcc-7b31-43e5-bd56-38e868dc3f1e",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "For this case (FU100-018), please keep the subject “แปล” and answer in the requested mixed language."
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "For this case (FU100-018), please keep the subject “แปล” and answer in the requested mixed language."
+          },
+          {
+            "role": "assistant",
+            "content": "ผมไม่สามารถดำเนินการตามคำขอได้ เนื่องจากไม่มีบริบทก่อนหน้าเกี่ยวกับกรณี FU100-018 หรือหัวข้อ “แปล” ที่กล่าวถึงในข้อความนี้ หากคุณต้องการให้ช่วยเหลือเกี่ยวกับกรณีนี้ กรุณาแชร์รายละเอียดเพิ่มเติม เช่น ข้อความต้นฉบับ ภาษาที่ต้องการ หรือเนื้อหาที่เกี่ยวข้อง เพื่อให้ผมสามารถตอบได้อย่างถูกต้อง"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "ผมไม่สามารถให้คำตอบสำหรับหัวข้อ \"แปล\" (รายการที่ 18) ในกรณี FU100-018 ได้ เนื่องจากไม่มีการระบุเนื้อหาต้นฉบับ ภาษาต้นทาง/ปลายทาง หรือขอบเขตที่ต้องการไว้ในบทสนทนาก่อนหน้านี้\n\nเพื่อให้ผมตอบได้ตรงตามที่ต้องการ กรุณาแจ้งข้อมูลต่อไปนี้:\n- ข้อความหรือเอกสารที่ต้องการให้แปล\n- ภาษาต้นทางและภาษาปลายทาง\n- ขอบเขตที่ต้องการ (เช่น แปลเฉพาะบางส่วน แปลทั้งเอกสาร หรือแปลสรุป)",
+        "usage": {
+          "prompt_tokens": 2436,
+          "completion_tokens": 133,
+          "total_tokens": 2569
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_022_typo_spacing_romanization",
+      "prompt": "ช่วยตรวจคำค้น “ฮันนารี” ต่อในรายการ 22 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "index": 6,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:28.492Z",
+        "finished_at": "2026-08-15T07:19:32.854Z",
+        "latency_ms": 4362,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_022_typo_spacing_romanization-cb5103c3-0576-4e62-aa49-7f22ed40ec54",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "ฉันกำลังค้นชื่อ “ฮันนารี” ในเคส FU100-022; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "ฉันกำลังค้นชื่อ “ฮันนารี” ในเคส FU100-022; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+          },
+          {
+            "role": "assistant",
+            "content": "รับทราบครับ ผมจะไม่แก้ชื่อ \"ฮันนารี\" เองจนกว่าจะมีหลักฐานยืนยัน\n\nในข้อความนี้ยังไม่มีหลักฐานหรือข้อมูลจากเคส FU100-022 ที่ปรากฏในบทสนทนาปัจจุบัน หากคุณต้องการให้ผมช่วยค้นหาหรือตรวจสอบข้อมูลเกี่ยวกับชื่อนี้ในเคสดังกล่าว กรุณาแนบข้อมูลหรือเอกสารที่เกี่ยวข้องมาให้ด้วย แล้วผมจะช่วยตรวจสอบโดยยึดชื่อต้นฉบับตามที่คุณระบุไว้ครับ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "ขออภัยครับ ผมยังไม่มีข้อมูลหรือเอกสารจากเคส FU100-022 หรือ \"รายการ 22\" ปรากฏในบทสนทนาปัจจุบัน\n\nเพื่อให้ผมช่วยเสนอการสะกดที่เป็นไปได้สำหรับคำค้น \"ฮันนารี\" ได้ โดยไม่ฟันธงตัวตน คุณช่วยแนบข้อมูลจากรายการ 22 (เช่น รายชื่อ เอกสาร หรือภาพ) มาให้ด้วยได้ไหมครับ? เมื่อมีข้อมูลแล้ว ผมจะช่วยเทียบเคียงการสะกดที่เป็นไปได้โดยยึดชื่อต้นฉบับเป็นหลัก และไม่ตัดสินใจแทนคุณครับ",
+        "usage": {
+          "prompt_tokens": 2592,
+          "completion_tokens": 138,
+          "total_tokens": 2730
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_023_typo_spacing_romanization",
+      "prompt": "ช่วยตรวจคำค้น “han nari” ต่อในรายการ 23 โดยเสนอการสะกดที่เป็นไปได้แต่ไม่ฟันธงตัวตน",
+      "index": 7,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:28.494Z",
+        "finished_at": "2026-08-15T07:19:36.851Z",
+        "latency_ms": 8357,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_023_typo_spacing_romanization-9d343c57-257e-4e3e-9e5a-675456dd0815",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "ฉันกำลังค้นชื่อ “han nari” ในเคส FU100-023; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "ฉันกำลังค้นชื่อ “han nari” ในเคส FU100-023; อย่าแก้ชื่อเองจนกว่าจะมีหลักฐาน"
+          },
+          {
+            "role": "assistant",
+            "content": "รับทราบครับ ผมจะไม่แก้ชื่อ “han nari” เองจนกว่าจะมีหลักฐานยืนยัน\n\nอย่างไรก็ตาม จากข้อมูลที่มีในขณะนี้ ผมไม่พบข้อมูลเคส FU100-023 หรือชื่อ “han nari” ในบริบทที่ให้มา หากคุณต้องการให้ผมช่วยค้นหาเพิ่มเติม กรุณาระบุแหล่งที่มาเพิ่มเติม เช่น:\n\n- เอกสารหรือไฟล์ที่เกี่ยวข้องกับเคสนี้\n- ลิงก์หรือระบบที่ใช้ค้นหา\n- รายละเอียดเพิ่มเติมเกี่ยวกับบริบท (เช่น เป็นชื่อบุคคล สถานที่ หรือข้อมูลอื่น)\n\nเมื่อได้ข้อมูลเพิ่มเติม ผมจะช่วยตรวจสอบโดยไม่ปรับเปลี่ยนชื่อจนกว่าจะมีหลักฐานชัดเจนครับ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "รับทราบครับ ผมจะช่วยตรวจคำค้น “han nari” ต่อในรายการที่ 23 โดยเสนอการสะกดที่เป็นไปได้เท่านั้น **โดยไม่ฟันธงตัวตน** และจะไม่แก้ชื่อจนกว่าจะมีหลักฐานยืนยัน\n\n---\n\n### ข้อสังเกตจากคำค้น “han nari”\n\nคำค้นนี้ฟังดูคล้ายกับการทับศัพท์ชื่อญี่ปุ่น ซึ่งอาจเป็นชื่อบุคคลหรือชื่อตัวละคร การสะกดที่เป็นไปได้ ได้แก่:\n\n1. **Han Nari** – สะกดตรงตามที่ให้มา (ชื่อต้น “Han” + ชื่อรอง “Nari”)\n2. **Hannari** – คำเดียว อาจเป็นชื่อญี่ปุ่นที่อ่านว่า “ฮันนาริ”\n3. **Nari Han** – สลับลำดับชื่อ-นามสกุล (แบบตะวันตก)\n4. **Narihito / Nariah** – รูปแบบใกล้เคียงแต่ไม่ตรงนัก (เสี่ยงเพี้ยนจากต้นฉบับ)\n5. **Hari Nari** หรือ **Hanari** – การสะกดที่อาจเกิดจากการตก/เพิ่มพยางค์\n\n---\n\n### ข้อควรระวัง\n\n- รายการที่ 23 ในเคส FU100-023 ยังไม่ปรากฏในข้อมูลที่ผมมีอยู่\n- หากคุณมีเอกสารหรือไฟล์ที่เกี่ยวข้องกับรายการนั้น กรุณาแนบหรือระบุที่มา เพื่อให้ผมเทียบเคียงการสะกดได้อย่างแม่นยำ\n- เมื่อมีหลักฐาน ผมจะใช้การสะกดตามเอกสารต้นฉบับเป็นหลัก และไม่แก้ไขเองโดยพลการ\n\n---\n\nหากคุณต้องการให้ผมช่วยค้นหาต่อในแหล่งข้อมูลที่คุณระบุ กรุณาบอกแหล่งที่มา หรือแนบไฟล์มาได้เลยครับ",
+        "usage": {
+          "prompt_tokens": 2711,
+          "completion_tokens": 404,
+          "total_tokens": 3115
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_031_corrections",
+      "prompt": "แก้คำขอของฉันในรายการ 31 ตามนี้: “ไม่ใช่คนเดิม” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "index": 8,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:31.954Z",
+        "finished_at": "2026-08-15T07:19:36.789Z",
+        "latency_ms": 4835,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_031_corrections-d58c1113-32dd-4727-af4b-b7dd1759dfc9",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "ข้อมูลตั้งต้นของเคส FU100-031 คือ “ไม่ใช่คนเดิม”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "ข้อมูลตั้งต้นของเคส FU100-031 คือ “ไม่ใช่คนเดิม”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+          },
+          {
+            "role": "assistant",
+            "content": "ผมไม่พบข้อมูลก่อนหน้าของ \"เคส FU100-031\" ในประวัติการสนทนาของเซสชันนี้ครับ\n\nหมายเหตุสำคัญ: ข้อความของคุณระบุว่า \"ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด\" ซึ่งเป็นการตั้งกฎไว้ล่วงหน้า แต่ไม่มีข้อมูลการแก้ไขจริงของเคสนี้ในบริบทที่เห็นอยู่\n\nเพื่อให้ตอบได้อย่างถูกต้อง ขอ Clarify ว่า:\n- ต้องการให้ \"แก้ไขภายหลัง\" ในส่วนใดของเคสนี้ และจากข้อความใดเป็นข้อความล่าสุด?\n- \"ไม่ใช่คนเดิม\" นี้หมายถึงข้อยืนยันเบื้องต้น (ตั้งต้น) ของเคสใช่ไหมครับ\n\nกรุณาแจ้งรายละเอียดที่ต้องการปรับแก้เพิ่มเติม เพื่อให้ผมยึดตามข้อความล่าสุดได้ถูกต้องครับ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "รับทราบครับ ผมจะยึดข้อความล่าสุดของคุณเป็นหลัก\n\n**ข้อความใหม่ (แก้ไขแล้ว):**\n- รายการที่ 31: **\"ไม่ใช่คนเดิม\"**\n\n---\n\n**ส่วนที่ถูกเปลี่ยน:**\n\nจากข้อความก่อนหน้า → เป็นข้อความใหม่ล่าสุดของรายการ 31 คือ **\"ไม่ใช่คนเดิม\"**\n\nโปรดยืนยันว่าต้องการให้ปรับเปลี่ยนสถานะ/ข้อมูลของรายการ 31 เป็นตามนี้หรือไม่ครับ หากใช่ ผมจะดำเนินการให้",
+        "usage": {
+          "prompt_tokens": 2836,
+          "completion_tokens": 115,
+          "total_tokens": 2951
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_034_corrections",
+      "prompt": "แก้คำขอของฉันในรายการ 34 ตามนี้: “เปลี่ยนภาษา” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "index": 9,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:32.512Z",
+        "finished_at": "2026-08-15T07:19:38.076Z",
+        "latency_ms": 5564,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_034_corrections-62317977-339b-465d-bff6-057c4399c641",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "ข้อมูลตั้งต้นของเคส FU100-034 คือ “เปลี่ยนภาษา”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "ข้อมูลตั้งต้นของเคส FU100-034 คือ “เปลี่ยนภาษา”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+          },
+          {
+            "role": "assistant",
+            "content": "ขอบคุณครับ สำหรับเคส **FU100-034** ข้อมูลตั้งต้นที่บันทึกไว้คือ **\"เปลี่ยนภาษา\"**\n\nผมได้จดข้อมูลนี้ไว้แล้วครับ ต่อไปนี้คือหลักการที่ผมจะยึดถือ:\n\n- **ข้อมูลตั้งต้นของเคส** = \"เปลี่ยนภาษา\"\n- **หากมีการแก้ไขภายหลัง** → จะยึดข้อความล่าสุดที่คุณอัปเดตเข้ามาแทน\n\nตอนนี้ยังไม่มีงานหรือคำขออื่นระบุเพิ่มเติมครับ ถ้าคุณต้องการให้ดำเนินการเรื่อง \"เปลี่ยนภาษา\" หรือมีข้อความแก้ไข/ข้อมูลเพิ่มเติมสำหรับเคสนี้ โปรดแจ้งได้เลยครับ 😊"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "ผมไม่มีระบบหรือเครื่องมือที่เชื่อมต่อกับ \"รายการข้อ 34\" ของคุณโดยตรงครับ และในบริบทการสนทนาที่ผ่านมา เราได้พูดถึงเพียง **เคส FU100-034** เท่านั้น — ข้อมูลตั้งต้นคือ **\"เปลี่ยนภาษา\"** และหลักการที่ให้ยึดข้อความล่าสุด\n\nเพื่อให้ผมดำเนินการแก้ไขได้ถูกต้อง และสามารถบอกได้ว่าข้อมูลส่วนใดถูกเปลี่ยน รบกวนยืนยัน/ระบุให้ชัดเจนดังนี้ครับ:\n\n1. \"รายการ 34\" หมายถึง **รายการเดียวกันกับเคส FU100-034** หรือเป็นรายการ/ระบบอื่น?\n2. ข้อความที่จะใช้แก้ไขคือ **\"เปลี่ยนภาษา\"** ตามที่ระบุในข้อความนี้ใช่หรือไม่ (เหมือนกับข้อมูลตั้งต้นเดิม)?\n3. ถ้าต้องการให้แก้เป็นข้อความอื่นนอกเหนือจาก \"เปลี่ยนภาษา\" โปรดระบุข้อความใหม่ที่ต้องการด้วยครับ\n\nเมื่อได้รับข้อมูลครบแล้ว ผมจะดำเนินการแก้ไขและสรุปให้ทราบว่าข้อมูลส่วนใดถูกเปลี่ยนจากเดิมเป็นอะไรบ้างครับ",
+        "usage": {
+          "prompt_tokens": 2692,
+          "completion_tokens": 250,
+          "total_tokens": 2942
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_036_corrections",
+      "prompt": "แก้คำขอของฉันในรายการ 36 ตามนี้: “ไม่ใช่คนเดิม” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "index": 10,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:32.552Z",
+        "finished_at": "2026-08-15T07:19:38.742Z",
+        "latency_ms": 6190,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_036_corrections-c773a1cf-330f-4548-832b-4f9c42986de8",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "ข้อมูลตั้งต้นของเคส FU100-036 คือ “ไม่ใช่คนเดิม”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "ข้อมูลตั้งต้นของเคส FU100-036 คือ “ไม่ใช่คนเดิม”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+          },
+          {
+            "role": "assistant",
+            "content": "คุณกำลังอ้างถึงข้อมูลตั้งต้นของเคส FU100-036 ว่า \"ไม่ใช่คนเดิม\" และต้องการให้ยึดข้อความล่าสุดหากมีการแก้ไขภายหลัง\n\nอย่างไรก็ตาม ฉันไม่มีบริบทของสนทนาก่อนหน้าในเซสชันนี้ จึงไม่ทราบว่าคำว่า \"ไม่ใช่คนเดิม\" นี้เกี่ยวกับเรื่องอะไร หรือต้องการให้ฉันทำอะไรกับข้อมูลนี้ เช่น ค้นหาข้อมูลเพิ่มเติม ตรวจสอบยืนยัน หรือบันทึกเป็นข้อมูลตั้งต้น\n\nช่วยระบุหน่อยได้ไหมว่า:\n- \"ไม่ใช่คนเดิม\" หมายถึงอะไรในบริบทของเคส FU100-036 (เช่น ตัวบุคคล เอกสาร หรือข้อมูลกลุ่มใด)\n- คุณต้องการให้ฉันทำอะไรกับข้อมูลนี้ (ค้นหาเพิ่มเติม เปรียบเทียบ หรืออย่างอื่น)?\n\nยืนยันรายละเอียดมาคร่าวๆ แล้วฉันจะดำเนินการต่อให้ครับ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "รับทราบครับ — ฉันจะแก้คำขอในรายการ 36 เป็นข้อความ \"ไม่ใช่คนเดิม\" และจะรายงานว่าข้อมูลส่วนใดถูกเปลี่ยน\n\n**สิ่งที่แก้ไขในรายการ 36:**\n- **เนื้อหาคำขอ** เปลี่ยนจากเดิม เป็น \"ไม่ใช่คนเดิม\"\n\nอย่างไรก็ตาม จากประวัติที่เห็นในเซสชันนี้ ฉันไม่เห็นรายการคำขอเดิมก่อนการแก้ไขว่ามีข้อความอะไรอยู่ก่อนหน้า จึงไม่สามารถระบุได้ชัดเจนว่า \"เปลี่ยนจากข้อความใด\" มาก่อน\n\nหากคุณต้องการให้ฉันเปรียบเทียบกับการแก้ไขจริง ฉันต้องเห็น:\n- ข้อความเดิมของรายการ 36 ก่อนการแก้ไข (หรือยืนยันว่าต้องการให้ฉันถือว่าข้อความเดิมคืออะไร)\n- หรือระบบ/รายการที่คุณอ้างถึงนี้เป็นไฟล์หรือตารางที่แนบมาในเซสชันนี้หรือไม่\n\nถ้าคุณยืนยันว่าข้อความเดิมคืออะไร ฉันจะยืนยันส่วนที่เปลี่ยนให้ทันทีครับ",
+        "usage": {
+          "prompt_tokens": 2876,
+          "completion_tokens": 242,
+          "total_tokens": 3118
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_037_corrections",
+      "prompt": "แก้คำขอของฉันในรายการ 37 ตามนี้: “ใช้ข้อมูลล่าสุด” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "index": 11,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:32.854Z",
+        "finished_at": "2026-08-15T07:19:43.955Z",
+        "latency_ms": 11101,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_037_corrections-5ba2dd03-10cb-49f8-a896-b1f868eb7daa",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "ข้อมูลตั้งต้นของเคส FU100-037 คือ “ใช้ข้อมูลล่าสุด”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "ข้อมูลตั้งต้นของเคส FU100-037 คือ “ใช้ข้อมูลล่าสุด”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+          },
+          {
+            "role": "assistant",
+            "content": "ผมขอแจ้งให้ทราบว่าผมไม่สามารถค้นหาข้อมูลเกี่ยวกับเคส FU100-037 ได้จากการค้นหาบนเว็บ เนื่องจากไม่มีผลลัพธ์ที่เกี่ยวข้องที่ระบบส่งกลับมาให้ผมใช้\n\nแต่จากข้อความของคุณ ผมเข้าใจว่า:\n- ข้อมูลตั้งต้นของเคส FU100-037 คือ **\"ใช้ข้อมูลล่าสุด\"**\n- หากคุณแก้ไขข้อมูลภายหลัง ให้ยึดถือข้อความล่าสุดที่คุณส่งเข้ามา\n\nถ้าคุณต้องการให้ผมช่วยอะไรเพิ่มเติมเกี่ยวกับเคสนี้ เช่น ติดตามการเปลี่ยนแปลง หรือเปรียบเทียบข้อมูล โปรดแจ้งรายละเอียดเพิ่มเติม หรือส่งข้อความใหม่เข้ามา แล้วผมจะใช้ข้อมูลล่าสุดที่คุณให้ไว้เป็นหลักครับ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "ผมได้ยึดถือ **\"ใช้ข้อมูลล่าสุด\"** เป็นข้อมูลตั้งต้นของเคส **FU100-037** แล้ว ตามที่คุณแจ้ง\n\n## สรุปการเปลี่ยนแปลง\n\nเมื่อเปรียบเทียบกับข้อมูลก่อนหน้า (ที่ยังไม่มีค่ากำหนดนี้) การเปลี่ยนแปลงที่ผมรับทราบคือ:\n\n- **เพิ่ม/ระบุข้อมูลตั้งต้น:** กำหนดให้เคส FU100-037 ใช้หลักการ **\"ใช้ข้อมูลล่าสุด\"** ในการติดตามหรืออ้างอิงข้อมูลของเคสนี้\n- **หลักการจัดการเวอร์ชัน:** หากมีการแก้ไขภายหลัง ให้ยึดข้อความล่าสุดที่คุณส่งเข้ามาเสมอ (นโยบายการแก้ไขนี้ถูกกำหนดไว้ด้วย)\n\n**ข้อมูลส่วนที่ถูกเปลี่ยน:** คือการตั้งค่า/นโยบายการติดตามข้อมูลของเคส FU100-037 จากที่ไม่มีข้อมูลตั้งต้นชัดเจน → ระบุเป็น \"ใช้ข้อมูลล่าสุด\" และการยืนยันว่าจะให้ความสำคัญกับข้อความเวอร์ชันล่าสุด\n\n---\n\n⚠️ **ข้อควรทราบ:** เคส FU100-037 อยู่ในบันทึกบริบทของการสนทนานี้เท่านั้น ผมไม่มีฐานข้อมูลแยกต่างหากเพื่อระบุเพิ่มเติมว่าภายในเนื้อหาของเคสเองมีการเปลี่ยนแปลงส่วนใดบ้าง หากคุณต้องการให้ผมเปรียบเทียบเนื้อหาส่วนอื่นของเคส โปรดส่งข้อมูลเวอร์ชันก่อนหน้ากับเวอร์ชันใหม่ให้ผมด้วยครับ",
+        "usage": {
+          "prompt_tokens": 3311,
+          "completion_tokens": 332,
+          "total_tokens": 3643
+        },
+        "mode": "model_without_requested_search",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "available_not_used",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": true,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_039_corrections",
+      "prompt": "แก้คำขอของฉันในรายการ 39 ตามนี้: “เปลี่ยนภาษา” และบอกว่าข้อมูลส่วนใดถูกเปลี่ยน",
+      "index": 12,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:34.293Z",
+        "finished_at": "2026-08-15T07:19:37.865Z",
+        "latency_ms": 3572,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_039_corrections-b52f9d3b-93e7-4070-b20c-6af877b8f109",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "ข้อมูลตั้งต้นของเคส FU100-039 คือ “เปลี่ยนภาษา”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "ข้อมูลตั้งต้นของเคส FU100-039 คือ “เปลี่ยนภาษา”; ถ้าฉันแก้ไขภายหลังให้ยึดข้อความล่าสุด"
+          },
+          {
+            "role": "assistant",
+            "content": "ข้อมูลตั้งต้นของเคส **FU100-039** คือ **\"เปลี่ยนภาษา\"** และได้บันทึกไว้ว่าหากมีการแก้ไขภายหลัง ให้ยึดข้อความล่าสุดเป็นหลักครับ\n\nยืนยันตามที่แจ้งไว้แล้ว ไม่มีการดำเนินการอื่นใดเพิ่มเติมในตอนนี้ หากมีข้อความใหม่เข้ามา กรุณาส่งมาให้ครับ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "ผมไม่พบรายการที่มีหมายเลข **39** หรือรายการอื่นใดในประวัติการสนทนาที่ผ่านมา จึงไม่สามารถระบุได้ว่าข้อมูลส่วนใดถูกเปลี่ยนแปลงครับ\n\nหากต้องการให้ช่วยแก้ไขโปรดส่งรายละเอียดของรายการ 39 เช่น ข้อมูลเดิมที่ต้องการแก้ และข้อมูลใหม่ที่ต้องการเปลี่ยนให้ครบถ้วน เพื่อให้ตรวจสอบและดำเนินการได้อย่างถูกต้องครับ",
+        "usage": {
+          "prompt_tokens": 2483,
+          "completion_tokens": 91,
+          "total_tokens": 2574
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_054_tool_no_tool",
+      "prompt": "จากบริบทเดิมของรายการ 54 ขอให้จัดการ “เลือก tool” และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool",
+      "index": 13,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:34.793Z",
+        "finished_at": "2026-08-15T07:19:48.713Z",
+        "latency_ms": 13920,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_054_tool_no_tool-65550af0-4318-4b28-9bd5-65e961d448be",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "เคส FU100-054 มีคำขอเกี่ยวกับ “เลือก tool”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "เคส FU100-054 มีคำขอเกี่ยวกับ “เลือก tool”; ให้ตัดสินจากขอบเขตงานว่าต้องใช้ tool หรือไม่"
+          },
+          {
+            "role": "assistant",
+            "content": "ไม่มีข้อมูลภายนอกหรือผลการค้นหาที่เป็นหลักฐานสำหรับเคส \"FU100-054\" กลับมา และฉันก็ไม่เห็นเนื้อหาคำขอเดิมที่ระบุเจาะจงว่าเป็น \"เลือก tool\" ในบริบทใด\n\nถ้าคุณส่งข้อความคำขอเดิมของเคสนี้มาให้ฉันดู ฉันจะช่วยตัดสินจากขอบเขตงานได้ทันทีว่า:\n\n- ถ้างานเป็นเพียงการเขียน แก้ไข สรุป หรืออธิบาย → ไม่ต้องใช้ tool ตอบตรง ๆ ได้เลย\n- ถ้างานต้องการข้อมูลปัจจุบัน แหล่งอ้างอิง หรือตรวจสอบจากภายนอก → ใช้ web_search\n- ถ้าต้องอ่านเนื้อหาจากหน้าเว็บที่ระบุ → ใช้ web_read_page\n- ถ้าเกี่ยวกับข้อมูลธุรกิจของเจ้าของร้าน → ใช้ tool ฝั่ง commerce\n\nช่วยส่งข้อความคำขอจริงของเคส FU100-054 มาให้หน่อยได้ไหมครับ แล้วฉันจะระบุได้ชัดเจนว่าควรใช้ tool ตัวไหนหรือไม่ควรใช้เลย"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "ขอบคุณครับ จากบริบทเดิมของรายการ 54 ที่ให้ผม \"เลือก tool และบอกเหตุผลว่าจะใช้หรือไม่ใช้ tool\" — ผมขอตอบตรงนี้เป็นหลักการโดยอ้างอิงข้อความที่คุณส่งมา (ซึ่งเป็นข้อมูลในประวัติที่มองเห็นได้) ไม่ใช่จากฐานข้อมูลภายนอก:\n\n**สรุปการตัดสินใจ: ไม่ต้องใช้ tool ใดๆ สำหรับคำขอนี้**\n\n**เหตุผล:**\n1. คำขอมีลักษณะเป็นการตัดสินใจ/ให้เหตุผลเชิงตรรกะเกี่ยวกับการเลือกใช้เครื่องมือ (metacognitive) ซึ่งอยู่ในความสามารถของตัวโมเดลโดยตรง ไม่ต้องพึ่งข้อมูลภายนอก\n2. งานนี้ไม่ต้องการข้อมูลปัจจุบัน แหล่งอ้างอิง หรือการค้นหาจากภายนอก (ไม่เข้าเงื่อนไข web_search)\n3. ไม่มีการระบุ URL หรือหน้าเว็บให้อ่าน (ไม่เข้าเงื่อนไข web_read_page)\n4. ไม่เกี่ยวกับข้อมูลธุรกิจของเจ้าของร้านหรือธุรกรรม (ไม่เข้าเงื่อนไข tool ฝั่ง commerce)\n5. ไม่มีการเปลี่ยนแปลงสถานะหรือการอนุมัติใดๆ ที่ต้องใช้ tool ที่มีการยืนยัน\n\n**ข้อแม้:** หากเนื้อหาคำขอเดิมของรายการ 54 มีรายละเอียดเพิ่มเติม (เช่น ระบุว่างานนั้นต้องค้นหาข้อมูลสดจากเว็บ หรือต้องอ่านจากลิงก์เฉพาะ) ผมขอให้คุณส่งเนื้อหาจริงมาให้ดูอีกครั้ง แล้วผมจะปรับการตัดสินใจให้ตรงกับขอบเขตงานนั้นครับ",
+        "usage": {
+          "prompt_tokens": 2927,
+          "completion_tokens": 341,
+          "total_tokens": 3268
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_060_grounding_unknown",
+      "prompt": "สรุปรายการ 60 เรื่อง “หลักฐาน” โดยใส่หลักฐานที่มี แยก inference และบอกสิ่งที่ยืนยันไม่ได้",
+      "index": 14,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:36.789Z",
+        "finished_at": "2026-08-15T07:19:41.739Z",
+        "latency_ms": 4950,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_060_grounding_unknown-c4c21f25-7bc1-4bbd-aba0-bc2c2268ff37",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "สำหรับเคส FU100-060 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “หลักฐาน”"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "สำหรับเคส FU100-060 ให้แยก fact กับสิ่งที่ยังไม่รู้เมื่อพูดถึง “หลักฐาน”"
+          },
+          {
+            "role": "assistant",
+            "content": "สำหรับเคส FU100-060 ฉันไม่มีข้อมูลหรือรายละเอียดของเคสดังกล่าวในบริบทที่ให้มา จึงไม่สามารถแยก fact กับสิ่งที่ยังไม่รู้เกี่ยวกับ “หลักฐาน” ของเคสนี้ได้โดยตรง\n\nเพื่อให้สามารถช่วยได้อย่างถูกต้อง กรุณาแนบข้อมูลที่เกี่ยวข้องกับเคส FU100-060 เช่น รายละเอียดหลักฐานที่มีอยู่ หรือเอกสารประกอบ หากมี\n\nหากคุณต้องการให้ฉันช่วย **แยกแยะ** ระหว่างข้อเท็จจริง (fact) กับสมมติฐาน/สิ่งที่ยังไม่ทราบ (unknown) จากข้อมูลที่คุณมีอยู่ โปรดส่งข้อมูลนั้นมา แล้วฉันจะจัดหมวดหมู่ให้ตามที่คุณต้องการ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "ผมไม่พบข้อมูลรายการ 60 เรื่อง “หลักฐาน” ของเคส FU100-060 ในบริบทที่ให้มา จึงไม่สามารถสรุปและแยก fact/inference/สิ่งที่ยืนยันไม่ได้ได้\n\nเพื่อให้ช่วยได้อย่างถูกต้อง กรุณาส่งข้อมูลดังกล่าวมา เช่น:\n\n- รายการ 60 เรื่อง “หลักฐาน” ที่คุณกำลังอ้างถึง\n- หรือเอกสาร/ตารางที่มีเนื้อหาเหล่านั้น\n\nเมื่อได้รับข้อมูลแล้ว ผมจะจัดหมวดหมู่ให้ตามรูปแบบ:\n\n| # | เรื่อง | หลักฐานที่มี (fact) | inference | สิ่งที่ยืนยันไม่ได้ (unknown) |\n|---|-------|-------------------|-----------|---------------------------|\n\nรบกวนแนบข้อมูลมาเพื่อให้ผมสามารถสรุปให้ได้ครับ",
+        "usage": {
+          "prompt_tokens": 2644,
+          "completion_tokens": 169,
+          "total_tokens": 2813
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_077_failure_handling",
+      "prompt": "ดำเนินการรายการ 77 ต่อกับ “ล้มเหลว” แต่ห้ามรายงานสำเร็จหากยังไม่มีผลตรวจจริง",
+      "index": 15,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:36.852Z",
+        "finished_at": "2026-08-15T07:19:44.245Z",
+        "latency_ms": 7393,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_077_failure_handling-8d33964a-460b-47e3-bc3a-3400c720bdc5",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "เคส FU100-077 จำลองสถานการณ์ “ล้มเหลว”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "เคส FU100-077 จำลองสถานการณ์ “ล้มเหลว”; ถ้าเกิดปัญหาให้รายงานสถานะจริงและหยุดตามขีดจำกัด"
+          },
+          {
+            "role": "assistant",
+            "content": "ข้อความนี้ระบุเคสทดสอบคือ `FU100-077` ซึ่งเป็นการจำลองสถานการณ์ “ล้มเหลว” โดยมีเงื่อนไขว่า หากเกิดปัญหา/ข้อผิดพลาดขึ้นจริงระหว่างการดำเนินการ ให้รายงานสถานะตามความเป็นจริง และหยุดดำเนินการเมื่อถึงขีดจำกัดที่กำหนดไว้\n\nสำหรับข้อความนี้ ยังไม่มีคำขอให้ดำเนินการใด ๆ อย่างเป็นรูปธรรม (เช่น สร้างรายงานสถานะ การจำลองการทำงาน หรือตรวจสอบระบบ) ยังไม่มีการเรียกใช้เครื่องมือใด ๆ และไม่มีการเปลี่ยนแปลงสถานะใด ๆ เกิดขึ้น\n\nหากคุณต้องการให้ผมดำเนินการตามเงื่อนไขของเคสนี้ โปรดระบุขอบเขตงานเพิ่มเติม เช่น:\n- ต้องการให้จำลองขั้นตอนใดของระบบ?\n- ขีดจำกัด (limit) ที่อ้างถึงคือเท่าไร (เช่น จำนวนครั้งที่ลอง, เวลา, หรือจำนวนข้อมูล)?\n- หากจำลองพบ “ความล้มเหลว” ต้องการให้รายงานผลในรูปแบบใด?\n\nตอนนี้ยังไม่มีเหตุการณ์ “เกิดปัญหา” เกิดขึ้น เพราะยังไม่มีการรันหรือจำลองการทำงานใด ๆ ตามเคสนี้ครับ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "รับทราบครับ เคส `FU100-077` ต่อไปนี้เป็นการ**จำลองสถานการณ์**ตามที่กำหนด:\n\n---\n\n**รายการที่ 77: ดำเนินการต่อกับสถานะ “ล้มเหลว”**\n\n**ผลการดำเนินการ:**\n- เริ่มต้นจำลองขั้นตอนการประมวลผลรายการ 77 ต่อจากจุดที่หยุดไว้\n- พบข้อผิดพลาดระหว่างการดำเนินการ (จำลองตามเงื่อนไขเคส)\n\n**สถานะจริง: ❌ ล้มเหลว**\n- ไม่สามารถดำเนินการรายการ 77 ให้สำเร็จได้ ณ จุดนี้\n- ไม่มีการรายงานผลสำเร็จ **เนื่องจากยังไม่มีผลการตรวจสอบจริง** ว่าการดำเนินการเสร็จสมบูรณ์\n\n**การหยุดตามขีดจำกัด:**\n- หยุดดำเนินการทันทีเมื่อพบความล้มเหลว ตามเงื่อนไขของเคส\n- ไม่มีการดำเนินการต่อหรือลองซ้ำเกินกว่าขีดจำกัด\n\n---\n\n**สรุป:** รายงานสถานะตามจริงคือ **“ล้มเหลว”** และหยุดการทำงานแล้ว ไม่มีการแจ้งว่าสำเร็จเพราะไม่มีหลักฐานยืนยันผลการตรวจจริงครับ หากต้องการให้ดำเนินการอย่างไรต่อ (เช่น ทดสอบซ้ำ, ตรวจสอบสาเหตุ, หรือปรับเงื่อนไข) บอกได้เลยครับ",
+        "usage": {
+          "prompt_tokens": 3023,
+          "completion_tokens": 304,
+          "total_tokens": 3327
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_082_entity_resolution",
+      "prompt": "ต่อจากเอนทิตีเดิมของรายการ 82 ช่วยตอบเรื่อง “สินค้า A” โดยอธิบายความกำกวมถ้ามี",
+      "index": 16,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:37.866Z",
+        "finished_at": "2026-08-15T07:19:45.103Z",
+        "latency_ms": 7237,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_082_entity_resolution-812cbfbe-6eaf-4876-9727-1c4d02ca9047",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "ในเคส FU100-082 คำว่า “สินค้า A” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "ในเคส FU100-082 คำว่า “สินค้า A” คือเอนทิตีที่ต้องติดตามต่อ ห้ามปนกับชื่ออื่น"
+          },
+          {
+            "role": "assistant",
+            "content": "ข้อความนี้คือการระบุข้อกำหนด (requirement) สำหรับการติดตามในเคส **FU100-082** ครับ\n\n**สรุปใจความ:**\n- เอนทิตีที่ต้องติดตามต่อคือ **“สินค้า A”**\n- ต้องแยกให้ชัด ไม่ปะปนกับชื่อ/เอนทิตีอื่น\n\nตอนนี้ยังไม่มีคำถามหรือคำสั่งให้ดำเนินการเพิ่มเติมครับ ถ้าต้องการให้ผมช่วยอะไรต่อ — เช่น บันทึกเป็นข้อกำหนดในเคส สร้างรายการติดตาม หรือตรวจดูว่ามีข้อมูลอื่นในเคสที่อาจปนกับ “สินค้า A” หรือไม่ — บอกได้เลยครับ"
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "จากที่คุณระบุไว้ในเคส FU100-082 เอนทิตี “สินค้า A” ถูกกำหนดให้เป็นสิ่งที่ต้องติดตามต่อ และห้ามปนกับชื่ออื่นครับ\n\n**คำตอบเรื่อง “สินค้า A” ตามบริบทที่มี:**\n\n- “สินค้า A” คือเอนทิตีที่ต้องติดตามต่อในรายการที่ 82 ของเคสนี้ โดยมีข้อกำหนดชัดเจนว่า **ต้องไม่ปะปนกับชื่อหรือเอนทิตีอื่น**\n\n**ความกำกวมที่อาจมี (ถ้ามี):**\n- ถ้า “สินค้า A” เป็นเพียงชื่อย่อ/รหัสภายในโดยที่ **ไม่มีคำนิยามหรือขอบเขตชัดเจน** ว่า “สินค้า A” หมายถึงตัวไหนแน่นอน (เช่น รุ่น สี ล็อต หรือ SKU) ก็อาจเกิดความคลุมเครือในการติดตามได้\n- ถ้าในเอกสารหรือรายการอื่นมีคำว่า “สินค้า A” ที่หมายถึงคนละตัว หรือมีชื่อคล้ายกัน เช่น “A1”, “A-ชนิดพิเศษ” ก็ต้องระบุให้ชัดว่าไม่ใช่ตัวเดียวกัน\n\n**สรุป:**\n- ตามข้อกำหนด: “สินค้า A” = เอนทิตีเดียวที่ต้องติดตาม ไม่ใช่ชื่ออื่น\n- ความกำกวมที่อาจต้องตรวจสอบเพิ่มเติม: **นิยาม/ขอบเขตที่ชัดเจนของ “สินค้า A”** ในเคสนี้ ว่าหมายถึงตัวไหนแน่ ๆ (ถ้ายังไม่มีระบุไว้)\n\nถ้าต้องการให้ผมช่วยตรวจสอบรายละเอียดเพิ่มเติมในเคส หรือระบุขอบเขตของ “สินค้า A” ให้ชัดเจนขึ้น บอกได้เลยครับ",
+        "usage": {
+          "prompt_tokens": 2751,
+          "completion_tokens": 394,
+          "total_tokens": 3145
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "followup100_097_consistency_followup",
+      "prompt": "ทำรายการ 97 เรื่อง “ขยายข้อสาม” ต่อโดยคงรูปแบบและข้อจำกัดจากข้อความก่อนหน้า",
+      "index": 17,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T07:19:38.076Z",
+        "finished_at": "2026-08-15T07:19:45.614Z",
+        "latency_ms": 7538,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-followup100_097_consistency_followup-9a5fca34-5d88-4279-bc64-7c73ab15994c",
+        "context_mode": "matched_history",
+        "history": [
+          {
+            "role": "user",
+            "content": "เคส FU100-097 กำหนดรูปแบบคำตอบเกี่ยวกับ “ขยายข้อสาม” ไว้ก่อน"
+          }
+        ],
+        "history_count": 1,
+        "seed_transcript": [
+          {
+            "role": "user",
+            "content": "เคส FU100-097 กำหนดรูปแบบคำตอบเกี่ยวกับ “ขยายข้อสาม” ไว้ก่อน"
+          },
+          {
+            "role": "assistant",
+            "content": "This message appears to reference an internal case/format specification (\"เคส FU100-097\") that isn't part of any visible conversation history or available source I can access.\n\nThe message mentions \"กำหนดรูปแบบคำตอบเกี่ยวกับ 'ขยายข้อสาม' ไว้ก่อน\" (defining an answer format about \"extending clause three\" beforehand), but I don't have any prior context defining what \"ขยายข้อสาม\" refers to or what format was previously agreed upon.\n\nI don't have access to any repository, case file, or stored specification for \"FU100-097.\" Since this references a previously established format, could you clarify:\n\n1. **What is \"ข้อสาม\" (clause three)?** — paste the relevant content you'd like me to expand or reformat.\n2. **What answer format is required?** — e.g., bullet points, structured sections, a table, a legal/formal structure, a specific template, etc.\n3. **What scope of \"ขยาย\" (expansion) do you need?** — clarifying details, adding explanation, breaking down sub-points, etc.\n\nThe intent hint suggested a web search, but \"เคส FU100-097\" appears to be internal (a case code), so public search evidence is unlikely to exist. Please provide the base text and the agreed format, and I'll prepare the answer accordingly."
+          }
+        ],
+        "seed_request_count": 1,
+        "response": "ผมไม่สามารถดำเนินการต่อได้ตามที่ขอ เพราะข้อมูลที่อ้างถึงไม่มีอยู่ในบริบทที่มองเห็นได้\n\nข้อความก่อนหน้าที่เป็น \"การกำหนดรูปแบบคำตอบ\" ไม่ได้ถูกส่งมาในบทสนทนานี้แต่อย่างใด และตัวเลข \"97 เรื่อง\" ก็ไม่ทราบที่มาจากไหน — ไม่มีรายการใดปรากฏให้เห็นในประวัติ\n\nเพื่อให้ผมทำต่อได้อย่างถูกต้องและตรงตามข้อจำกัดเดิม ขอความกรุณาแนบข้อมูลเหล่านี้:\n\n1. **ต้นฉบับ \"ข้อสาม\"** ที่ต้องขยาย\n2. **รูปแบบคำตอบที่ตกลงไว้ก่อนหน้า** (โครงสร้าง, ความยาว, ข้อจำกัด)\n3. **รายการ 97 เรื่อง** ที่ต้องการให้ต่อ หรือจุดเริ่มต้น/ลำดับที่ทำค้างไว้\n\nกรุณาวางเนื้อหาต้นฉบับและรูปแบบที่ต้องการ แล้วผมจะจัดทำรายการต่อให้ตามนั้นทันทีครับ",
+        "usage": {
+          "prompt_tokens": 3042,
+          "completion_tokens": 209,
+          "total_tokens": 3251
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    }
+  ]
+}

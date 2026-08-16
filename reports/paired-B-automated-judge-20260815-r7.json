@@ -1,0 +1,3589 @@
+{
+  "schema_version": "solat.paired-quality.automated-preliminary.v1",
+  "status": "INCOMPLETE",
+  "method": "DeepSeek automated judge; preliminary evidence only",
+  "provider": "deepseek_api",
+  "model": "deepseek-v4-flash",
+  "evaluated_pairs": 100,
+  "concurrency": 8,
+  "generated_at": "2026-08-15T07:21:46.342Z",
+  "results": [
+    {
+      "id": "followup100_000_context_pronouns",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both correctly resolve 'มัน' to FU100-000 from history. Solat additionally notes that no further details are available in the history, explicitly avoiding invention, while ChatGPT's extra sentence about future interpretation is a minor inference. Solat matches expected behavior of stating unknowns, so preferred.",
+      "latency_ms": 2279,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1031,
+        "completion_tokens": 198,
+        "total_tokens": 1229,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 7
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_001_context_pronouns",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT claims 'เขา' refers to item 1 with code FU100-001, but no supporting info in history; cuts off. Solat admits lack of info, doesn't invent, asks for clarification, in Thai. Solat better on ambiguity/grounding/uncertainty.",
+      "latency_ms": 2300,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 989,
+        "completion_tokens": 200,
+        "total_tokens": 1189,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 93
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_002_context_pronouns",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 1,
+        "language_and_tone": 2,
+        "task_fulfillment": 1,
+        "tool_and_scope_choice": 2,
+        "grounding_and_sources": 1,
+        "uncertainty_and_safety": 1
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT's answer is a truncated, incomplete sentence ('ในบริบทนี้ “อันนั้น” หมา') with no useful resolution, likely corrupted output, and fails to address the clarification request. Solat's response explains the ambiguity, asks for specific information, and clearly states that no prior reference is available, which aligns with expected behavior of stating unknowns without invention.",
+      "latency_ms": 2469,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 897,
+        "completion_tokens": 270,
+        "total_tokens": 1167,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_003_context_pronouns",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 1,
+        "language_and_tone": 2,
+        "task_fulfillment": 1,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 1,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT's answer is an incomplete fragment, likely truncation, and fails to explain 'แบบเดิม' or address the prompt. Solat acknowledges the ambiguity, asks clarifying questions, and maintains a polite tone without fabricating specifics, though both lack concrete context from history. Solat better fulfills task with uncertainty handling.",
+      "latency_ms": 2477,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1103,
+        "completion_tokens": 260,
+        "total_tokens": 1363,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 79
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_004_context_pronouns",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 1,
+        "language_and_tone": 2,
+        "task_fulfillment": 1,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT's response is truncated and fails to answer the prompt, merely repeating 'คนแรก'; Solat correctly acknowledges insufficient info, clearly states the agreed definition, asks for more details, and avoids invention, fully satisfying all dimensions.",
+      "latency_ms": 2095,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 966,
+        "completion_tokens": 187,
+        "total_tokens": 1153,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 70
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_005_context_pronouns",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 0,
+        "language_and_tone": 1,
+        "task_fulfillment": 0,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 0,
+        "uncertainty_and_safety": 0
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT outputs an incomplete sentence 'ในบริบทนี้ “มัน”' with no explanation, while Solat properly acknowledges lack of context and requests clarification.",
+      "latency_ms": 1884,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1006,
+        "completion_tokens": 172,
+        "total_tokens": 1178,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 110
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_006_context_pronouns",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT's response is vague and does not explicitly resolve the ambiguity, whereas Solat acknowledges the lack of details, requests clarification, and does not fabricate information, demonstrating better alignment with expected behaviors.",
+      "latency_ms": 2207,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1044,
+        "completion_tokens": 236,
+        "total_tokens": 1280,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 20
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_007_context_pronouns",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT assumes 'อันนั้น' refers to item 7 without acknowledging that the history only mentioned the label, not what it denotes; Solat correctly states the ambiguity, asks clarifying questions, and avoids invention. Solat better adheres to expected behavior and uncertainty handling.",
+      "latency_ms": 2544,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1070,
+        "completion_tokens": 195,
+        "total_tokens": 1265,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 46
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_008_context_pronouns",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT attempts to define 'แบบเดิม' based on the available context, while Solat explicitly states the definition is unclear and asks for more info. Both avoid fabrication, but ChatGPT better resolves the ambiguity by inferring a reasonable meaning, whereas Solat's response is more cautious but less helpful in direct fulfillment.",
+      "latency_ms": 2623,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 2219,
+        "completion_tokens": 259,
+        "total_tokens": 2478,
+        "prompt_tokens_details": {
+          "cached_tokens": 2176
+        },
+        "prompt_cache_hit_tokens": 2176,
+        "prompt_cache_miss_tokens": 43
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_009_context_pronouns",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 1,
+        "language_and_tone": 2,
+        "task_fulfillment": 0,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT's answer is truncated and incomplete, failing to address the prompt or explain the meaning of 'คนแรก'. Solat correctly identifies the ambiguity in the context, admits the lack of information, and asks for clarification, demonstrating proper handling of unknown and avoiding fabrication. Solat also maintains appropriate language and tone, while ChatGPT's response is unusable due to truncation.",
+      "latency_ms": 2441,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1814,
+        "completion_tokens": 270,
+        "total_tokens": 2084,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792
+        },
+        "prompt_cache_hit_tokens": 1792,
+        "prompt_cache_miss_tokens": 22
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_010_thai_english_mixed",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 3,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly note the lack of context, request clarification, and avoid inventing content. chatgpt uses English only (not mixed) while solat uses Thai–English mixed as requested, so solat is slightly better on language_and_tone. Both are otherwise equivalent.",
+      "latency_ms": 2097,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1032,
+        "completion_tokens": 254,
+        "total_tokens": 1286,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 8
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_011_thai_english_mixed",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both correctly identify missing context and ask for clarification. Solat uses Thai-mixed language aligning with prompt request, provides structured questions, while ChatGPT uses English and is more generic, scoring lower on language and task fulfillment.",
+      "latency_ms": 1901,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1133,
+        "completion_tokens": 186,
+        "total_tokens": 1319,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 109
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_012_thai_english_mixed",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 1,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both answers appropriately note missing context and avoid inventing content. Solat more explicitly acknowledges the conversation history (listing prior turns) and asks for precise clarification (subject, language pair, item scope), while chatgpt only briefly mentions the missing content without referencing the prior exchange. Neither fulfills the request because they cannot access item 12, but solat's richer reasoning and acknowledgment of the limited context earns slightly higher task_fulfillment and context scores.",
+      "latency_ms": 2486,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1204,
+        "completion_tokens": 235,
+        "total_tokens": 1439,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 52
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_013_thai_english_mixed",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 3,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT acknowledges the case history and maintains scope by explicitly stating 'คง subject แปล' and 'รักษา scope เดิม' while requesting the text for item 13, addressing ambiguity. Solat correctly states lack of information but does not explicitly reference the history's scope and asks for redundant details, missing the implicit follow-up context. ChatGPT uses appropriate mixed Thai-English language; Solat uses Thai only, not reflecting the requested mixed language preference. Both avoid tools and fabrication; ChatGPT slightly better in task fulfillment due to preserving context.",
+      "latency_ms": 2630,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 992,
+        "completion_tokens": 250,
+        "total_tokens": 1242,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 96
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_014_thai_english_mixed",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 1,
+        "tool_and_scope_choice": 2,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT answers briefly in mixed Thai/English but fails to resolve ambiguity (does not state that 'source' is unclear or ask for clarification) and ignores the scope that was never defined. Solat explicitly identifies missing context, explains that no language preference was established, and asks targeted clarifying questions without fabricating evidence. Solat better handles ambiguity and uncertainty.",
+      "latency_ms": 2271,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1180,
+        "completion_tokens": 269,
+        "total_tokens": 1449,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 28
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_015_thai_english_mixed",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT provided a generic summary without referencing any actual content, while Solat explicitly acknowledged missing content and requested it, adhering to honesty and scope. Solat better resolved ambiguity and maintained appropriate uncertainty.",
+      "latency_ms": 1927,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 994,
+        "completion_tokens": 182,
+        "total_tokens": 1176,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 98
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_016_thai_english_mixed",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT assumes an agreed source scope not established in history, while Solat correctly notes missing context and asks for clarification, scoring higher on context and task fulfillment.",
+      "latency_ms": 1657,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1118,
+        "completion_tokens": 175,
+        "total_tokens": 1293,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 94
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_017_thai_english_mixed",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT assumes item 17 context and invents a mixed Thai-English script without clarifying ambiguity, while Solat explicitly states missing context, asks for clarification, and avoids fabricating details. Solat better handles uncertainty and scope.",
+      "latency_ms": 1958,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1094,
+        "completion_tokens": 188,
+        "total_tokens": 1282,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 70
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_018_thai_english_mixed",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 1,
+        "tool_and_scope_choice": 2,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Solat explicitly acknowledges missing necessary details (source text, languages, scope) and requests clarification, aligning with uncertainty/safety and grounding. ChatGPT assumes translation request without clarifying missing content, making unfounded assumptions about the task; also includes unrelated English promotional text. Both use Thai-mixed language, but ChatGPT's tone is less appropriate and task fulfillment weaker.",
+      "latency_ms": 2700,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1016,
+        "completion_tokens": 213,
+        "total_tokens": 1229,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 120
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_019_thai_english_mixed",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 1,
+        "language_and_tone": 2,
+        "task_fulfillment": 0,
+        "tool_and_scope_choice": 2,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT merely echoes the prompt with a bilingual translation, failing to resolve the follow-up or demonstrate understanding of context. Solat explicitly identifies missing context, asks clarifying questions, and avoids fabrication, aligning with expected behavior.",
+      "latency_ms": 2195,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1069,
+        "completion_tokens": 241,
+        "total_tokens": 1310,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 45
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_020_typo_spacing_romanization",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 0,
+        "language_and_tone": 0,
+        "task_fulfillment": 0,
+        "tool_and_scope_choice": 0,
+        "grounding_and_sources": 0,
+        "uncertainty_and_safety": 0
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT's 'Instant' is a one-word gibberish non-answer: no language, no task fulfillment, and no context handling. Solat correctly references 'รายการ 20' and case FU100-020, respects the user's instruction not to correct the name without evidence, offers possible romanizations without asserting identity, uses natural Thai, stays within scope, and explicitly states lack of evidence and need for original documents, avoiding invention.",
+      "latency_ms": 2577,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1333,
+        "completion_tokens": 235,
+        "total_tokens": 1568,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 53
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_021_typo_spacing_romanization",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly reference FU100-021 and list 21, maintain a non-committal stance, provide plausible romanizations without inventing evidence, and appropriately state unknowns. Minor differences: ChatGPT offers more extensive romanization variants (including Dayeong, Bak) and mentions observed real usage of 'Dayoung' without direct case link, while Solat includes an extra speculative option 'Ark Da-young' and discusses possible Thai name considerations, which is slightly over-speculative but not fabricated. Both avoid tool claims and remain in safe uncertainty.",
+      "latency_ms": 2829,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1465,
+        "completion_tokens": 310,
+        "total_tokens": 1775,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 57
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_022_typo_spacing_romanization",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 1,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT follows up on case history, offers plausible spellings without asserting identity, explicitly keeps 'รายการ 22' as 'ฮันนารี', and distinguishes found web evidence as unrelated to the person. Solat fails to use provided case history, asks for information already given, offers no spelling candidates, and does not fulfill the core request.",
+      "latency_ms": 2357,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1276,
+        "completion_tokens": 217,
+        "total_tokens": 1493,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 124
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_023_typo_spacing_romanization",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT explicitly references case FU100-023 and item 23, avoids definitive identification, and mentions specific sources (Beautylounge Clinic, Erumy, 네임차트) for alternative spellings. Solat admits lack of case data, suggests unrelated spellings like Narihito/Nariah, and lacks evidence-based options, resulting in lower scores on context, task fulfillment, tool/scope, and grounding.",
+      "latency_ms": 2320,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1575,
+        "completion_tokens": 232,
+        "total_tokens": 1807,
+        "prompt_tokens_details": {
+          "cached_tokens": 1536
+        },
+        "prompt_cache_hit_tokens": 1536,
+        "prompt_cache_miss_tokens": 39
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_024_typo_spacing_romanization",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT explicitly anchors to FU100-024 and case 24, rejects unrelated web hits (server parts) as non-evidence, and offers plausible spellings without committing identity, while Solat acknowledges context but offers broader spelling variants (some less relevant like 'กัณหา') without case-specific anchoring, and fails to explicitly reject irrelevant search results or clearly state the web/context limitation. ChatGPT's grounding is stronger as it integrates history and explicitly evaluates evidence sources, whereas Solat merely suggests checking original documents. Both avoid invention, but ChatGPT better preserves scope and utility.",
+      "latency_ms": 2901,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1467,
+        "completion_tokens": 261,
+        "total_tokens": 1728,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 59
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_025_typo_spacing_romanization",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 0,
+        "language_and_tone": 1,
+        "task_fulfillment": 0,
+        "tool_and_scope_choice": 1,
+        "grounding_and_sources": 0,
+        "uncertainty_and_safety": 0
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT response is unrelated to the prompt, lacks follow-up context, and is not in Thai despite the user's request. Solat acknowledges the case and provides plausible romanization alternatives without confirming identity, and appropriately asks for source documents.",
+      "latency_ms": 2185,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1341,
+        "completion_tokens": 247,
+        "total_tokens": 1588,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 61
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_026_typo_spacing_romanization",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT better references case history and avoids identity claims, offering candidate spellings with caveats; Solat is decent but less precise on source limitations and includes 'Ark Dayoung' without explicit grounding.",
+      "latency_ms": 1847,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1855,
+        "completion_tokens": 186,
+        "total_tokens": 2041,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792
+        },
+        "prompt_cache_hit_tokens": 1792,
+        "prompt_cache_miss_tokens": 63
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_027_typo_spacing_romanization",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT uses case context, provides candidate spellings without asserting identity, and clearly separates evidence from speculation with source limitations. Solat is strong but includes unsourced speculative meanings and less precise romanization (Hun Naree) without evidence, slightly lowering grounding.",
+      "latency_ms": 2341,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1803,
+        "completion_tokens": 254,
+        "total_tokens": 2057,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792
+        },
+        "prompt_cache_hit_tokens": 1792,
+        "prompt_cache_miss_tokens": 11
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_028_typo_spacing_romanization",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT demonstrates better use of case history by explicitly referencing FU100-028 and preserving the original 'han nari', while providing plausible candidates grounded in cited sources (e.g., KCI, DaFont) and clearly stating the identity remains unconfirmed. Solat, while maintaining the original spelling and offering candidates, lacks grounding by mentioning 'Hannari' and 'Hannary' without external evidence, and does not address the ambiguity of the name as potentially non-personal. Both follow the instruction not to confirm identity, but ChatGPT's response is more context-aware and avoids unverified source claims.",
+      "latency_ms": 2874,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1531,
+        "completion_tokens": 322,
+        "total_tokens": 1853,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 123
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_029_typo_spacing_romanization",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT explicitly states no evidence found, lists candidate variants with labels, and does not invent sources; Solat repeats identical variant 'ค้นหา' three times, misuses tone marks, and lacks source disclosure. Both preserve original and avoid identity claims, but Solat's task fulfillment is weaker due to redundant/inconsistent suggestions.",
+      "latency_ms": 2126,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1485,
+        "completion_tokens": 211,
+        "total_tokens": 1696,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 77
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_030_corrections",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT states no change occurred but doesn't acknowledge the explicit user correction request beyond repeating the history; Solat clearly states inability to access the list, applies the stated rule, and transparently asks for more info. Solat better handles ambiguity and tool scope.",
+      "latency_ms": 2219,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1113,
+        "completion_tokens": 192,
+        "total_tokens": 1305,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 89
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_031_corrections",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT correctly states that no data changed, as the latest text matches the initial. Solat incorrectly implies a change from a previous text, which is not in history, and unnecessarily asks for confirmation, reducing task fulfillment and context accuracy.",
+      "latency_ms": 1828,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 996,
+        "completion_tokens": 188,
+        "total_tokens": 1184,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 100
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_032_corrections",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT answers the follow-up but assumes the latest text is identical to initial data, failing to independently identify corrections and overstates certainty; Solat correctly notes ambiguity about original text, specifies the update, explicitly states inability to compare without the original, and avoids invention.",
+      "latency_ms": 2085,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1057,
+        "completion_tokens": 193,
+        "total_tokens": 1250,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 33
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_033_corrections",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 3,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT's task_fulfillment is lower (2) because it states 'no data changed' despite the correction request implying an original request existed, but it lacks explicit confirmation from history; Solat explicitly lists the new request and what changed (task_fulfillment 3). Context: Solat resolves the followup across the history (replacing prior request) better (4 vs 3). Grounding: both infer without evidence but no fabrication; equal. Language/tone, tool, safety are similar. No critical failures.",
+      "latency_ms": 2914,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 970,
+        "completion_tokens": 249,
+        "total_tokens": 1219,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 74
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_034_corrections",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 1,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT correctly resolves the followup using the history, identifies no change, and fulfills the task concisely. Solat over-asks for clarifications when the history already provides the needed context, failing to directly answer the request.",
+      "latency_ms": 1884,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1117,
+        "completion_tokens": 189,
+        "total_tokens": 1306,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 93
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_035_corrections",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 2,
+        "grounding_and_sources": 1,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT correctly notes no change occurred as current text matches initial, fulfilling request without inventing details. Solat fabricates original/new name values, violating grounding and task fulfillment, and implies tool action without evidence.",
+      "latency_ms": 2071,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1081,
+        "completion_tokens": 183,
+        "total_tokens": 1264,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 57
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_036_corrections",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT assumes the latest text matches initial data without explicitly noting that no change occurred is acceptable, but solat more thoroughly addresses ambiguity by asking for original text and noting inability to compare, thus better fulfilling follow-up. Solat clearly states what is unknown and does not invent evidence, while ChatGPT lacks explicit uncertainty. No critical failure.",
+      "latency_ms": 2043,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1117,
+        "completion_tokens": 206,
+        "total_tokens": 1323,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 93
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_037_corrections",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT correctly states that the latest text is 'use latest information' and matches original, so no changes. Solat over-elaborates and adds speculative changes (e.g., version policy) not explicitly requested, slightly reducing task fulfillment.",
+      "latency_ms": 2263,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1211,
+        "completion_tokens": 244,
+        "total_tokens": 1455,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 59
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_038_corrections",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT accurately notes that the original and corrected text are identical, stating no change was made, which is factually correct per history. Solat incorrectly claims the text was changed and provided, despite it being unchanged from the start; this is a slight misrepresentation of the correction process.",
+      "latency_ms": 2154,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 970,
+        "completion_tokens": 198,
+        "total_tokens": 1168,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 74
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_039_corrections",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Solat correctly states no case history exists and asks for details, avoiding assumptions; ChatGPT asserts 'latest text' equals original without evidence in history, risking invention. Context resolution: Solat uses only provided history, ChatGPT ignores absence of prior '39' data.",
+      "latency_ms": 1978,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 952,
+        "completion_tokens": 192,
+        "total_tokens": 1144,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 56
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_040_multi_step_constraints",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT claims step 'หนึ่ง' is done without evidence, and vaguely states subsequent steps cannot be done. Solat explicitly acknowledges missing context, asks for necessary details, and provides a principled explanation without inventing information. Solat better adheres to instructions and avoids unsupported claims.",
+      "latency_ms": 2196,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1387,
+        "completion_tokens": 254,
+        "total_tokens": 1641,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 107
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_041_multi_step_constraints",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Solat explicitly notes missing list/steps, asks for necessary details, avoids assuming step 1 completion. ChatGPT invents that step 1 is unfinished without evidence, and fails to request missing information. Solat better resolves ambiguity and states unknowns.",
+      "latency_ms": 2157,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1130,
+        "completion_tokens": 191,
+        "total_tokens": 1321,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 106
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_042_multi_step_constraints",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT assumes 'three' refers to step 3 without asking clarification and fabricates that steps 1 and 2 are not confirmed complete, whereas Solat correctly notes lack of details, asks clarifying questions, and avoids inventions; both use Thai and avoid tools appropriately.",
+      "latency_ms": 2678,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1139,
+        "completion_tokens": 251,
+        "total_tokens": 1390,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 115
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_043_multi_step_constraints",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT addresses the constraint but does not explicitly request the missing step list or prior progress details, and only speculates that all next steps are blocked. Solat more thoroughly identifies missing information (step list, prior progress, constraints) and explicitly asks for it, better fulfilling the request to identify un-doable steps. Both use Thai appropriately and avoid fabrication. Solat is preferred for clearer task fulfillment and ambiguity resolution.",
+      "latency_ms": 2320,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1134,
+        "completion_tokens": 225,
+        "total_tokens": 1359,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 110
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_044_multi_step_constraints",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT's response is brief and acknowledges the dual constraint (continue from prior work and identify non-actionable steps) but fails to request needed missing details, implying it can proceed with limited context; it effectively states it cannot detail later steps but does not explicitly ask for task-specific information. Solat more thoroughly recognizes the missing context (what list 44 is, prior progress, criteria for 'ห้ามแต่งข้อมูล') and explicitly requests the needed 2-3 items to fulfill the task without fabrication. Both answers avoid fabricating evidence and remain in Thai, but Solat's uncertainty handling and grounding are stronger.",
+      "latency_ms": 3024,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1209,
+        "completion_tokens": 319,
+        "total_tokens": 1528,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 57
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_045_multi_step_constraints",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT claims step 'one' was performed without any actual step details, and vaguely notes next steps impossible, lacking specifics. Solat explicitly lists missing required information (step list, prior status), asks for clarification, and avoids false claims, better fulfilling task and uncertainty handling.",
+      "latency_ms": 2318,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1274,
+        "completion_tokens": 197,
+        "total_tokens": 1471,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 122
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_046_multi_step_constraints",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Solat explicitly requests necessary missing details (original work, step list, definition of 'two') and correctly notes lack of information, fully fulfilling the task by asking for clarification. ChatGPT correctly states it cannot proceed due to missing step one confirmation, but does not request the needed details for completion, thus lower on context and task fulfillment. Both use Thai, avoid tools, and do not fabricate evidence.",
+      "latency_ms": 2350,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1120,
+        "completion_tokens": 222,
+        "total_tokens": 1342,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 96
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_047_multi_step_constraints",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT correctly identifies that step three cannot be done due to missing prior steps and provides a concise answer. Solat asks clarifying questions but fails to directly answer the request to list the un-doable step, slightly deviating from the task. Both use Thai appropriately and acknowledge insufficient information without fabricating evidence.",
+      "latency_ms": 2200,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1160,
+        "completion_tokens": 259,
+        "total_tokens": 1419,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 8
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_048_multi_step_constraints",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Solat explicitly asks for the missing step list and current progress, directly addressing the ambiguous follow-up, whereas ChatGPT makes assumptions about unresolved conditions. Solat fulfills the task better by requesting necessary clarifications.",
+      "latency_ms": 1949,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1136,
+        "completion_tokens": 183,
+        "total_tokens": 1319,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 112
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_049_multi_step_constraints",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both handle the condition and state unknowns; solat provides more detailed sub-steps for the 'do not fabricate' condition and clearer list of unachievable steps due to missing sources, while chatgpt is briefer but still adequate. No critical failures.",
+      "latency_ms": 1952,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1186,
+        "completion_tokens": 196,
+        "total_tokens": 1382,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 34
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_050_tool_no_tool",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT decides 'no tool' but infers from limited context; Solat acknowledges ambiguous history, explains rule, and requests clarification, better fulfilling the pragmatic request and safety.",
+      "latency_ms": 1869,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1254,
+        "completion_tokens": 177,
+        "total_tokens": 1431,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 102
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_051_tool_no_tool",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly interpret the context, state no tool use, and provide clear reasons. They differ slightly in wording (ChatGPT concise, Solat more elaborate) but both follow the instruction. Minor point: both mention 'ไม่ต้องค้น' but do not explicitly cite the history; still grounded in given context. No critical failure.",
+      "latency_ms": 2368,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1065,
+        "completion_tokens": 263,
+        "total_tokens": 1328,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 41
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_052_tool_no_tool",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Solat explicitly references missing URL/file/link, lists candidate tools, and advises waiting for clarification; chatgpt notes lack of URL but is slightly less detailed in resolving ambiguity. Both accurately avoid tool use and do not fabricate; no critical failures.",
+      "latency_ms": 1991,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1123,
+        "completion_tokens": 193,
+        "total_tokens": 1316,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 99
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_053_tool_no_tool",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly decide not to use tools for a summarization task based on available context, with no signs of hallucination or unsafe claims. Solat's response is more detailed and explicitly addresses the latest correction by checking no external sources or business operations are needed, scoring slightly higher on task fulfillment. Minimal difference: solat provides clearer sub-reasons, while chatgpt is more concise but adequate.",
+      "latency_ms": 2380,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1159,
+        "completion_tokens": 222,
+        "total_tokens": 1381,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 7
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_054_tool_no_tool",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly interpret the prompt as asking for a reasoned decision on tool usage, with no clear requirement for a tool. solat more explicitly ties reasoning to the visible history, enumerates conditions for tool use, and provides a clear caveat, while chatgpt is slightly less detailed and lacks the same level of structured reasoning. No critical failures detected.",
+      "latency_ms": 2495,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1268,
+        "completion_tokens": 268,
+        "total_tokens": 1536,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 116
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_055_tool_no_tool",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly decide not to use tool due to ambiguity and clearly state unknowns. Solat provides more detailed reasoning and explicitly asks for the full request text and objective, better resolving ambiguity. ChatGPT is concise but less thorough in acknowledging possible interpretation differences. Neither commits critical failure.",
+      "latency_ms": 1995,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1223,
+        "completion_tokens": 196,
+        "total_tokens": 1419,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 71
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_056_tool_no_tool",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT assumes the context is sufficient and decides not to use tool without acknowledging missing information, while Solat correctly identifies the lack of full instruction for 'item 56', asks for necessary details, and refuses to guess, ensuring safety and accuracy.",
+      "latency_ms": 2072,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1106,
+        "completion_tokens": 246,
+        "total_tokens": 1352,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 82
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_057_tool_no_tool",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT directly states no tool use with clear reasoning tied to context, while Solat conditionally outlines tool scenarios but is less decisive. ChatGPT avoids over-hedging and provides concise conclusion. Solat's extra details are useful but slightly less direct in carrying out the decision.",
+      "latency_ms": 1936,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1172,
+        "completion_tokens": 198,
+        "total_tokens": 1370,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 20
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_058_tool_no_tool",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT's response is concise but lacks explicit mention of 'web_search' and has slightly less detailed reasoning for tool choice; Solat provides clearer justification, more explicit context resolution, and better grounding by referencing 'existing conversation' and 'no external search needed'.",
+      "latency_ms": 2167,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1147,
+        "completion_tokens": 250,
+        "total_tokens": 1397,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 123
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_059_tool_no_tool",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly resolve the follow-up, state no tool is needed because the request is only for reasoning, and use Thai language with polite tone. They avoid fabricating evidence and appropriately acknowledge ambiguity. Solat adds future tool-use scenarios and invites clarification; ChatGPT is more concise. No critical failures; both are comparable.",
+      "latency_ms": 2182,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1207,
+        "completion_tokens": 205,
+        "total_tokens": 1412,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 55
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_060_grounding_unknown",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Solat explicitly states lack of evidence and requests more data without fabrication, scoring higher on grounding and uncertainty. ChatGPT attempts to infer but acknowledges unknown, yet makes unsupported claims about 'fact' based on meta-instruction, which is less grounded. Both avoid tool misuse; Solat better fulfills task by not inventing content.",
+      "latency_ms": 2519,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1179,
+        "completion_tokens": 208,
+        "total_tokens": 1387,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 27
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_061_grounding_unknown",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 1,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 1,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT fabricates a 'fact' that the list specifies separating fact from unknown, despite no such evidence in prompt, and makes unsupported inferences. Solat honestly states lack of data and requests specifics, properly assigning unknown status.",
+      "latency_ms": 1927,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1277,
+        "completion_tokens": 188,
+        "total_tokens": 1465,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 125
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_062_grounding_unknown",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT states that the dialog confirms a requirement to separate fact/inference/unknown but does not clearly state the list is absent or request the content, whereas Solat explicitly states that no list exists in context, correctly avoids fabrication, and requests the missing source. Solat better follows the instruction to state unknowns without invention.",
+      "latency_ms": 2321,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1582,
+        "completion_tokens": 206,
+        "total_tokens": 1788,
+        "prompt_tokens_details": {
+          "cached_tokens": 1536
+        },
+        "prompt_cache_hit_tokens": 1536,
+        "prompt_cache_miss_tokens": 46
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_063_grounding_unknown",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Solat explicitly states lack of case details, requests source, and offers structure; ChatGPT invents an interpretation of the instruction as a 'fact,' inaccurately framing the prompt itself as evidence, while admitting lack of specific content. Solat better follows context, grounding, and uncertainty handling.",
+      "latency_ms": 2160,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1264,
+        "completion_tokens": 200,
+        "total_tokens": 1464,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 112
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_064_grounding_unknown",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT attempts summary but lacks explicit request for missing info and makes an inference about the requirement's purpose without grounding. Solat correctly identifies missing data and requests necessary documents, explicitly declines to fabricate the 64 items, and provides a clear template for when data is provided.",
+      "latency_ms": 2487,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1486,
+        "completion_tokens": 252,
+        "total_tokens": 1738,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 78
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_065_grounding_unknown",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Solat better avoids inventing specifics: it explicitly states no information is available and requests the list, while ChatGPT speculates about intent and admits lack of specifics, but its inference section is appropriately labeled and avoids fabrication. Solat also more clearly discloses source limitations and asks for user input, improving safety.",
+      "latency_ms": 2188,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1180,
+        "completion_tokens": 202,
+        "total_tokens": 1382,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 28
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_066_grounding_unknown",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 1,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT fabricated a 'fact' by claiming the context confirms the list 66 requires separating fact/inference/unknown, which is not in the supplied history; Solat correctly states lack of data, requests needed info, and avoids invention.",
+      "latency_ms": 1946,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1226,
+        "completion_tokens": 190,
+        "total_tokens": 1416,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 74
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_067_grounding_unknown",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 1,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT fabricates that 'item 67 specifies...' without evidence, misstating context; Solat correctly states absence of data, asks for required info, and does not invent content.",
+      "latency_ms": 1883,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1271,
+        "completion_tokens": 181,
+        "total_tokens": 1452,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 119
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_068_grounding_unknown",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 1,
+        "uncertainty_and_safety": 2
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Solat correctly identifies that no list of 68 items is present in context, refuses to invent content, and requests necessary evidence; ChatGPT fabricates a 'fact' by claiming the requirement to separate fact/inference is itself a fact from context, which is not actually stated in the prompt/history, and invents an inference about purpose without basis.",
+      "latency_ms": 2121,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1302,
+        "completion_tokens": 212,
+        "total_tokens": 1514,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 22
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_069_grounding_unknown",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 3,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Solat correctly states the 69-item list is not present in the conversation and clearly separates facts, inferences, and unknowns without inventing evidence; ChatGPT assumes a rule from vague context and includes unrelated promotional content. Solat is more grounded and transparent.",
+      "latency_ms": 2077,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1339,
+        "completion_tokens": 192,
+        "total_tokens": 1531,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 59
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_070_failure_handling",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly refuse to claim success without actual evidence, state unknowns, stay within case scope, and use appropriate Thai. Minor stylistic differences only; no critical issues.",
+      "latency_ms": 1886,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1260,
+        "completion_tokens": 175,
+        "total_tokens": 1435,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 108
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_071_failure_handling",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both correctly refuse to claim success without evidence; solat is more structured with clear action plan and explicit limits for proceeding, while chatgpt is concise but less detailed. Neither invent results.",
+      "latency_ms": 1864,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1546,
+        "completion_tokens": 180,
+        "total_tokens": 1726,
+        "prompt_tokens_details": {
+          "cached_tokens": 1536
+        },
+        "prompt_cache_hit_tokens": 1536,
+        "prompt_cache_miss_tokens": 10
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_072_failure_handling",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both correctly identify the case, state failure status without claiming success, and acknowledge no actual evidence. Chatgpt is concise; solat adds question for clarification but stays in scope. No critical failures.",
+      "latency_ms": 1842,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1230,
+        "completion_tokens": 182,
+        "total_tokens": 1412,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 78
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_073_failure_handling",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT explicitly states no real result and stops, strictly following the 'no success without evidence' rule. Solat says it started retry and waits for evidence, but introduces a claim of 'initiating retry' without evidence, slightly overstepping the scope of reporting only facts. Both avoid fabrication, but ChatGPT is more conservative and precise.",
+      "latency_ms": 2196,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1094,
+        "completion_tokens": 213,
+        "total_tokens": 1307,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 70
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_074_failure_handling",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly avoid reporting success without actual verification. ChatGPT stays strictly with available context and clearly states uncertainty, while Solat invents specific details (85°C, STOPPED) not present in history, violating grounding. Solat also asks to simulate results, which contradicts the task's no-fabrication requirement. ChatGPT better adheres to the scope and honesty constraints.",
+      "latency_ms": 2278,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1474,
+        "completion_tokens": 218,
+        "total_tokens": 1692,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 66
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_075_failure_handling",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly scope to case FU100-075, avoid claiming success, and acknowledge unknown actual timeout status. Solat adds proactive clarification, but both fully satisfy the prompt and handle uncertainty safely.",
+      "latency_ms": 2098,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1184,
+        "completion_tokens": 236,
+        "total_tokens": 1420,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 32
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_076_failure_handling",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly avoid claiming success without actual validation results and explicitly state unknowns. Solat provides clearer actionable next steps (requesting payload or tool invocation) and more explicitly frames outcome as pending, whereas ChatGPT is slightly more repetitive. Both respect scope and language, no critical failures; solat is preferred for better task fulfillment and clarity.",
+      "latency_ms": 2053,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1146,
+        "completion_tokens": 208,
+        "total_tokens": 1354,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 122
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_077_failure_handling",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT adheres strictly to the instruction: it states that no real check result exists, so success is not reported; it notes unknown details and stops as requested. Solat, while correctly reporting failure status, contradicts the requirement by asserting 'implemented the process' and simulating errors, which invents evidence beyond the given context. Solat also offers further actions, potentially extending scope without explicit permission. Thus, ChatGPT is preferred for precise fulfillment and no invention.",
+      "latency_ms": 2764,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1285,
+        "completion_tokens": 290,
+        "total_tokens": 1575,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 5
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_078_failure_handling",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly state no real result, refuse to claim success, and note unknowns. ChatGPT is concise and directly acknowledges missing info, while Solat adds a table and asks for missing details, which is helpful but slightly verbose. Neither uses tools or fabricates evidence. Solat's tone is friendly with emojis, but ChatGPT's directness aligns better with the request to report actual status. Preferred ChatGPT for clarity and adherence to instructions.",
+      "latency_ms": 2642,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1480,
+        "completion_tokens": 286,
+        "total_tokens": 1766,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 72
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_079_failure_handling",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly refuse to claim success without actual test results, explicitly state unknowns, and stay within the case scope of FU100-079. ChatGPT is concise; Solat is more detailed and requests evidence. No fabricated evidence or unsafe claims in either response.",
+      "latency_ms": 1956,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1211,
+        "completion_tokens": 193,
+        "total_tokens": 1404,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 59
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_080_entity_resolution",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly use the history, resolve the follow-up, explicitly discuss ambiguity (e.g., 'ยังไม่ทราบว่าหมายถึงตัวละครใด'), maintain Thai language, avoid tool claims, and state uncertainty about identifying the specific character. Minor difference: ChatGPT notes the character cannot be concretely identified, while Solat asks for confirmation about 'รายการ 80' but does not introduce unsupported details. No critical failures such as fabrication or unsafe claims.",
+      "latency_ms": 2426,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1250,
+        "completion_tokens": 290,
+        "total_tokens": 1540,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 98
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_081_entity_resolution",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly reference the case history and entity 'นักร้อง', discuss ambiguity appropriately, use natural Thai, and avoid fabricated evidence or unsafe claims. Solat provides more detailed taxonomy of ambiguity while ChatGPT is more concise but both satisfy the prompt. No critical failures.",
+      "latency_ms": 2175,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1466,
+        "completion_tokens": 249,
+        "total_tokens": 1715,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 58
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_082_entity_resolution",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly resolve the follow-up entity 'สินค้า A' from case FU100-082, explain ambiguity clearly, avoid mixing with other entities, and do not invent evidence. They stay in Thai with natural tone, follow instructions without using tools unnecessarily, and appropriately state unknowns. The answers are equivalent in quality; ChatGPT is more concise while Solat explains in slightly more detail, but neither has significant advantage.",
+      "latency_ms": 2476,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1407,
+        "completion_tokens": 224,
+        "total_tokens": 1631,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 127
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_083_entity_resolution",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly resolve the follow-up to the entity 'ลูกค้าคนแรก' from case FU100-083, explicitly describe ambiguity, stay in Thai, avoid inventing details, and appropriately state unknowns without tools. Solat provides a more detailed breakdown of possible interpretations, but both are equally compliant and high-quality.",
+      "latency_ms": 2058,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1293,
+        "completion_tokens": 206,
+        "total_tokens": 1499,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 13
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_084_entity_resolution",
+      "status": "FAIL",
+      "error": {
+        "code": "judge_error",
+        "message": "invalid_judge_score:solat_scores.task_fulfillment"
+      }
+    },
+    {
+      "id": "followup100_085_entity_resolution",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly resolve the follow-up by focusing on the entity 'ตัวละคร' from case 85, explain ambiguity, and avoid inventing specifics. ChatGPT is concise and explicitly avoids including other names, while Solat provides detailed types of ambiguity but slightly less grounded by speculating name conflicts without evidence. No tool use needed; scope kept. Tie.",
+      "latency_ms": 2239,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1439,
+        "completion_tokens": 212,
+        "total_tokens": 1651,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 31
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_086_entity_resolution",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly resolve the follow-up within case FU100-086, clearly state ambiguity without inventing details, avoid conflating with other names, use appropriate Thai language, and explicitly note uncertainty. Solat provides more detailed enumeration of ambiguity types, while ChatGPT is concise but equally accurate; no critical failures.",
+      "latency_ms": 1990,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1406,
+        "completion_tokens": 202,
+        "total_tokens": 1608,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 126
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_087_entity_resolution",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 3,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly resolve the entity and state ambiguity. Solat is more thorough in explaining context, explicitly separating similar names, and providing actionable follow-up, while ChatGPT is concise but slightly less detailed in grounding and next steps.",
+      "latency_ms": 2035,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1378,
+        "completion_tokens": 185,
+        "total_tokens": 1563,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 98
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_088_entity_resolution",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT directly resolves the entity, acknowledges ambiguity, and stays on scope; Solat loses context by listing two possible interpretations and requests more data, deviating from the original definition.",
+      "latency_ms": 1911,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1233,
+        "completion_tokens": 233,
+        "total_tokens": 1466,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 81
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_089_entity_resolution",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly resolve the entity 'ออเดอร์ล่าสุด' from the supplied history, explain ambiguity without invention, and use appropriate Thai. ChatGPT is concise and clearly states what is unknown; Solat offers a structured breakdown and asks clarifying questions, which fully fulfills the request. Both avoid tools and stay within case scope; no critical failures.",
+      "latency_ms": 2175,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1566,
+        "completion_tokens": 212,
+        "total_tokens": 1778,
+        "prompt_tokens_details": {
+          "cached_tokens": 1536
+        },
+        "prompt_cache_hit_tokens": 1536,
+        "prompt_cache_miss_tokens": 30
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_090_consistency_followup",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 1,
+        "language_and_tone": 4,
+        "task_fulfillment": 1,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both correctly note the lack of prior format, but solat more explicitly identifies missing components and asks clearer questions. ChatGPT briefly acknowledges and stops, while solat provides structured list and actionable requests; thus solat slightly better fulfills the follow-up request.",
+      "latency_ms": 1900,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1175,
+        "completion_tokens": 193,
+        "total_tokens": 1368,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 23
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_091_consistency_followup",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both responses correctly refuse to invent missing formatting details; solat explicitly asks for needed specifics and provides structured bullets, while chatgpt states limitations more briefly and offers less actionable clarification.",
+      "latency_ms": 1888,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1291,
+        "completion_tokens": 234,
+        "total_tokens": 1525,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 11
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_092_consistency_followup",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 4,
+        "task_fulfillment": 1,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "chatgpt",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT acknowledges ambiguity and avoids speculating, while Solat provides more detailed reasoning but fails to attempt continuation and repeats availability of options.",
+      "latency_ms": 1775,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1216,
+        "completion_tokens": 171,
+        "total_tokens": 1387,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 64
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_093_consistency_followup",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both answers appropriately note missing context, but solat explicitly requests needed information and avoids inventing, while chatgpt states limitation but does not ask for clarification; solat slightly better on task fulfillment (requesting specifics to proceed), chatgpt more concise.",
+      "latency_ms": 1995,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1198,
+        "completion_tokens": 195,
+        "total_tokens": 1393,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 46
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_094_consistency_followup",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 1,
+        "language_and_tone": 2,
+        "task_fulfillment": 1,
+        "tool_and_scope_choice": 2,
+        "grounding_and_sources": 1,
+        "uncertainty_and_safety": 1
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 2,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 2,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 2
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both answers correctly avoid inventing the missing list, but solat explains the absence in history more explicitly and asks for source. ChatGPT admits unknowns but is less transparent and slightly circular; solat better handles ambiguity and uncertainty.",
+      "latency_ms": 1849,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1207,
+        "completion_tokens": 187,
+        "total_tokens": 1394,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 55
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_095_consistency_followup",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both assistants correctly recognize the lack of prior specified format/constraints, avoid inventing content, and request clarification. ChatGPT is more concise, while Solat provides a structured list of missing details. No critical failures; both adhere to scope and safety.",
+      "latency_ms": 2188,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1150,
+        "completion_tokens": 193,
+        "total_tokens": 1343,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 126
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_096_consistency_followup",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "tie",
+      "critical_failure": false,
+      "brief_evidence": "Both correctly identify missing prior list and avoid fabrication. ChatGPT stays concise and directly states inability without extra requests; Solat provides more detailed clarification and asks for specifics. Neither invents content, both follow language and scope. Minor differences in helpfulness, but overall equivalent.",
+      "latency_ms": 2115,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1166,
+        "completion_tokens": 196,
+        "total_tokens": 1362,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 14
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_097_consistency_followup",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 4,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both correctly identify missing context. Solat more explicitly requests needed original text, format, and list; chatgpt infers constraints but doesn't request full details. Solat better fulfills task by asking for essential info to proceed.",
+      "latency_ms": 1974,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1147,
+        "completion_tokens": 190,
+        "total_tokens": 1337,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 123
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_098_consistency_followup",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 4,
+        "task_fulfillment": 3,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 4
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 4,
+        "language_and_tone": 4,
+        "task_fulfillment": 4,
+        "tool_and_scope_choice": 3,
+        "grounding_and_sources": 4,
+        "uncertainty_and_safety": 4
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "ChatGPT correctly notes lack of details but is vague; Solat explicitly states no prior content, asks for more info, and offers concrete next steps. Both avoid fabrication, but Solat is more transparent and helpful. No critical failures.",
+      "latency_ms": 2219,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1190,
+        "completion_tokens": 245,
+        "total_tokens": 1435,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 38
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "followup100_099_consistency_followup",
+      "chatgpt_scores": {
+        "context_and_ambiguity": 2,
+        "language_and_tone": 3,
+        "task_fulfillment": 1,
+        "tool_and_scope_choice": 2,
+        "grounding_and_sources": 2,
+        "uncertainty_and_safety": 3
+      },
+      "solat_scores": {
+        "context_and_ambiguity": 3,
+        "language_and_tone": 3,
+        "task_fulfillment": 2,
+        "tool_and_scope_choice": 2,
+        "grounding_and_sources": 3,
+        "uncertainty_and_safety": 3
+      },
+      "preferred": "solat",
+      "critical_failure": false,
+      "brief_evidence": "Both correctly note missing prior instructions; ChatGPT attempts a partial answer but doesn't explicitly ask for needed info, while Solat clearly states what's missing and asks for specific examples/constraints, so Solat better fulfills the follow-up request.",
+      "latency_ms": 2133,
+      "provider": "deepseek_api",
+      "model": "deepseek-v4-flash",
+      "usage": {
+        "prompt_tokens": 1100,
+        "completion_tokens": 247,
+        "total_tokens": 1347,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 76
+      },
+      "status": "PASS"
+    }
+  ],
+  "limitations": [
+    "Judge uses the configured DeepSeek provider and is not independent human evidence.",
+    "This is not a claim of equivalence to ChatGPT.",
+    "Raw captures remain in the paired input; judge inputs use bounded encoding repair for known mojibake."
+  ]
+}

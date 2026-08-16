@@ -1,0 +1,47 @@
+{
+  "schema_version": "solat.quality-iteration.v1",
+  "status": "NOT VERIFIED",
+  "baseline": {
+    "cases": 100,
+    "quality_percent": 76.38,
+    "report": "D:/SOLAT_WORKSPACE/tmp-20260814/solat-quality-report-final-20260815.json"
+  },
+  "after": {
+    "cases": 0,
+    "quality_percent": null,
+    "reason": "A post-change semantic paired run was not executed because the user explicitly paused work immediately before the new 100-pair run. Existing captures cannot be reused as an after-run without fabricating evidence."
+  },
+  "paired_corpus_preflight": {
+    "status": "FAIL",
+    "case_count": 100,
+    "unique_case_count": 100,
+    "context_required_but_missing": 10,
+    "policy": "The fixed cases were not edited or removed. Do not start the next paid/live 100-pair run until this limitation is resolved or explicitly accepted."
+  },
+  "changed_files": [
+    "src/core/provider.js",
+    "src/core/conversation-core.js",
+    "test/core.test.js",
+    "src/core/file-intake.js",
+    "src/core/agent-orchestrator.js",
+    "src/main.js",
+    "test/file-intake.test.js",
+    "scripts/create-human-review-packet.js",
+    "scripts/validate-paired-corpus.js",
+    "test/paired-corpus-preflight.test.js",
+    "package.json",
+    "reports/human-review-packet-20260815.json",
+    "docs/GITHUB_REFERENCE_MATRIX.md",
+    "docs/MODEL_FOUNDATION_ROADMAP.md",
+    "docs/RISK_REGISTER.md",
+    "docs/VERIFICATION_REPORT.md"
+  ],
+  "local_tests": {
+    "npm.cmd test": "172/172 PASS",
+    "npm.cmd run check": "PASS",
+    "git diff --check": "PASS"
+  },
+  "human_review_required": true,
+  "limitation": "GPT-judge preliminary evidence is not independent human verification; no post-change semantic score is claimed.",
+    "next_gate": "A post-change semantic 100-pair score remains NOT VERIFIED. The later B transport preflight is separate and PASS 100/100, but B quality still requires a fresh authorized capture and automated judge after the output-encoding fix."
+}

@@ -1,0 +1,522 @@
+{
+  "input": {
+    "cases": "D:\\SOLAT_V3\\evaluations\\followup-context-100.json",
+    "progress": "D:\\SOLAT_V3\\reports\\chatgpt-B-100-progress-20260815.json"
+  },
+  "schema_version": "solat.chatgpt-progress-preflight.v1",
+  "status": "PASS",
+  "mode": "B",
+  "expected_count": 100,
+  "corpus_count": 100,
+  "captured_count": 100,
+  "completed_count": 100,
+  "incomplete_count": 0,
+  "missing_count": 0,
+  "completed": [
+    {
+      "id": "followup100_000_context_pronouns",
+      "index": 0,
+      "isolation_id": "chatgpt-b-eede1dfc-fa42-4181-bc2e-c12a03f814c3"
+    },
+    {
+      "id": "followup100_001_context_pronouns",
+      "index": 1,
+      "isolation_id": "chatgpt-b-b962e570-6939-4c04-8daa-58e04ff0322d"
+    },
+    {
+      "id": "followup100_002_context_pronouns",
+      "index": 2,
+      "isolation_id": "chatgpt-b-ecc5cad1-3078-41cf-8b10-b653713db763"
+    },
+    {
+      "id": "followup100_003_context_pronouns",
+      "index": 3,
+      "isolation_id": "chatgpt-b-4b626289-2a9e-4550-9134-147ea9e5b999"
+    },
+    {
+      "id": "followup100_004_context_pronouns",
+      "index": 4,
+      "isolation_id": "chatgpt-b-0a59f8be-5856-424c-bf72-6187136c8c43"
+    },
+    {
+      "id": "followup100_005_context_pronouns",
+      "index": 5,
+      "isolation_id": "chatgpt-b-b0e09eef-6e09-4fb8-acd9-72dd9d6a4338"
+    },
+    {
+      "id": "followup100_006_context_pronouns",
+      "index": 6,
+      "isolation_id": "chatgpt-b-42e9a1e4-bc87-4feb-a742-ef32410556fe"
+    },
+    {
+      "id": "followup100_007_context_pronouns",
+      "index": 7,
+      "isolation_id": "chatgpt-b-be433278-04ba-42eb-b319-0dd51b713750"
+    },
+    {
+      "id": "followup100_008_context_pronouns",
+      "index": 8,
+      "isolation_id": "chatgpt-b-8bc2e084-e230-4f86-a487-a256b706388c"
+    },
+    {
+      "id": "followup100_009_context_pronouns",
+      "index": 9,
+      "isolation_id": "chatgpt-b-cabce637-9991-4ddc-97bb-00270ffe081c"
+    },
+    {
+      "id": "followup100_010_thai_english_mixed",
+      "index": 10,
+      "isolation_id": "chatgpt-b-b758d92e-892e-466a-b437-c6a85e21f01a"
+    },
+    {
+      "id": "followup100_011_thai_english_mixed",
+      "index": 11,
+      "isolation_id": "chatgpt-b-b20794aa-d193-46c0-a4bb-48fb38bbae49"
+    },
+    {
+      "id": "followup100_012_thai_english_mixed",
+      "index": 12,
+      "isolation_id": "chatgpt-b-e981fe8b-61d6-472e-9ac1-171480257dd5"
+    },
+    {
+      "id": "followup100_013_thai_english_mixed",
+      "index": 13,
+      "isolation_id": "chatgpt-b-e2b9e54f-9799-4ec1-9013-bf7e5e6be357"
+    },
+    {
+      "id": "followup100_014_thai_english_mixed",
+      "index": 14,
+      "isolation_id": "chatgpt-b-d1825f8d-60f7-4514-a96b-3da1a40f1158"
+    },
+    {
+      "id": "followup100_015_thai_english_mixed",
+      "index": 15,
+      "isolation_id": "chatgpt-b-8082fa09-cd83-4c35-a3f1-0ba3d648946d"
+    },
+    {
+      "id": "followup100_016_thai_english_mixed",
+      "index": 16,
+      "isolation_id": "chatgpt-b-8120e0bb-a61b-4f9a-9536-0118093da31e"
+    },
+    {
+      "id": "followup100_017_thai_english_mixed",
+      "index": 17,
+      "isolation_id": "chatgpt-b-1ce4ccf7-73b0-4f33-9161-9889a300c8de"
+    },
+    {
+      "id": "followup100_018_thai_english_mixed",
+      "index": 18,
+      "isolation_id": "chatgpt-b-3b04c07b-0259-4164-96bc-9f99eb8fdac5"
+    },
+    {
+      "id": "followup100_019_thai_english_mixed",
+      "index": 19,
+      "isolation_id": "chatgpt-b-4ee15c0c-7b97-4ebd-a7fc-80fa18128e3b"
+    },
+    {
+      "id": "followup100_020_typo_spacing_romanization",
+      "index": 20,
+      "isolation_id": "chatgpt-b-58cff124-c8cb-4ca6-bee4-14adf2cc1595"
+    },
+    {
+      "id": "followup100_021_typo_spacing_romanization",
+      "index": 21,
+      "isolation_id": "chatgpt-b-c0ab6698-0d9e-4ca2-bbac-36fef6cced04"
+    },
+    {
+      "id": "followup100_022_typo_spacing_romanization",
+      "index": 22,
+      "isolation_id": "chatgpt-b-36a5f5b1-01b3-4963-8040-517520dcfe01"
+    },
+    {
+      "id": "followup100_023_typo_spacing_romanization",
+      "index": 23,
+      "isolation_id": "chatgpt-b-98cb58f6-bfe8-4628-8bc6-e38ca0ad0aef"
+    },
+    {
+      "id": "followup100_024_typo_spacing_romanization",
+      "index": 24,
+      "isolation_id": "chatgpt-b-f354d803-fe32-492f-8c36-fe67ac158a0b"
+    },
+    {
+      "id": "followup100_025_typo_spacing_romanization",
+      "index": 25,
+      "isolation_id": "chatgpt-b-5492ac76-ceca-4798-ac51-ff5ab81d7707"
+    },
+    {
+      "id": "followup100_026_typo_spacing_romanization",
+      "index": 26,
+      "isolation_id": "chatgpt-b-5b749b94-7afc-4387-8df7-ed3d4e21edb1"
+    },
+    {
+      "id": "followup100_027_typo_spacing_romanization",
+      "index": 27,
+      "isolation_id": "chatgpt-b-04045e31-ecab-48aa-91cf-ed02c25552d8"
+    },
+    {
+      "id": "followup100_028_typo_spacing_romanization",
+      "index": 28,
+      "isolation_id": "chatgpt-b-c1519fa1-bd60-4f27-abc2-96a85fafacda"
+    },
+    {
+      "id": "followup100_029_typo_spacing_romanization",
+      "index": 29,
+      "isolation_id": "chatgpt-b-8e81b1ac-425c-43fc-bdf7-4503e8ad601e"
+    },
+    {
+      "id": "followup100_030_corrections",
+      "index": 30,
+      "isolation_id": "chatgpt-b-519bfa30-a5d3-4adb-afd0-fb120d4920cc"
+    },
+    {
+      "id": "followup100_031_corrections",
+      "index": 31,
+      "isolation_id": "chatgpt-b-3d1671de-0126-4253-a6ba-02750e4eea6a"
+    },
+    {
+      "id": "followup100_032_corrections",
+      "index": 32,
+      "isolation_id": "chatgpt-b-30bed353-ba5c-466d-a8a8-a7d670bb5c58"
+    },
+    {
+      "id": "followup100_033_corrections",
+      "index": 33,
+      "isolation_id": "chatgpt-b-ff8f15ed-5b9c-488f-8714-07b5e3b4f14c"
+    },
+    {
+      "id": "followup100_034_corrections",
+      "index": 34,
+      "isolation_id": "chatgpt-b-bf364b38-7c96-4fba-ae7c-624f8c32a4c4"
+    },
+    {
+      "id": "followup100_035_corrections",
+      "index": 35,
+      "isolation_id": "chatgpt-b-9082dca4-debc-42eb-9425-08c0b1ff962b"
+    },
+    {
+      "id": "followup100_036_corrections",
+      "index": 36,
+      "isolation_id": "chatgpt-b-fab4c1b5-6375-48b2-bda8-411bb50ca577"
+    },
+    {
+      "id": "followup100_037_corrections",
+      "index": 37,
+      "isolation_id": "chatgpt-b-998101ed-e8fa-4cd4-a611-042f1f8947ff"
+    },
+    {
+      "id": "followup100_038_corrections",
+      "index": 38,
+      "isolation_id": "chatgpt-b-1cbdcef9-8b4c-473a-986f-bc58a666f6b2"
+    },
+    {
+      "id": "followup100_039_corrections",
+      "index": 39,
+      "isolation_id": "chatgpt-b-86553517-d962-48af-a2e6-13d4349ca8bb"
+    },
+    {
+      "id": "followup100_040_multi_step_constraints",
+      "index": 40,
+      "isolation_id": "chatgpt-b-c7380b78-a2f4-4ffb-95db-fba504eb1cd8"
+    },
+    {
+      "id": "followup100_041_multi_step_constraints",
+      "index": 41,
+      "isolation_id": "chatgpt-b-a848b341-aa9f-42e7-ac2e-641ef24cafea"
+    },
+    {
+      "id": "followup100_042_multi_step_constraints",
+      "index": 42,
+      "isolation_id": "chatgpt-b-f572066a-83bc-4460-904c-35cd756d67c9"
+    },
+    {
+      "id": "followup100_043_multi_step_constraints",
+      "index": 43,
+      "isolation_id": "chatgpt-b-84ef3b50-cdd4-414d-b1eb-57f39525da20"
+    },
+    {
+      "id": "followup100_044_multi_step_constraints",
+      "index": 44,
+      "isolation_id": "chatgpt-b-8da856c4-bcb6-4a41-a3f1-13ba89013ece"
+    },
+    {
+      "id": "followup100_045_multi_step_constraints",
+      "index": 45,
+      "isolation_id": "chatgpt-b-15b549fd-7295-4d3a-8aeb-fc2734f4823a"
+    },
+    {
+      "id": "followup100_046_multi_step_constraints",
+      "index": 46,
+      "isolation_id": "chatgpt-b-989de3e0-6d2a-4324-be03-79a944ef4327"
+    },
+    {
+      "id": "followup100_047_multi_step_constraints",
+      "index": 47,
+      "isolation_id": "chatgpt-b-87707df9-ad50-4706-956f-cee56a0f6f6d"
+    },
+    {
+      "id": "followup100_048_multi_step_constraints",
+      "index": 48,
+      "isolation_id": "chatgpt-b-5eb60217-8a2e-4957-b054-42ebf2cd5a84"
+    },
+    {
+      "id": "followup100_049_multi_step_constraints",
+      "index": 49,
+      "isolation_id": "chatgpt-b-ff1264e8-3b2e-46ed-a8ca-7b37ad02433e"
+    },
+    {
+      "id": "followup100_050_tool_no_tool",
+      "index": 50,
+      "isolation_id": "chatgpt-b-b60047cd-47b5-4ed6-ae8e-0840178adfed"
+    },
+    {
+      "id": "followup100_051_tool_no_tool",
+      "index": 51,
+      "isolation_id": "chatgpt-b-cd968f41-836e-4913-958b-0b741dfc51de"
+    },
+    {
+      "id": "followup100_052_tool_no_tool",
+      "index": 52,
+      "isolation_id": "chatgpt-b-8246964b-2fdf-485a-8696-ebf73c8f411f"
+    },
+    {
+      "id": "followup100_053_tool_no_tool",
+      "index": 53,
+      "isolation_id": "chatgpt-b-797a2555-f4d3-424f-871f-230cc961acdf"
+    },
+    {
+      "id": "followup100_054_tool_no_tool",
+      "index": 54,
+      "isolation_id": "chatgpt-b-49ea4160-f437-4222-b84a-e637eababeae"
+    },
+    {
+      "id": "followup100_055_tool_no_tool",
+      "index": 55,
+      "isolation_id": "chatgpt-b-eff5187f-5bce-47ca-b073-27ab6d8ebbb1"
+    },
+    {
+      "id": "followup100_056_tool_no_tool",
+      "index": 56,
+      "isolation_id": "chatgpt-b-d0b2e2f2-90a5-4b16-b58d-372578091ec4"
+    },
+    {
+      "id": "followup100_057_tool_no_tool",
+      "index": 57,
+      "isolation_id": "chatgpt-b-1e9728ea-b035-42f8-ab30-8e25ddfa2768"
+    },
+    {
+      "id": "followup100_058_tool_no_tool",
+      "index": 58,
+      "isolation_id": "chatgpt-b-ef793c90-6b11-42b7-ae2e-a0af6337145c"
+    },
+    {
+      "id": "followup100_059_tool_no_tool",
+      "index": 59,
+      "isolation_id": "chatgpt-b-61befc43-8dec-42e4-a0e4-3b96b2e9400b"
+    },
+    {
+      "id": "followup100_060_grounding_unknown",
+      "index": 60,
+      "isolation_id": "chatgpt-b-9bc1c9e5-d5b2-49bf-a28d-c486134547a5"
+    },
+    {
+      "id": "followup100_061_grounding_unknown",
+      "index": 61,
+      "isolation_id": "chatgpt-b-16302970-b8c5-4eb7-9eab-8b26d205b08f"
+    },
+    {
+      "id": "followup100_062_grounding_unknown",
+      "index": 62,
+      "isolation_id": "chatgpt-b-52d01874-ddc9-427a-a8c9-bde0735fc2c9"
+    },
+    {
+      "id": "followup100_063_grounding_unknown",
+      "index": 63,
+      "isolation_id": "chatgpt-b-047b18aa-41b3-4e86-abb1-fe1e8288107a"
+    },
+    {
+      "id": "followup100_064_grounding_unknown",
+      "index": 64,
+      "isolation_id": "chatgpt-b-8f82ef84-0dd6-4af3-8e41-6a3b951f722a"
+    },
+    {
+      "id": "followup100_065_grounding_unknown",
+      "index": 65,
+      "isolation_id": "chatgpt-b-9645f5ca-9795-4ede-ad0c-e82ed91b77fa"
+    },
+    {
+      "id": "followup100_066_grounding_unknown",
+      "index": 66,
+      "isolation_id": "chatgpt-b-5f1fd7bf-2252-40a8-92fb-92ba042fc205"
+    },
+    {
+      "id": "followup100_067_grounding_unknown",
+      "index": 67,
+      "isolation_id": "chatgpt-b-0ecf9673-e10d-4d50-8ed5-6a3c06ee7661"
+    },
+    {
+      "id": "followup100_068_grounding_unknown",
+      "index": 68,
+      "isolation_id": "chatgpt-b-734db877-3d42-4577-928c-43b03aa87016"
+    },
+    {
+      "id": "followup100_069_grounding_unknown",
+      "index": 69,
+      "isolation_id": "chatgpt-b-9a1650fd-02c1-4879-88d4-cf33c851e6ae"
+    },
+    {
+      "id": "followup100_070_failure_handling",
+      "index": 70,
+      "isolation_id": "chatgpt-b-3632cf75-ca58-42b8-bc9b-b76e077823d1"
+    },
+    {
+      "id": "followup100_071_failure_handling",
+      "index": 71,
+      "isolation_id": "chatgpt-b-1e6ff27c-c927-444c-ad60-e19856f1c063"
+    },
+    {
+      "id": "followup100_072_failure_handling",
+      "index": 72,
+      "isolation_id": "chatgpt-b-b39a0a0e-e515-499d-b668-784b8ff2fbf5"
+    },
+    {
+      "id": "followup100_073_failure_handling",
+      "index": 73,
+      "isolation_id": "chatgpt-b-1d6ab532-c712-4348-84da-69e5667ab30e"
+    },
+    {
+      "id": "followup100_074_failure_handling",
+      "index": 74,
+      "isolation_id": "chatgpt-b-f78c1be2-8c5c-4013-993a-8e66d31b108a"
+    },
+    {
+      "id": "followup100_075_failure_handling",
+      "index": 75,
+      "isolation_id": "chatgpt-b-725221cf-dd1f-4c18-84f9-cf507751a438"
+    },
+    {
+      "id": "followup100_076_failure_handling",
+      "index": 76,
+      "isolation_id": "chatgpt-b-eb402a6e-1a9c-4d6b-b3b3-92d113a71cb3"
+    },
+    {
+      "id": "followup100_077_failure_handling",
+      "index": 77,
+      "isolation_id": "chatgpt-b-20a7a699-38f4-46c0-8d5e-dfd24fc00ae2"
+    },
+    {
+      "id": "followup100_078_failure_handling",
+      "index": 78,
+      "isolation_id": "chatgpt-b-494e1fa9-6cb2-4368-a164-9660cd2dc4fd"
+    },
+    {
+      "id": "followup100_079_failure_handling",
+      "index": 79,
+      "isolation_id": "chatgpt-b-c95d4da1-6a99-40ca-a1e6-ca3b0d3ed728"
+    },
+    {
+      "id": "followup100_080_entity_resolution",
+      "index": 80,
+      "isolation_id": "chatgpt-b-95e2d9f7-600a-469c-9a52-958b4ead8300"
+    },
+    {
+      "id": "followup100_081_entity_resolution",
+      "index": 81,
+      "isolation_id": "chatgpt-b-499666c1-268a-4eb7-873a-c7636e7c22e0"
+    },
+    {
+      "id": "followup100_082_entity_resolution",
+      "index": 82,
+      "isolation_id": "chatgpt-b-911887f3-a2f9-44c2-aaa8-4921b02522ba"
+    },
+    {
+      "id": "followup100_083_entity_resolution",
+      "index": 83,
+      "isolation_id": "chatgpt-b-b3cf72ec-1cc3-44c0-97a0-c7487b163b1d"
+    },
+    {
+      "id": "followup100_084_entity_resolution",
+      "index": 84,
+      "isolation_id": "chatgpt-b-ebd929b0-fe49-4df0-bd8a-d618465002f3"
+    },
+    {
+      "id": "followup100_085_entity_resolution",
+      "index": 85,
+      "isolation_id": "chatgpt-b-23c2ad6d-ed23-4ece-926b-0ee247230668"
+    },
+    {
+      "id": "followup100_086_entity_resolution",
+      "index": 86,
+      "isolation_id": "chatgpt-b-f317000c-1f8d-4406-a0af-aa0080ffe1d2"
+    },
+    {
+      "id": "followup100_087_entity_resolution",
+      "index": 87,
+      "isolation_id": "chatgpt-b-c7b53aca-694e-45e3-9ed6-053a01330f85"
+    },
+    {
+      "id": "followup100_088_entity_resolution",
+      "index": 88,
+      "isolation_id": "chatgpt-b-45217d3f-08d9-4530-aa5a-9f0e84a75900"
+    },
+    {
+      "id": "followup100_089_entity_resolution",
+      "index": 89,
+      "isolation_id": "chatgpt-b-31c9836f-8c11-4a68-aba0-b31ee1f9139d"
+    },
+    {
+      "id": "followup100_090_consistency_followup",
+      "index": 90,
+      "isolation_id": "chatgpt-b-4f10ee26-98ea-4062-826f-7525ee3fa43f"
+    },
+    {
+      "id": "followup100_091_consistency_followup",
+      "index": 91,
+      "isolation_id": "chatgpt-b-8e585655-555d-40ef-af86-0a4f511db59d"
+    },
+    {
+      "id": "followup100_092_consistency_followup",
+      "index": 92,
+      "isolation_id": "chatgpt-b-1856b44e-52a8-434b-b622-46153d03dd7d"
+    },
+    {
+      "id": "followup100_093_consistency_followup",
+      "index": 93,
+      "isolation_id": "chatgpt-b-343f22de-47b5-4387-8ab5-7c929b184a9f"
+    },
+    {
+      "id": "followup100_094_consistency_followup",
+      "index": 94,
+      "isolation_id": "chatgpt-b-90947c7d-a1b1-40c5-8229-e2f7efdd6256"
+    },
+    {
+      "id": "followup100_095_consistency_followup",
+      "index": 95,
+      "isolation_id": "chatgpt-b-7e7b3b73-ae75-4f8e-8881-3813d4f5f101"
+    },
+    {
+      "id": "followup100_096_consistency_followup",
+      "index": 96,
+      "isolation_id": "chatgpt-b-aefc9663-7fa0-4542-b977-e386337d8e98"
+    },
+    {
+      "id": "followup100_097_consistency_followup",
+      "index": 97,
+      "isolation_id": "chatgpt-b-1241a4b5-2e7e-424e-878f-ca7a3fb15933"
+    },
+    {
+      "id": "followup100_098_consistency_followup",
+      "index": 98,
+      "isolation_id": "chatgpt-b-081e90f5-b39c-4006-b8a0-d008a8788ea0"
+    },
+    {
+      "id": "followup100_099_consistency_followup",
+      "index": 99,
+      "isolation_id": "chatgpt-b-3dabdf5a-2066-4913-96fb-1dd6c9d89c1b"
+    }
+  ],
+  "incomplete": [],
+  "missing_ids": [],
+  "issue_counts": {},
+  "issues": [],
+  "policy": "Partial browser captures are resumable only for missing/invalid IDs; never treat this report as a complete baseline, alter corpus rows, reuse an isolation id, or bypass provider rate limits."
+}

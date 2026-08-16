@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { ConversationCore, parseDirectComputerLaunchRequest, parseDirectComputerWorkflowRequest, parseDirectFileCreateRequest, requestsAgentCapability } = require('../src/core/conversation-core');
+const { ConversationCore, parseDirectComputerLaunchRequest, parseDirectComputerWorkflowRequest, parseDirectFileCreateRequest, requestsAgentCapability, requiresScreenDrivenComputerTask } = require('../src/core/conversation-core');
 
 function router() {
   return {
@@ -48,6 +48,17 @@ test('Agent mode OFF rejects an explicit file mutation truthfully without callin
   assert.equal(result.agentActions.length, 0);
   assert.match(result.assistant, /Agent mode ปิดอยู่/);
   assert.match(result.assistant, /ยังไม่ได้สร้าง/);
+});
+
+test('Agent mode OFF also gates a natural Google Classroom control request', async () => {
+  let providerCalls = 0;
+  const provider = { status: () => ({ configured: true, provider: 'fake', model: 'fake' }), async complete() { providerCalls += 1; } };
+  const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: { definitions: () => [], owns: () => false } }).send({
+    sessionId: 'agent-off-classroom', content: 'Open Google Classroom and find Physics.', agentMode: false,
+  });
+  assert.equal(providerCalls, 0);
+  assert.equal(result.agentActions.length, 0);
+  assert.match(result.assistant, /Agent mode is off/);
 });
 
 test('Agent mode ON exposes tools but a write returns an out-of-band approval action', async () => {
@@ -103,6 +114,33 @@ test('Thai create-file command is model-planned before the filesystem approval b
   assert.equal(result.agentCommand, 'create-file');
 });
 
+test('CPU Agent mode uses the model planner for a natural file request without an @ prefix', async () => {
+  let plannedCommand = null;
+  let bridgeCall = null;
+  const provider = {
+    status: () => ({ configured: true, provider: 'fake', model: 'fake' }),
+    async completeStructured(messages) {
+      plannedCommand = messages[0].content;
+      return { data: { schema_version: 'solat.agent-command-plan.v1', status: 'planned', summary: 'I will create tree.html.', tool: 'filesystem_create', arguments: { path: 'tree.html', content: '<main>tree</main>' } } };
+    },
+  };
+  const bridge = {
+    definitions: () => [{ type: 'function', function: { name: 'filesystem_create', parameters: { type: 'object' } } }],
+    owns: name => name === 'filesystem_create',
+    async execute({ call }) {
+      bridgeCall = call;
+      return { model_result: { status: 'confirmation_required' }, action: { status: 'confirmation_required', idempotency_key: 'auto-k1', plan_id: 'auto-p1', approval_token: 'auto-token', tool: call.name, arguments: call.arguments } };
+    },
+  };
+  const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: bridge }).send({
+    sessionId: 'agent-auto-file', content: 'Create tree.html with a simple tree.', agentMode: true,
+  });
+  assert.match(plannedCommand, /Allowed capability for this request: auto/);
+  assert.deepEqual(bridgeCall, { id: 'model-plan-' + result.requestId, name: 'filesystem_create', arguments: { path: 'tree.html', content: '<main>tree</main>' } });
+  assert.equal(result.agentCommand, null);
+  assert.equal(result.agentActions.length, 1);
+});
+
 test('Create-file command without a filename or content asks for the missing fields', async () => {
   const provider = {
     status: () => ({ configured: true, provider: 'fake', model: 'fake' }),
@@ -148,6 +186,58 @@ test('Computer-use launch command is model-planned before approval', async () =>
   assert.equal(result.agentCommand, 'computer-use');
 });
 
+test('Computer requests use the persistent model-guided task loop when it is available', async () => {
+  let received = null;
+  const loop = {
+    async start(input) {
+      received = input;
+      return {
+        task_id: 'computer-task-1', status: 'AWAITING_APPROVAL', planner_turns: 2,
+        summary: 'Open Google Classroom first.',
+        pending_action: { tool: 'computer_open_website', action: { status: 'confirmation_required', idempotency_key: 'classroom-1', approval_token: 'once', arguments: { site: 'google_classroom' } } },
+      };
+    },
+  };
+  const provider = { status: () => ({ configured: true, provider: 'fake', model: 'fake' }) };
+  const bridge = { definitions: () => [], owns: () => false };
+  const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: bridge, computerTaskLoop: loop }).send({
+    sessionId: 'computer-task', requestId: 'request-task', content: '@computer-use open Google Classroom and find Physics.', agentMode: true, agentCommand: 'computer-use',
+  });
+  assert.equal(received.ownerId, 'computer-task');
+  assert.equal(received.requestId, 'request-task');
+  assert.equal(result.agentActions[0].computerTaskId, 'computer-task-1');
+  assert.equal(result.agentActions[0].tool, 'computer_open_website');
+  assert.match(result.assistant, /Open Google Classroom first/);
+});
+
+test('bounded YouTube playback stays inside the persistent task loop until verified completion', async () => {
+  let loopCalls = 0;
+  const provider = {
+    status: () => ({ configured: true, provider: 'fake', model: 'fake' }),
+    async completeStructured() { throw new Error('ConversationCore must delegate the persistent task.'); },
+  };
+  const bridge = {
+    definitions: () => [], owns: name => name === 'computer_play_youtube_music',
+  };
+  const loop = { hasActive: () => false, async start() { loopCalls += 1; return { task_id: 'youtube-task', status: 'AWAITING_APPROVAL', summary: 'Play and verify Lllies.', planner_turns: 1, pending_action: { tool: 'computer_play_youtube_music', action: { status: 'confirmation_required', idempotency_key: 'yt-direct', approval_token: 'once', arguments: { query: 'Lllies' } } } }; } };
+  assert.equal(requiresScreenDrivenComputerTask('Open YouTube and play Lllies'), true);
+  const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: bridge, computerTaskLoop: loop }).send({
+    sessionId: 'youtube-direct', content: 'Open YouTube and play Lllies', agentMode: true, agentCommand: 'computer-use',
+  });
+  assert.equal(loopCalls, 1);
+  assert.equal(result.agentActions[0].computerTaskId, 'youtube-task');
+  assert.equal(result.agentActions.length, 1);
+});
+
+test('screen-driven navigation keeps the persistent planner', () => {
+  assert.equal(requiresScreenDrivenComputerTask('Open Google Classroom and find Physics'), true);
+  assert.equal(requiresScreenDrivenComputerTask('เปิด Google Classroom แล้วหาวิชาฟิสิกส์'), true);
+  assert.equal(
+    requiresScreenDrivenComputerTask('เปิด Chrome พิมพ์ Diana King แล้วเข้าเว็บ Wikipedia เลื่อนไปดูส่วน Biography และสรุปเพลงชื่อดัง 10 เพลง'),
+    true,
+  );
+});
+
 test('Multi-step YouTube music command routes to one verified computer workflow', async () => {
   let plannerCalls = 0;
   let bridgeCall = null;
@@ -170,6 +260,10 @@ test('Multi-step YouTube music command routes to one verified computer workflow'
     },
   };
   assert.deepEqual(parseDirectComputerWorkflowRequest('@computer-use เปิด chrome แล้วเปิด youtube แล้วเปิดเพลง Lllies'), { status: 'ready', workflow: 'youtube_music', query: 'Lllies' });
+  assert.deepEqual(
+    parseDirectComputerWorkflowRequest('@computer-use เปิด Chrome แล้วเข้า YouTube ค้นหาและเล่นเพลง Lllies ดูจนแน่ใจว่าเพลงกำลังเล่นแบบไม่หยุดเอง แล้วจบงาน'),
+    { status: 'ready', workflow: 'youtube_music', query: 'Lllies' },
+  );
   const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: bridge }).send({
     sessionId: 'agent-youtube', content: '@computer-use เปิด chrome แล้วเปิด youtube แล้วเปิดเพลง Lllies', agentMode: true, agentCommand: 'computer-use',
   });

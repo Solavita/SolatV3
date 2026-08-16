@@ -1,0 +1,262 @@
+{
+  "schema_version": "solat.provider-suite-capture.v1",
+  "provider": "deepseek_api",
+  "model": "deepseek-v4-flash",
+  "mode": "A",
+  "corpus_path": "D:\\SOLAT_V3\\evaluations\\paired-100-baseline.json",
+  "started_at": "2026-08-15T04:58:43.624Z",
+  "finished_at": "2026-08-15T04:59:02.631Z",
+  "run_id": "27310016-4ac4-4c38-b988-0a7b62e6502d",
+  "case_count": 4,
+  "counts": {
+    "PASS": 4,
+    "FAIL": 0,
+    "NOT VERIFIED": 0
+  },
+  "rows": [
+    {
+      "id": "paired100_002_conversation_3",
+      "prompt": "Explain photosynthesis in simple language.",
+      "index": 0,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T04:58:43.625Z",
+        "finished_at": "2026-08-15T04:58:47.468Z",
+        "latency_ms": 3843,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-paired100_002_conversation_3-e37ad3e8-33b4-4379-b34b-042e362c8596",
+        "context_mode": "temporary_chat",
+        "history": [],
+        "history_count": 0,
+        "seed_transcript": [],
+        "seed_request_count": 0,
+        "response": "There's nothing inherently current or source-specific required to explain what photosynthesis is — it's a well-established scientific concept. Let me give you a simple, clear explanation.\n\n## Photosynthesis in Simple Language\n\n**What it is:** Photosynthesis is how green plants make their own food using sunlight.\n\n**What plants need:**\n- **Sunlight**\n- **Water** (from the roots)\n- **Carbon dioxide** (from the air)\n\n**What happens:**\n\n1. The plant's **leaves** catch sunlight using a green pigment called **chlorophyll** (that's what makes leaves green).\n2. The plant takes in carbon dioxide through tiny openings in its leaves.\n3. Using sunlight as energy, the plant combines the water + carbon dioxide.\n4. It makes **glucose** (sugar) — the plant's food that gives it energy to grow.\n5. **Oxygen** is released into the air as a waste product — and that's the oxygen we breathe!\n\n**Simple summary:**\n> Sunlight + Water + Carbon dioxide → Sugar (food) + Oxygen\n\n**Two bonus facts:**\n- **Why it matters:** Almost all life on Earth depends on photosynthesis — it's the base of the food chain and produces the oxygen we breathe.\n- **Why it happens mostly in daylight:** The whole process is driven by light, so it shuts down at night.\n\nWould you like me to go deeper into any part, like the chemical equation or how it connects to climate change?",
+        "usage": {
+          "prompt_tokens": 1997,
+          "completion_tokens": 305,
+          "total_tokens": 2302
+        },
+        "mode": "model_without_requested_search",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "available_not_used",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": true,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "paired100_023_context_4",
+      "prompt": "The previous answer gave two possible meanings. What clarification should I ask?",
+      "index": 1,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T04:58:47.468Z",
+        "finished_at": "2026-08-15T04:58:49.213Z",
+        "latency_ms": 1745,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-paired100_023_context_4-18ff50a9-d639-4029-a1df-b8328c928ff3",
+        "context_mode": "temporary_chat",
+        "history": [],
+        "history_count": 0,
+        "seed_transcript": [],
+        "seed_request_count": 0,
+        "response": "The referenced previous answer isn't available in this session, so I can't see the two meanings it offered. Could you repaste that earlier answer, or tell me what the two possible interpretations were? Then I can suggest a concise, precise clarification you can ask the other person to resolve the ambiguity.",
+        "usage": {
+          "prompt_tokens": 1478,
+          "completion_tokens": 60,
+          "total_tokens": 1538
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "paired100_036_multilingual_7",
+      "prompt": "ฉันพิมพ์ว่า “ค้นหาอาดาโลเวส” ช่วยสร้าง query ที่ระมัดระวัง",
+      "index": 2,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T04:58:49.213Z",
+        "finished_at": "2026-08-15T04:59:01.249Z",
+        "latency_ms": 12036,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-paired100_036_multilingual_7-18eb39ef-ebbd-4b1f-b8cb-30322b84a13e",
+        "context_mode": "temporary_chat",
+        "history": [],
+        "history_count": 0,
+        "seed_transcript": [],
+        "seed_request_count": 0,
+        "response": "ขอโทษครับ ผมไม่เข้าใจข้อความของคุณดีนัก\n\nคุณเขียนว่า \"ฉันพิมพ์ว่า 'ค้นหาอาดาโลเวส' ช่วยสร้าง query ที่ระมัดระวัง\" — ผมตีความได้หลายแบบ และอยากขอ clarify สั้นๆ ก่อน:\n\n1. **คุณต้องการให้ผมช่วยสร้าง query (คำค้น) ที่ \"ระมัดระวัง\" สำหรับค้นหาคำว่า \"อาดาโลเวส\" ใช่ไหม?** — เช่น query ที่เจาะจงและลดผลลัพธ์ที่ไม่เกี่ยวข้อง\n2. หรือคุณกำลัง **บอกว่าคุณพิมพ์ข้อความนี้ไปที่อื่นแล้วอยากให้ผมช่วยตรวจ/ปรับปรุง**?\n\nรบกวนช่วยอธิบายเพิ่มเติมอีกหน่อยได้ไหมครับ เช่น:\n- \"อาดาโลเวส\" คือชื่ออะไร? (ชื่อคน ชื่อสินค้า ชื่อยา ชื่อสถานที่ หรืออื่นๆ)\n- ต้องการค้นหาบนเว็บ ทั่วไป หรือในฐานข้อมูลเฉพาะ?\n- \"ระมัดระวัง\" หมายถึงต้องการ query ที่**แม่นยำ** หลีกเลี่ยงผลลัพธ์กำกวม หรือหมายถึงเรื่องความปลอดภัย/ความเป็นส่วนตัว?\n\nถ้าคุณต้องการแค่ตัวอย่าง query ที่ระมัดระวังสำหรับคำว่า \"อาดาโลเวส\" ผมยกตัวอย่างให้ได้ดังนี้ครับ:\n\n- `\"อาดาโลเวส\"` (ใช้เครื่องหมายคำพูดเพื่อค้นหาคำตรงตัว)\n- `\"อาดาโลเวส\" -โฆษณา` (หากต้องการตัดผลลัพธ์ประเภทโฆษณา)\n- `อาดาโลเวส ความหมาย` หรือ `อาดาโลเวส คืออะไร` (เพื่อหาคำนิยามที่ชัดเจน)\n\nแต่ถ้าเป้าหมายต่างออกไป ช่วยเล่ารายละเอียดเพิ่มได้เลยครับ แล้วผมจะช่วยปรับให้ตรงตามที่ต้องการครับ",
+        "usage": {
+          "prompt_tokens": 1710,
+          "completion_tokens": 428,
+          "total_tokens": 2138
+        },
+        "mode": "search_and_model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "empty",
+        "sources": [],
+        "search_evidence": [
+          {
+            "status": "empty",
+            "source_scope": "auto",
+            "provider_query": "ฉันพิมพ์ว่า “ค้นหาอาดาโลเวส” ช่วยสร้าง query ที่ระมัดระวัง",
+            "result_count": 0,
+            "error_count": 0,
+            "quality": {
+              "status": "insufficient_relevance",
+              "ambiguity": "none",
+              "authority_level": "none",
+              "agreement_status": "not_assessed"
+            }
+          }
+        ],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": true,
+          "search_used": true,
+          "search_recovery_used": true,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [
+            "auto"
+          ],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [
+            "auto"
+          ],
+          "candidate_source_scope_status": "used",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": [
+            "none"
+          ]
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    },
+    {
+      "id": "paired100_082_consistency_3",
+      "prompt": "Repeat the evidence policy and keep the same ordering.",
+      "index": 3,
+      "capture": {
+        "status": "PASS",
+        "started_at": "2026-08-15T04:59:01.250Z",
+        "finished_at": "2026-08-15T04:59:02.630Z",
+        "latency_ms": 1380,
+        "provider": "deepseek_api",
+        "model": "deepseek-v4-flash",
+        "isolation_id": "three-way-paired100_082_consistency_3-4bb1728c-b979-48a2-ad32-eaa8e1cdaa1d",
+        "context_mode": "temporary_chat",
+        "history": [],
+        "history_count": 0,
+        "seed_transcript": [],
+        "seed_request_count": 0,
+        "response": "Here is the evidence policy, in the same ordering as provided:\n\n1. **Fact policy:** Claim only what the available evidence supports.\n2. **Inference policy:** Label inference and state its basis.\n3. **Unknown policy:** State unknown or insufficient instead of guessing.\n4. **Source policy:** Never invent or imply unreturned sources.\n\nThis policy ensures that all claims are grounded in verified evidence, inferences are clearly distinguished from facts, unknowns are acknowledged rather than guessed, and only actual sources are cited.",
+        "usage": {
+          "prompt_tokens": 1469,
+          "completion_tokens": 103,
+          "total_tokens": 1572
+        },
+        "mode": "model",
+        "tool_rounds": 0,
+        "comparison_recovery_used": false,
+        "page_read_used": false,
+        "page_reads": [],
+        "web_search_status": "not_requested",
+        "sources": [],
+        "search_evidence": [],
+        "search_summary": {
+          "source_count": 0,
+          "search_requested": false,
+          "search_used": false,
+          "search_recovery_used": false,
+          "contextual_coverage_used": false,
+          "comparison_coverage_used": false,
+          "source_scopes": [],
+          "source_hosts": [],
+          "requested_source_scopes": [],
+          "source_scope_priority": [
+            "auto"
+          ],
+          "candidate_source_scopes": [
+            "auto"
+          ],
+          "candidate_source_scopes_used": [],
+          "candidate_source_scope_status": "not_applicable",
+          "requested_source_scope_status": "not_applicable",
+          "comparison_evidence_status": "not_applicable",
+          "authority_levels": []
+        },
+        "source_trace": "solat_router_provider_and_model_selected_tools"
+      }
+    }
+  ]
+}

@@ -316,7 +316,7 @@
       const hint = $('#hint');
       if (hint) hint.innerHTML = this.values.enterSends ? '<kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line' : '<kbd>Ctrl</kbd>+<kbd>Enter</kbd> to send · <kbd>Enter</kbd> for a new line';
       const themeButton = $('#themeBtn');
-      if (themeButton) {
+      if (themeButton && !themeButton.classList.contains('ui-mode-toggle')) {
         themeButton.textContent = '';
         themeButton.append(icon(this.values.theme === 'dark' ? 'moon' : this.values.theme === 'light' ? 'sun' : 'monitor'));
         themeButton.title = `Theme: ${this.values.theme}`;
@@ -702,7 +702,8 @@
     node(message) {
       if (message.role === 'system') return make('div', { class: 'note', text: message.content });
       const failed = message.role === 'assistant' && message.error;
-      const article = make('article', { class: `msg ${message.role}${failed ? ' error' : ''}`, 'data-id': message.id, tabindex: '-1' });
+      const agentStatus = message.responseMeta?.agentStatus;
+      const article = make('article', { class: `msg ${message.role}${failed ? ' error' : ''}${agentStatus ? ` agent-${agentStatus}` : ''}`, 'data-id': message.id, tabindex: '-1' });
       const label = message.role === 'user' ? 'You' : failed ? 'Delivery failed' : 'SOLAT';
       article.append(make('div', { class: 'who-line' }, label, make('time', { text: new Date(message.ts).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) })));
       const visibleContent = visibleMessageText(message);
@@ -784,9 +785,14 @@
     },
     actions(message) {
       const row = make('div', { class: 'actions' });
-      const action = (label, symbol, handler, pressed = false) => {
-        const button = make('button', { type: 'button', class: `act${!label ? ' icon-only' : ''}`, 'aria-label': label, title: label, 'aria-pressed': pressed ? 'true' : 'false' }, icon(symbol), label ? make('span', { text: label }) : null);
-        button.addEventListener('click', () => handler(button)); return button;
+      const action = (label, symbol, handler, pressed = false, { disabled = false, title = label } = {}) => {
+        const button = make('button', {
+          type: 'button', class: `act${!label ? ' icon-only' : ''}`,
+          'aria-label': label, title, 'aria-pressed': pressed ? 'true' : 'false',
+          ...(disabled ? { disabled: true, 'aria-disabled': 'true' } : {}),
+        }, icon(symbol), label ? make('span', { text: label }) : null);
+        if (!disabled) button.addEventListener('click', () => handler(button));
+        return button;
       };
       row.append(action('Copy', 'copy', async button => {
         const ok = await copyText(message.content); button.textContent = ''; button.append(icon(ok ? 'check' : 'alert'), make('span', { text: ok ? 'Copied' : 'Copy failed' })); button.classList.toggle('done', ok);
@@ -796,7 +802,32 @@
         row.append(action('Edit', 'pencil', () => { State.truncateAfter(State.activeId, message.id); Composer.setValue(message.content); }));
       } else {
         row.append(action('Retry', 'refresh', () => this.retry(message.id)));
-        if (message.responseMeta?.agentActionPending) row.append(action('Review Agent', 'cpu', () => AgentUI.openPending(message)));
+        if (message.responseMeta?.agentActionPending) {
+          const active = AgentUI.canReview(message);
+          row.append(action(
+            active ? 'Review Agent' : 'Action unavailable',
+            'cpu',
+            () => AgentUI.openPending(message),
+            false,
+            { disabled: !active, title: active ? 'Review Agent' : 'This Agent plan has already finished, been cancelled, or been replaced.' },
+          ));
+        }
+        if (message.responseMeta?.mode === 'agent_progress' && message.responseMeta?.computerTaskId
+          && !['COMPLETED', 'FAILED', 'CANCELLED', 'UNSUPPORTED', 'NEEDS_CLARIFICATION'].includes(String(message.responseMeta.agentStatus || '').toUpperCase())) {
+          row.append(action('Cancel task', 'x', async button => {
+            button.disabled = true;
+            try {
+              await window.solat.computerTaskCancel({
+                sessionId: message.responseMeta.computerTaskSessionId || sessionFor(State.activeId),
+                taskId: message.responseMeta.computerTaskId,
+              });
+              Toast.show('Computer task cancelled.', { icon: 'check' });
+            } catch (error) {
+              button.disabled = false;
+              Toast.show(`Cancel failed: ${errorText(error)}`, { icon: 'alert' });
+            }
+          }, false, { title: 'Stop this Computer Use task' }));
+        }
         row.append(action('Helpful', 'up', button => this.feedback(message, 'up', button), message.feedback === 'up'));
         row.append(action('Not helpful', 'down', button => this.feedback(message, 'down', button), message.feedback === 'down'));
       }
@@ -964,7 +995,10 @@
         if (event.key === 'Enter' && !event.shiftKey && (Settings.get('enterSends') ? !modifier : modifier)) { event.preventDefault(); this.submit(); }
         if (event.key === 'ArrowUp' && !input.value.trim()) { const previous = [...(State.active?.messages || [])].reverse().find(message => message.role === 'user'); if (previous) { event.preventDefault(); this.setValue(previous.content); } }
       });
-      form.addEventListener('submit', event => { event.preventDefault(); if (busy) return Chat.stop(); this.submit(); });
+      // Composer.submit owns the busy-state decision. An active Computer Use
+      // task treats a new message as owner steering; ordinary model responses
+      // still keep the existing Stop behaviour.
+      form.addEventListener('submit', event => { event.preventDefault(); this.submit(); });
       $('#attachBtn')?.addEventListener('click', () => $('#fileInput')?.click()); $('#fileInput')?.addEventListener('change', event => { this.attach([...event.target.files]); event.target.value = ''; });
       let depth = 0; const wrap = $('#composerWrap');
       wrap.addEventListener('dragenter', event => { event.preventDefault(); if (++depth === 1) form.classList.add('dropping'); }); wrap.addEventListener('dragover', event => event.preventDefault()); wrap.addEventListener('dragleave', () => { if (--depth <= 0) { depth = 0; form.classList.remove('dropping'); } });
@@ -1014,7 +1048,9 @@
       });
     },
     async submit() {
-      if (busy) return Chat.stop(); const input = $('#input'); const content = input.value.trim(); if (!content && !this.attachments.length) return;
+      const input = $('#input'); const content = input.value.trim();
+      if (busy && !AgentUI.canInterruptCurrent()) return Chat.stop();
+      if (!content && !this.attachments.length) return;
       if (this.launching) return;
       if (content.length > this.limit) return Toast.show('Message is too long to send', { icon: 'alert' });
       this.launching = true;
@@ -1035,7 +1071,17 @@
 
   const AgentUI = {
     enabled: false, pending: null, queue: [], plan: null, busy: false, workingMessageId: null, lastCommandSelectionAt: 0,
+    progressMessages: new Map(), activeTaskBySession: new Map(), latestRevisionByTask: new Map(), unsubscribeComputerEvents: null,
     isEnabled() { return this.enabled; },
+    canInterruptCurrent() {
+      const thread = State.active;
+      // The toggle controls starting new tasks, not control of a task that is
+      // already running. Keep owner steering available until it is terminal.
+      return Boolean(thread && this.activeTaskBySession.has(sessionFor(thread.id)));
+    },
+    canReview(message) {
+      return Boolean(this.pending && !this.busy && this.pending.messageId === message?.id);
+    },
     commands: Object.freeze(['@create-file', '@computer-use']),
     available() { return Boolean(window.solat?.agentInspect && window.solat?.agentApprove && window.solat?.agentRun && window.solat?.agentCancel); },
     syncCommandMenu() {
@@ -1111,6 +1157,55 @@
       Toast.show(`@${command} inserted.`, { icon: 'cpu', timeout: 1800 });
     },
     status(message) { const node = $('#agentStatus'); if (node) node.textContent = message; },
+    receiveComputerTaskEvent(event) {
+      if (!event || event.schema_version !== 'solat.computer-task-event.v1' || !event.task_id || !event.session_id) return;
+      const revision = Number(event.revision || 0);
+      const latestRevision = this.latestRevisionByTask.get(event.task_id) || 0;
+      if (revision < latestRevision) return;
+      this.latestRevisionByTask.set(event.task_id, revision);
+      const thread = State.threads.find(item => sessionFor(item.id) === event.session_id);
+      if (!thread) return;
+      const terminal = ['completed', 'failed', 'cancelled', 'unsupported', 'needs_clarification'].includes(event.type);
+      if (terminal) this.activeTaskBySession.delete(event.session_id);
+      else this.activeTaskBySession.set(event.session_id, event.task_id);
+      const label = event.summary || ({
+        started: 'SOLAT is planning the computer task.', planning: 'SOLAT is choosing the next step.',
+        step_selected: 'SOLAT selected the next computer step.', observation_ready: 'SOLAT received a verified screen observation.',
+        approval_required: 'The next computer action needs your approval.', action_verified: 'The approved action was verified.',
+        replanned: 'SOLAT received your newer instruction and is replanning.', completed: 'Computer task completed.',
+        failed: 'Computer task failed.', cancelled: 'Computer task cancelled.',
+      }[event.type] || 'Computer task updated.');
+      const content = event.tool ? `${label}\n\nStep: \`${event.tool}\`` : label;
+      const existingId = this.progressMessages.get(event.task_id);
+      const responseMeta = {
+        provider: 'SOLAT Agent', model: 'continuous computer task', mode: 'agent_progress',
+        agentMode: true, agentStatus: event.status, computerTaskId: event.task_id,
+        computerTaskSessionId: event.session_id, computerTaskRevision: event.revision,
+        webSearchStatus: 'not_requested', sources: [], searchEvidence: [],
+      };
+      if (existingId && State.updateMessage(thread.id, existingId, { content, responseMeta })) {
+        // Keep one live progress item per task instead of flooding the chat.
+      } else {
+        const message = State.add(thread.id, { role: 'assistant', content, responseMeta });
+        if (message?.id) this.progressMessages.set(event.task_id, message.id);
+      }
+      this.status(label);
+      if (State.activeId === thread.id) Chat.render();
+    },
+    finalizeRequestMessage(status) {
+      const pending = this.pending;
+      if (!pending?.threadId || !pending?.messageId) return;
+      const thread = State.threads.find(item => item.id === pending.threadId);
+      const message = thread?.messages?.find(item => item.id === pending.messageId);
+      if (!message?.responseMeta) return;
+      State.updateMessage(pending.threadId, pending.messageId, {
+        responseMeta: {
+          ...message.responseMeta,
+          agentActionPending: false,
+          agentActionStatus: status,
+        },
+      });
+    },
     actionPreview(action) {
       const args = action?.arguments && typeof action.arguments === 'object' ? action.arguments : {};
       const preview = { tool: action?.tool || 'unknown' };
@@ -1124,6 +1219,34 @@
         if (args.value.length > 1200) preview.value_truncated = true;
       }
       return preview;
+    },
+    actionSummary(action) {
+      const args = action?.arguments && typeof action.arguments === 'object' ? action.arguments : {};
+      if (action?.approval_scope === 'computer_task' && action?.task_goal) {
+        const goal = text(action.task_goal).slice(0, 500);
+        const firstAction = JSON.stringify(this.actionPreview(action));
+        return `Authorize this bounded Computer Use task once: ${goal}\n\nFirst action: ${firstAction}`;
+      }
+      switch (action?.tool) {
+        case 'filesystem_create': return `Create “${text(args.path || 'new file')}” with ${Number(args.content?.length || 0).toLocaleString()} characters of generated content.`;
+        case 'filesystem_update': return `Update “${text(args.path || 'workspace file')}” after checking that it has not changed.`;
+        case 'filesystem_export': return `Save a downloadable copy of “${text(args.path || 'workspace file')}”.`;
+        case 'computer_launch_app': return `Open ${text(args.app_id || 'the selected app')}.`;
+        case 'computer_open_website': return `Open ${text(String(args.site || '').replaceAll('_', ' ') || 'the selected website')} in Chrome.`;
+        case 'computer_play_youtube_music': return `Open YouTube and play the search result for “${text(args.query || '')}”.`;
+        case 'computer_invoke': return 'Use the selected on-screen control, then verify the expected result.';
+        case 'computer_set_value': return 'Fill the selected non-sensitive on-screen field, then verify it.';
+        case 'computer_press_enter': return 'Submit the selected non-sensitive field with Enter, then verify the resulting page title.';
+        default: return 'Review the requested Agent action before it runs.';
+      }
+    },
+    stepSummary(step) {
+      const labels = {
+        filesystem_create: 'Create file', filesystem_update: 'Update file', filesystem_undo: 'Undo file edit', filesystem_export: 'Prepare download',
+        computer_launch_app: 'Open app', computer_open_website: 'Open website', computer_play_youtube_music: 'Play YouTube music',
+        computer_list_windows: 'Read visible windows', computer_inspect: 'Read screen controls', computer_invoke: 'Use screen control', computer_set_value: 'Fill screen field', computer_press_enter: 'Submit screen field',
+      };
+      return `${labels[step?.tool] || 'Agent action'} — ${step?.status || 'Queued'}`;
     },
     outcomeText(plan) {
       const step = plan?.steps?.[0]; const output = step?.output || {};
@@ -1161,9 +1284,9 @@
       });
       this.workingMessageId = message?.id || null;
     },
-    addChatResult(content, error = false, artifact = null) {
+    addChatResult(content, error = false, artifact = null, statusOverride = null) {
       const threadId = this.pending?.threadId; if (!threadId) return;
-      const responseMeta = { provider: 'SOLAT Agent', model: 'verified tool result', mode: error ? 'agent_failure' : 'agent_verified', webSearchStatus: 'not_requested', sources: [], searchEvidence: [], agentMode: true, ...(artifact ? { agentFile: artifact } : {}) };
+      const responseMeta = { provider: 'SOLAT Agent', model: 'verified tool result', mode: error ? 'agent_failure' : 'agent_verified', agentStatus: statusOverride || (error ? 'failed' : 'verified'), webSearchStatus: 'not_requested', sources: [], searchEvidence: [], agentMode: true, ...(artifact ? { agentFile: artifact } : {}) };
       if (this.workingMessageId && State.updateMessage(threadId, this.workingMessageId, { content, error, responseMeta })) return;
       State.add(threadId, { role: 'assistant', content, error, responseMeta });
     },
@@ -1184,17 +1307,65 @@
       const close = make('button', { type: 'button', class: 'iconbtn', 'aria-label': 'Close file preview' }, icon('x'));
       const meta = make('p', { class: 'muted', text: 'Opening verified workspace file…' });
       const content = make('pre', { class: 'agent-artifact-content', text: 'Loading…' });
+      const preview = make('iframe', { class: 'agent-artifact-preview', title: `Rendered preview of ${artifact.relativePath}`, sandbox: '' });
+      const codeButton = make('button', { type: 'button', class: 'button sm active', text: 'Code', 'aria-pressed': 'true' });
+      const previewButton = make('button', { type: 'button', class: 'button sm', text: 'Preview', 'aria-pressed': 'false' });
+      const downloadButton = make('button', { type: 'button', class: 'button sm', text: 'Download' });
+      const toolbar = make('div', { class: 'agent-artifact-toolbar', role: 'toolbar', 'aria-label': 'File view options' }, codeButton, previewButton, downloadButton);
+      const canRender = /\.html?$/iu.test(artifact.relativePath);
+      const setView = view => {
+        const showPreview = view === 'preview' && canRender;
+        content.hidden = showPreview;
+        preview.hidden = !showPreview;
+        codeButton.classList.toggle('active', !showPreview); codeButton.setAttribute('aria-pressed', String(!showPreview));
+        previewButton.classList.toggle('active', showPreview); previewButton.setAttribute('aria-pressed', String(showPreview));
+      };
+      codeButton.addEventListener('click', () => setView('code'));
+      previewButton.addEventListener('click', () => setView('preview'));
+      previewButton.disabled = !canRender;
+      previewButton.title = canRender ? 'Render this HTML safely inside SOLAT' : 'Preview is available for HTML files only';
+      downloadButton.addEventListener('click', async () => {
+        if (!window.solat?.agentExportArtifact) return Toast.show('Download is unavailable in this runtime.', { icon: 'alert' });
+        downloadButton.disabled = true;
+        try {
+          const exportName = artifact.relativePath.split('/').at(-1);
+          const downloaded = await window.solat.agentExportArtifact({ sessionId: artifact.sessionId, relativePath: artifact.relativePath, expectedSha256: artifact.sha256, exportName });
+          Toast.show(`Saved ${downloaded.export_name} to SOLAT Downloads.`, { icon: 'check' });
+        } catch (error) { Toast.show(`Download failed: ${errorText(error)}`, { icon: 'alert' }); }
+        finally { downloadButton.disabled = false; }
+      });
       close.addEventListener('click', () => dialog.close()); dialog.addEventListener('close', () => dialog.remove(), { once: true });
-      dialog.append(make('div', { class: 'music-surface-head' }, make('strong', { text: artifact.relativePath }), close), meta, content);
+      dialog.append(make('div', { class: 'music-surface-head' }, make('strong', { text: artifact.relativePath }), close), meta, toolbar, content, preview);
       document.body.append(dialog); dialog.showModal();
       try {
         const result = await window.solat.agentReadArtifact({ sessionId: artifact.sessionId, relativePath: artifact.relativePath, expectedSha256: artifact.sha256 });
         meta.textContent = `${result.size_bytes.toLocaleString()} bytes · ${result.sha256}${result.truncated ? ' · preview truncated' : ''}`;
         content.textContent = result.content;
+        if (canRender) preview.srcdoc = result.content;
+        setView('code');
       } catch (error) { meta.textContent = `File preview failed: ${errorText(error)}`; content.textContent = ''; }
     },
     async receive(actions, context) {
       const accepted = actions.filter(action => action?.status === 'confirmation_required' && action.idempotency_key && action.approval_token);
+      // A ComputerTaskLoop start is a newer owner instruction. The backend has
+      // already cancelled its old durable plan; remove its stale dialog here
+      // too so the user cannot accidentally review a superseded action.
+      const replacement = accepted.find(action => action?.computerTaskId);
+      if (replacement) {
+        const sameTaskScope = action => action?.computerTaskId
+          && action.sessionId === context.sessionId
+          && action.idempotency_key !== replacement.idempotency_key;
+        const stale = [this.pending, ...this.queue].filter(sameTaskScope);
+        for (const action of stale) {
+          try { await window.solat?.agentCancel?.({ sessionId: action.sessionId, idempotencyKey: action.idempotency_key }); }
+          catch { /* Backend cancellation is idempotent; never block the new instruction. */ }
+        }
+        if (sameTaskScope(this.pending)) {
+          this.pending = null; this.plan = null; Overlay.close();
+          Toast.show('Previous Computer Use action was replaced by your newer instruction.', { icon: 'alert' });
+        }
+        this.queue = this.queue.filter(action => !sameTaskScope(action));
+      }
       this.queue.push(...accepted.map(action => ({ ...action, ...context })));
       if (!this.pending) await this.activateNext();
     },
@@ -1203,7 +1374,9 @@
       if (!this.pending) { this.render(); return; }
       try {
         this.plan = await window.solat.agentInspect({ sessionId: this.pending.sessionId, idempotencyKey: this.pending.idempotency_key });
-        this.status('This action changes a file or app. Review it before approval.');
+        this.status(this.pending.approval_scope === 'computer_task'
+          ? 'Approve this bounded Computer Use task once. Safe in-scope steps will then continue automatically.'
+          : 'This action changes a file or app. Review it before approval.');
       } catch (error) { this.status(`The pending action could not be inspected: ${errorText(error)}`); }
       this.render(); Overlay.open($('#agentDialog'), { focus: $('#agentApproveBtn') });
     },
@@ -1214,20 +1387,73 @@
     close() { Overlay.close(); },
     async approve() {
       if (!this.pending || this.busy) return;
+      const pending = this.pending;
       const animationStartedAt = performance.now();
       this.busy = true; this.startWorkingMessage(); this.status('Approving and running the verified plan…'); this.render();
+      let nextTask = null;
       try {
-        await window.solat.agentApprove({ sessionId: this.pending.sessionId, idempotencyKey: this.pending.idempotency_key, approvalToken: this.pending.approval_token });
-        const result = await window.solat.agentRun({ sessionId: this.pending.sessionId, idempotencyKey: this.pending.idempotency_key });
+        let result;
+        if (pending.computerTaskId && window.solat?.computerTaskApproveAndContinue) {
+          // Start the atomic owner-scoped approval, then immediately return the
+          // user to chat while the bounded continuation runs in main.
+          const continuation = window.solat.computerTaskApproveAndContinue({
+            sessionId: pending.sessionId, taskId: pending.computerTaskId,
+            idempotencyKey: pending.idempotency_key, approvalToken: pending.approval_token,
+          });
+          this.status('Task authorized · continuing with verified in-scope steps');
+          Overlay.close();
+          const approved = await continuation;
+          result = { plan: approved.plan };
+          nextTask = approved.next_task;
+        } else {
+          await window.solat.agentApprove({ sessionId: pending.sessionId, idempotencyKey: pending.idempotency_key, approvalToken: pending.approval_token });
+          result = await window.solat.agentRun({ sessionId: pending.sessionId, idempotencyKey: pending.idempotency_key });
+        }
+        // A newer owner instruction may replace this approval while its action
+        // is in flight. Never let the stale result overwrite the newer UI.
+        if (this.pending !== pending) return;
         this.plan = result.plan;
         const remainingAnimationMs = 600 - (performance.now() - animationStartedAt);
         if (remainingAnimationMs > 0) await new Promise(resolve => setTimeout(resolve, remainingAnimationMs));
-        const message = this.outcomeText(this.plan); this.addChatResult(message, this.plan?.status !== 'SUCCEEDED', this.artifactFromPlan(this.plan));
-        this.status(message); this.render();
-        if (this.plan?.status === 'SUCCEEDED') Toast.show('Agent action verified and completed.', { icon: 'check' });
+        let message = this.outcomeText(this.plan);
+        if (this.plan?.status === 'SUCCEEDED' && pending.computerTaskId && window.solat?.computerTaskContinue) {
+          // The owner approved the bounded task, not every individual click.
+          // Close the modal before the continuation loop so chat remains
+          // visible and the user can interrupt or cancel while SOLAT works.
+          if (!nextTask) nextTask = await window.solat.computerTaskContinue({ sessionId: pending.sessionId, taskId: pending.computerTaskId, idempotencyKey: pending.idempotency_key });
+          if (this.pending !== pending) return;
+          if (nextTask?.pending_action?.action) {
+            this.queue.unshift({
+              ...nextTask.pending_action.action,
+              tool: nextTask.pending_action.tool,
+              computerTaskId: nextTask.task_id,
+              threadId: pending.threadId,
+              sessionId: pending.sessionId,
+              messageId: pending.messageId,
+            });
+            message = `${message}\n\n${nextTask.summary || 'SOLAT checked the result and prepared the next step.'}`;
+          } else if (nextTask?.summary) {
+            message = `${message}\n\n${nextTask.summary}`;
+          }
+        }
+        const taskStatus = pending.computerTaskId ? String(nextTask?.status || 'RUNNING').toUpperCase() : (this.plan?.status === 'SUCCEEDED' ? 'COMPLETED' : 'FAILED');
+        const taskFailed = taskStatus === 'FAILED' || this.plan?.status !== 'SUCCEEDED';
+        this.addChatResult(message, taskFailed, this.artifactFromPlan(this.plan));
+        const statusLabel = {
+          COMPLETED: 'Completed · verified', FAILED: 'Computer task failed', CANCELLED: 'Computer task cancelled',
+          NEEDS_CLARIFICATION: 'Computer task needs clarification', AWAITING_APPROVAL: 'Additional approval required',
+          RUNNING: 'Step verified · continuing',
+        }[taskStatus] || 'Step verified · continuing';
+        this.status(statusLabel); this.render();
+        if (taskStatus === 'COMPLETED') Toast.show('Agent task verified and completed.', { icon: 'check' });
+        else if (taskStatus === 'AWAITING_APPROVAL') Toast.show('Additional approval is required because the task scope changed.', { icon: 'alert' });
       } catch (error) {
+        if (this.pending !== pending) return;
         const message = `Agent action failed: ${errorText(error)}`; this.status(message); this.addChatResult(message, true);
       } finally {
+        if (this.pending !== pending) { this.busy = false; this.workingMessageId = null; this.render(); return; }
+        const hasNextPending = Boolean(nextTask?.pending_action?.action);
+        this.finalizeRequestMessage(this.plan?.status === 'SUCCEEDED' ? (hasNextPending ? 'awaiting_approval' : (nextTask?.status?.toLowerCase() || 'completed')) : 'failed');
         this.busy = false; this.workingMessageId = null; this.pending = null; this.render(); Overlay.close(); await this.activateNext();
       }
     },
@@ -1236,12 +1462,18 @@
       this.busy = true; this.status('Cancelling the pending action…'); this.render();
       try {
         this.plan = await window.solat.agentCancel({ sessionId: this.pending.sessionId, idempotencyKey: this.pending.idempotency_key });
-        this.addChatResult('Agent action cancelled. No pending file or computer change was completed.');
+        if (this.pending.computerTaskId && window.solat?.computerTaskCancel) {
+          await window.solat.computerTaskCancel({ sessionId: this.pending.sessionId, taskId: this.pending.computerTaskId });
+        }
+        this.addChatResult('Agent action cancelled. No pending file or computer change was completed.', false, null, 'cancelled');
         Toast.show('Agent action cancelled.', { icon: 'check' });
       } catch (error) { this.status(`Cancellation failed: ${errorText(error)}`); return; }
       finally {
         this.busy = false;
-        if (this.plan?.status === 'CANCELLED') { this.pending = null; Overlay.close(); await this.activateNext(); }
+        if (this.plan?.status === 'CANCELLED') {
+          this.finalizeRequestMessage('cancelled');
+          this.pending = null; Overlay.close(); await this.activateNext();
+        }
         this.render();
       }
     },
@@ -1249,17 +1481,20 @@
       const steps = $('#agentSteps'); if (steps) {
         steps.textContent = '';
         const current = this.plan?.steps?.length ? this.plan.steps : this.pending ? [{ tool: this.pending.tool, status: 'PAUSED_APPROVAL' }] : [];
-        for (const step of current) steps.append(make('li', { text: `${step.tool} — ${step.status || 'QUEUED'}` }));
+        for (const step of current) steps.append(make('li', { text: this.stepSummary(step) }));
       }
       const result = $('#agentResult'); if (result) {
-        const value = this.pending ? this.actionPreview(this.pending) : this.plan ? { status: this.plan.status, failure: this.plan.failure || null } : null;
-        result.hidden = !value; result.textContent = value ? JSON.stringify(value, null, 2) : '';
+        const value = this.pending ? this.actionSummary(this.pending) : this.plan?.failure?.message || (this.plan ? `Plan status: ${this.plan.status}` : '');
+        result.hidden = !value; result.textContent = value;
       }
       const approve = $('#agentApproveBtn'); const cancel = $('#agentCancelBtn');
       const progress = $('#agentProgress'); const progressLabel = $('#agentProgressLabel');
       if (progress) progress.hidden = !this.busy;
       if (progressLabel && this.busy) progressLabel.textContent = String(this.pending?.tool || '').startsWith('filesystem_') ? `Creating ${text(this.pending?.arguments?.path || 'file')}…` : 'Running approved Agent action…';
-      if (approve) { approve.hidden = !this.pending; approve.disabled = this.busy; }
+      if (approve) {
+        approve.hidden = !this.pending; approve.disabled = this.busy;
+        approve.textContent = this.pending?.approval_scope === 'computer_task' ? 'Approve task and continue' : 'Approve and run';
+      }
       if (cancel) { cancel.textContent = this.pending ? 'Cancel action' : 'Close'; cancel.disabled = this.busy; }
     },
     init() {
@@ -1279,6 +1514,7 @@
       $('#agentApproveBtn')?.addEventListener('click', () => this.approve());
       $('#agentCancelBtn')?.addEventListener('click', () => this.cancel());
       $('[data-agent-close]')?.addEventListener('click', () => this.close());
+      if (window.solat?.onComputerTaskEvent) this.unsubscribeComputerEvents = window.solat.onComputerTaskEvent(event => this.receiveComputerTaskEvent(event));
       this.syncCommandMenu(); this.render();
     },
   };
@@ -1376,7 +1612,7 @@
           this.render();
         } catch (error) {
           resultHost.textContent = error?.message || 'The creative workflow failed.';
-        } finally {
+      } finally {
           submit.disabled = false;
         }
       });
@@ -1656,6 +1892,11 @@
     };
     document.addEventListener('pointermove', event => {
       x = event.clientX; y = event.clientY;
+      const root = document.documentElement;
+      const halfWidth = Math.max(window.innerWidth / 2, 1);
+      const halfHeight = Math.max(window.innerHeight / 2, 1);
+      root.style.setProperty('--pointer-x', `${((x - halfWidth) / halfWidth) * 12}`);
+      root.style.setProperty('--pointer-y', `${((y - halfHeight) / halfHeight) * 9}`);
       cursor.classList.add('on');
       if (!frame) frame = requestAnimationFrame(paint);
     }, { passive: true });

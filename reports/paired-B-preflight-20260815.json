@@ -1,0 +1,31 @@
+{
+  "status": "FAIL",
+  "issue_counts": {
+    "matched_history_mismatch": 2,
+    "seed_transcript_user_mismatch": 2
+  },
+  "issues": [
+    {
+      "code": "matched_history_mismatch",
+      "id": "followup100_008_context_pronouns",
+      "provider": "solat"
+    },
+    {
+      "code": "seed_transcript_user_mismatch",
+      "id": "followup100_008_context_pronouns",
+      "provider": "solat"
+    },
+    {
+      "code": "matched_history_mismatch",
+      "id": "followup100_009_context_pronouns",
+      "provider": "solat"
+    },
+    {
+      "code": "seed_transcript_user_mismatch",
+      "id": "followup100_009_context_pronouns",
+      "provider": "solat"
+    }
+  ],
+  "chatgpt_cases": 100,
+  "solat_cases": 100
+}

@@ -9,6 +9,14 @@ const definitions = [
   {
     type: 'function',
     function: {
+      name: 'computer_scroll_into_view',
+      description: 'Scroll one previously inspected semantic UI element into view in the trusted window and verify it remains observable. This changes visible computer state and requires owner approval.',
+      parameters: { type: 'object', properties: { hwnd: { type: 'integer', minimum: 1 }, selector: { type: 'string', minLength: 1, maxLength: 300 } }, required: ['hwnd', 'selector'], additionalProperties: false },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'computer_play_youtube_music',
       description: 'Open Chrome with the fixed local Default profile, open an approved YouTube music page, start playback when needed, and verify that playback is active. This changes computer state and always requires owner approval.',
       parameters: { type: 'object', properties: { query: { type: 'string', minLength: 1, maxLength: 160 } }, required: ['query'], additionalProperties: false },
@@ -20,6 +28,14 @@ const definitions = [
       name: 'computer_launch_app',
       description: 'Launch one explicitly allowlisted local application without arguments. This changes computer state and always requires owner approval.',
       parameters: { type: 'object', properties: { app_id: { type: 'string', enum: ['chrome', 'notepad'] } }, required: ['app_id'], additionalProperties: false },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'computer_open_website',
+      description: 'Open one allowlisted website in Chrome Default profile. This only opens Google, Google Classroom, or YouTube; it never enters credentials or submits forms. It requires owner approval.',
+      parameters: { type: 'object', properties: { site: { type: 'string', enum: ['google', 'google_classroom', 'youtube'] } }, required: ['site'], additionalProperties: false },
     },
   },
   {
@@ -54,17 +70,28 @@ const definitions = [
       parameters: { type: 'object', properties: { hwnd: { type: 'integer', minimum: 1 }, selector: { type: 'string', minLength: 1, maxLength: 300 }, value: { type: 'string', minLength: 1, maxLength: 4000 } }, required: ['hwnd', 'selector', 'value'], additionalProperties: false },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'computer_press_enter',
+      description: 'Press Enter on one previously inspected non-sensitive text field, then verify the same window title contains the expected text. Use after computer_set_value to submit a browser search. This changes computer state and always requires owner approval.',
+      parameters: { type: 'object', properties: { hwnd: { type: 'integer', minimum: 1 }, selector: { type: 'string', minLength: 1, maxLength: 300 }, verify_title_contains: { type: 'string', minLength: 1, maxLength: 200 } }, required: ['hwnd', 'selector', 'verify_title_contains'], additionalProperties: false },
+    },
+  },
 ];
 
 function createComputerAgentTools({ adapter } = {}) {
   if (!adapter || typeof adapter.listWindows !== 'function') throw new Error('A computer-use adapter is required.');
   const registry = {
-    computer_play_youtube_music: { side_effect_level: 'write', validate_arguments: value => object(value) && typeof value.query === 'string' && value.query.trim().length > 0 && value.query.length <= 160 && Object.keys(value).length === 1, validate_output: value => ready(value, 'play_youtube_music') && value.verified === true && value.playback === 'playing' },
-    computer_launch_app: { side_effect_level: 'write', validate_arguments: value => object(value) && ['chrome', 'notepad'].includes(value.app_id), validate_output: value => ready(value, 'launch_app') && value.launched === true },
+    computer_play_youtube_music: { side_effect_level: 'write', task_grant_eligible: false, task_grant_origin: false, validate_arguments: value => object(value) && typeof value.query === 'string' && value.query.trim().length > 0 && value.query.length <= 160 && Object.keys(value).length === 1, validate_output: value => ready(value, 'play_youtube_music') && value.verified === true && value.playback === 'playing' && Number(value.playback_stable_for_ms) >= 3_000 && Number(value.playback_samples) >= 4 },
+    computer_launch_app: { side_effect_level: 'write', task_grant_eligible: false, task_grant_origin: true, validate_arguments: value => object(value) && ['chrome', 'notepad'].includes(value.app_id), validate_output: value => ready(value, 'launch_app') && value.launched === true && value.verified === true && validHwnd(value.hwnd) },
+    computer_open_website: { side_effect_level: 'write', task_grant_eligible: false, task_grant_origin: true, validate_arguments: value => object(value) && ['google', 'google_classroom', 'youtube'].includes(value.site) && Object.keys(value).length === 1, validate_output: value => ready(value, 'open_website') && value.verified === true },
     computer_list_windows: { side_effect_level: 'read', validate_arguments: value => object(value) && Object.keys(value).length === 0, validate_output: value => ready(value, 'list_windows') },
     computer_inspect: { side_effect_level: 'read', validate_arguments: value => object(value) && validHwnd(value.hwnd) && (value.selector === undefined || validSelector(value.selector)), validate_output: value => ready(value, 'inspect') },
-    computer_invoke: { side_effect_level: 'write', validate_arguments: value => object(value) && validHwnd(value.hwnd) && validSelector(value.selector) && validSelector(value.verify_selector) && ['present', 'gone', 'value'].includes(value.verify_state) && (value.verify_state !== 'value' || validSelector(value.verify_value)), validate_output: value => ready(value, 'invoke') && value.verified === true },
-    computer_set_value: { side_effect_level: 'write', validate_arguments: value => object(value) && validHwnd(value.hwnd) && validSelector(value.selector) && typeof value.value === 'string' && value.value.length > 0 && value.value.length <= 4000, validate_output: value => ready(value, 'set_value') && value.verified === true },
+    computer_invoke: { side_effect_level: 'write', task_grant_eligible: true, validate_arguments: value => object(value) && validHwnd(value.hwnd) && validSelector(value.selector) && validSelector(value.verify_selector) && ['present', 'gone', 'value'].includes(value.verify_state) && (value.verify_state !== 'value' || validSelector(value.verify_value)), validate_output: value => ready(value, 'invoke') && value.verified === true },
+    computer_set_value: { side_effect_level: 'write', task_grant_eligible: true, validate_arguments: value => object(value) && validHwnd(value.hwnd) && validSelector(value.selector) && typeof value.value === 'string' && value.value.length > 0 && value.value.length <= 4000, validate_output: value => ready(value, 'set_value') && value.verified === true },
+    computer_press_enter: { side_effect_level: 'write', task_grant_eligible: true, validate_arguments: value => object(value) && validHwnd(value.hwnd) && validSelector(value.selector) && validSelector(value.verify_title_contains) && value.verify_title_contains.length <= 200 && Object.keys(value).length === 3, validate_output: value => ready(value, 'press_enter') && value.verified === true },
+    computer_scroll_into_view: { side_effect_level: 'write', task_grant_eligible: true, validate_arguments: value => object(value) && validHwnd(value.hwnd) && validSelector(value.selector) && Object.keys(value).length === 2, validate_output: value => ready(value, 'scroll_into_view') && value.verified === true && Boolean(value.tree) },
   };
   return {
     definitions,
@@ -73,10 +100,13 @@ function createComputerAgentTools({ adapter } = {}) {
       if (!registry[tool]) return { status: 'failed', error: { code: 'unauthorized_tool', message: 'Computer tool is not registered.' } };
       if (tool === 'computer_play_youtube_music') return adapter.playYoutubeMusic({ query: args.query, signal });
       if (tool === 'computer_launch_app') return adapter.launchApp({ appId: args.app_id, signal });
+      if (tool === 'computer_open_website') return adapter.openWebsite({ site: args.site, signal });
       if (tool === 'computer_list_windows') return adapter.listWindows({ signal });
       if (tool === 'computer_inspect') return adapter.inspect({ ...args, signal });
       if (tool === 'computer_invoke') return adapter.invoke({ hwnd: args.hwnd, selector: args.selector, verifySelector: args.verify_selector, verifyState: args.verify_state, verifyValue: args.verify_value, signal });
       if (tool === 'computer_set_value') return adapter.setValue({ ...args, signal });
+      if (tool === 'computer_press_enter') return adapter.pressEnter({ hwnd: args.hwnd, selector: args.selector, verifyTitleContains: args.verify_title_contains, signal });
+      if (tool === 'computer_scroll_into_view') return adapter.scrollIntoView({ ...args, signal });
       return { status: 'failed', error: { code: 'unauthorized_tool', message: 'Computer tool is not registered.' } };
     },
   };

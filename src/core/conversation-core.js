@@ -53,7 +53,7 @@ function runtimeGroundingEvidenceState({ searchRequested, webSearchStatus, sourc
 
 function requestsAgentCapability(message) {
   const value = String(message || '').toLocaleLowerCase();
-  const target = /(?:\b(?:file|folder|workspace|computer|screen|window|app|application|notepad)\b|\.(?:txt|md|json|csv|html)\b|\u0e44\u0e1f\u0e25\u0e4c|\u0e42\u0e1f\u0e25\u0e40\u0e14\u0e2d\u0e23\u0e4c|\u0e40\u0e27\u0e34\u0e23\u0e4c\u0e01\u0e2a\u0e40\u0e1b\u0e0b|\u0e04\u0e2d\u0e21\u0e1e\u0e34\u0e27\u0e40\u0e15\u0e2d\u0e23\u0e4c|\u0e2b\u0e19\u0e49\u0e32\u0e08\u0e2d|\u0e2b\u0e19\u0e49\u0e32\u0e15\u0e48\u0e32\u0e07|\u0e42\u0e1b\u0e23\u0e41\u0e01\u0e23\u0e21|\u0e41\u0e2d\u0e1b)/iu;
+  const target = /(?:\b(?:file|folder|workspace|computer|screen|window|app|application|notepad|chrome|browser|youtube|classroom|google\s+classroom)\b|\.(?:txt|md|json|csv|html)\b|\u0e44\u0e1f\u0e25\u0e4c|\u0e42\u0e1f\u0e25\u0e40\u0e14\u0e2d\u0e23\u0e4c|\u0e40\u0e27\u0e34\u0e23\u0e4c\u0e01\u0e2a\u0e40\u0e1b\u0e0b|\u0e04\u0e2d\u0e21\u0e1e\u0e34\u0e27\u0e40\u0e15\u0e2d\u0e23\u0e4c|\u0e2b\u0e19\u0e49\u0e32\u0e08\u0e2d|\u0e2b\u0e19\u0e49\u0e32\u0e15\u0e48\u0e32\u0e07|\u0e42\u0e1b\u0e23\u0e41\u0e01\u0e23\u0e21|\u0e41\u0e2d\u0e1b)/iu;
   if (!target.test(value)) return false;
   return /(?:\b(?:create|write|edit|update|undo|export|read|open|control|click|type|inspect|screenshot)\b|\u0e2a\u0e23\u0e49\u0e32\u0e07|\u0e41\u0e01\u0e49\u0e44\u0e02|\u0e41\u0e01\u0e49|\u0e40\u0e02\u0e35\u0e22\u0e19|\u0e2d\u0e31\u0e1b\u0e40\u0e14\u0e15|\u0e22\u0e49\u0e2d\u0e19\u0e01\u0e25\u0e31\u0e1a|\u0e2a\u0e48\u0e07\u0e2d\u0e2d\u0e01|\u0e2d\u0e48\u0e32\u0e19|\u0e40\u0e1b\u0e34\u0e14|\u0e04\u0e27\u0e1a\u0e04\u0e38\u0e21|\u0e04\u0e25\u0e34\u0e01|\u0e1e\u0e34\u0e21\u0e1e\u0e4c|\u0e08\u0e31\u0e1a\u0e20\u0e32\u0e1e)/iu.test(value);
 }
@@ -86,12 +86,32 @@ function parseDirectComputerWorkflowRequest(message) {
   const asksYoutube = /\byoutube\b|\u0e22\u0e39\u0e17\u0e39\u0e1a/iu.test(value);
   const asksPlayback = /\b(?:play|music|song)\b|\u0e40\u0e1b\u0e34\u0e14\s*\u0e40\u0e1e\u0e25\u0e07|\u0e40\u0e25\u0e48\u0e19\s*\u0e40\u0e1e\u0e25\u0e07|\u0e40\u0e1e\u0e25\u0e07/iu.test(value);
   if (asksYoutube && asksPlayback) {
-    const queryMatch = value.match(/(?:\u0e40\u0e1b\u0e34\u0e14|\u0e40\u0e25\u0e48\u0e19)\s*\u0e40\u0e1e\u0e25\u0e07\s*[:=]?\s*([^,.;]+)$/iu)
-      || value.match(/\bplay\s+(?:the\s+)?(?:song|music)\s*[:=]?\s*([^,.;]+)$/iu);
+    const queryMatch = value.match(/(?:\u0e40\u0e1b\u0e34\u0e14|\u0e40\u0e25\u0e48\u0e19)\s*\u0e40\u0e1e\u0e25\u0e07\s*[:=]?\s*([^,.;]+?)(?=\s+(?:\u0e14\u0e39\u0e08\u0e19|\u0e08\u0e19\u0e41\u0e19\u0e48\u0e43\u0e08|\u0e41\u0e25\u0e49\u0e27\u0e08\u0e1a|\u0e41\u0e25\u0e49\u0e27\u0e2b\u0e22\u0e38\u0e14|\u0e41\u0e25\u0e30\u0e15\u0e23\u0e27\u0e08)|$)/iu)
+      || value.match(/\bplay\s+(?:the\s+)?(?:song|music)\s*[:=]?\s*([^,.;]+?)(?=\s+(?:then|and\s+(?:verify|ensure|finish|stop)|until)|$)/iu);
     const query = String(queryMatch?.[1] || 'music').trim();
     return { status: 'ready', workflow: 'youtube_music', query };
   }
   return null;
+}
+
+// The screen planner is for genuinely screen-driven navigation after an
+// initial action, not for every computer request. A playback request remains
+// screen-driven because the outer task must consume the verified stability
+// result and reach a terminal COMPLETED state; opening an app alone can still
+// use the one-step bounded planner.
+function requiresScreenDrivenComputerTask(message) {
+  const value = repairWindows874Mojibake(String(message || '')).trim();
+  if (!value) return false;
+  const asksYoutubePlayback = /(?:\byoutube\b|\u0e22\u0e39\u0e17\u0e39\u0e1a)/iu.test(value)
+    && /(?:\b(?:play|music|song)\b|\u0e40\u0e1b\u0e34\u0e14\s*\u0e40\u0e1e\u0e25\u0e07|\u0e40\u0e25\u0e48\u0e19\s*\u0e40\u0e1e\u0e25\u0e07|\u0e40\u0e1e\u0e25\u0e07)/iu.test(value);
+  if (asksYoutubePlayback) return true;
+  // A request may start with "open Chrome" but continue with navigation,
+  // inspection, scrolling, or summarisation. Detect the whole workflow before
+  // applying the launch-only fast path, otherwise the remaining steps vanish.
+  const requiresScreenWork = /(?:\b(?:find|locate|select|choose|click|type|inspect|screenshot|navigate|scroll|wikipedia|summari[sz]e)\b|\u0e2b\u0e32|\u0e40\u0e25\u0e37\u0e2d\u0e01|\u0e04\u0e25\u0e34\u0e01|\u0e1e\u0e34\u0e21\u0e1e\u0e4c|\u0e15\u0e23\u0e27\u0e08\u0e14\u0e39|\u0e40\u0e02\u0e49\u0e32\u0e44\u0e1b\u0e17\u0e35\u0e48|\u0e40\u0e25\u0e37\u0e48\u0e2d\u0e19|\u0e2a\u0e23\u0e38\u0e1b)/iu.test(value);
+  if (requiresScreenWork) return true;
+  if (parseDirectComputerLaunchRequest(value)) return false;
+  return false;
 }
 
 function modelContextWindow(history, currentMessage, maxChars = MAX_MODEL_CONTEXT_CHARS) {
@@ -365,7 +385,7 @@ function comparisonRecoveryQueries(searchRuns, entities) {
 }
 
 class ConversationCore {
-  constructor({ config, provider, router = { analyze: analyzeIntent }, searchService = null, commerceService = null, fileContextProvider = null, agentBridge = null } = {}) {
+  constructor({ config, provider, router = { analyze: analyzeIntent }, searchService = null, commerceService = null, fileContextProvider = null, agentBridge = null, computerTaskLoop = null } = {}) {
     this.config = config;
     this.provider = provider || createProvider(config);
     this.sessions = new Map();
@@ -375,6 +395,7 @@ class ConversationCore {
     this.commerceService = commerceService;
     this.fileContextProvider = fileContextProvider;
     this.agentBridge = agentBridge;
+    this.computerTaskLoop = computerTaskLoop;
   }
 
   status() {
@@ -385,7 +406,7 @@ class ConversationCore {
     };
   }
 
-  async send({ sessionId, content, requestId, assetIds = [], agentMode = false, agentCommand = null }) {
+  async send({ sessionId, content, requestId, assetIds = [], agentMode = false, agentCommand = null, onComputerTaskEvent = null }) {
     const normalizedSession = String(sessionId || '').trim();
     const submittedContent = String(content ?? '');
     const normalizedContent = submittedContent.trim();
@@ -469,19 +490,60 @@ class ConversationCore {
             : 'SOLAT Agent mode is OFF. Do not claim to create, edit, export, or control files or the computer. Continue answering ordinary questions normally.'),
       } : null;
       const modelMessages = [hintMessage, ...(agentModeMessage ? [agentModeMessage] : []), ...(fileContext ? [{ role: 'system', content: fileContext }] : []), ...contextWindow.messages];
+      const activeComputerTask = Boolean(this.computerTaskLoop && agentEnabled
+        && typeof this.computerTaskLoop.hasActive === 'function'
+        && this.computerTaskLoop.hasActive({ ownerId: normalizedSession, sessionId: normalizedSession }));
+      const computerTaskRequested = Boolean(this.computerTaskLoop)
+        && (requiresScreenDrivenComputerTask(modelContent) || activeComputerTask);
       if (this.agentBridge && !agentEnabled && requestsAgentCapability(modelContent)) {
         const thai = /[\u0E00-\u0E7F]/u.test(modelContent);
         result = {
           content: thai
             ? 'Agent mode ปิดอยู่ จึงยังไม่ได้สร้าง แก้ไข หรือควบคุมสิ่งใด กรุณาเปิดปุ่ม Agent แล้วส่งคำสั่งนี้อีกครั้ง'
-            : 'Agent mode is off, so no file or computer action was performed. Turn on Agent mode and send the request again.',
+            : 'Agent mode is off, so no file or computer action was performed. Turn on the CPU Agent button and send the request again, or select @create-file / @computer-use.',
           provider: 'solat_agent_gate',
           model: 'deterministic',
           usage: null,
           toolRounds: 0,
         };
-      } else if (agentEnabled && normalizedAgentCommand) {
-        const plan = await planAgentCommand({ provider: this.provider, messages: modelMessages, command: normalizedAgentCommand });
+      } else if (agentEnabled && computerTaskRequested && this.computerTaskLoop) {
+        const directWorkflow = parseDirectComputerWorkflowRequest(modelContent);
+        const taskInput = {
+          ownerId: normalizedSession,
+          sessionId: normalizedSession,
+          requestId: normalizedRequestId,
+          eventSink: onComputerTaskEvent,
+          workflowHint: directWorkflow?.workflow === 'youtube_music'
+            ? { workflow: 'youtube_music', query: directWorkflow.query }
+            : null,
+        };
+        const task = typeof this.computerTaskLoop.hasActive === 'function'
+          && this.computerTaskLoop.hasActive({ ownerId: normalizedSession, sessionId: normalizedSession })
+          ? await this.computerTaskLoop.revise({ ...taskInput, instruction: modelContent })
+          : await this.computerTaskLoop.start({ ...taskInput, goal: modelContent });
+        if (task.pending_action?.action) {
+          agentActions.push({
+            ...task.pending_action.action,
+            tool: task.pending_action.tool,
+            computerTaskId: task.task_id,
+          });
+        }
+        result = {
+          content: task.status === 'AWAITING_APPROVAL'
+            ? `${task.summary}\n\nReview this next computer action before SOLAT runs it.`
+            : task.summary || 'Computer task stopped without a verified next action.',
+          provider: 'solat_computer_task',
+          model: 'model guided computer use',
+          usage: null,
+          toolRounds: task.planner_turns || 0,
+        };
+      } else if (agentEnabled && (normalizedAgentCommand || (typeof this.provider.completeStructured === 'function' && requestsAgentCapability(modelContent)))) {
+        // The CPU toggle is a persistent capability grant, not a requirement
+        // to prefix every natural-language request with @. An explicit @
+        // still narrows the tool family; without one, code asks the model for
+        // one bounded capability plan and validates it before execution.
+        const planningCommand = normalizedAgentCommand || 'auto';
+        const plan = await planAgentCommand({ provider: this.provider, messages: modelMessages, command: planningCommand });
         if (plan.status !== 'planned') {
           result = { content: plan.summary, provider: 'solat_agent_planner', model: 'model planned clarification', usage: null, toolRounds: 0 };
         } else {
@@ -964,4 +1026,4 @@ class ConversationCore {
   }
 }
 
-module.exports = { alignComparisonQuery, buildConversationSystemPrompt, buildResolvedReferenceInstruction, comparisonTargetForQuery, directlyIdentifiesComparisonTarget, filterComparisonOutcome, mergeScopedOutcomes, modelContextWindow, parseDirectComputerLaunchRequest, parseDirectComputerWorkflowRequest, parseDirectFileCreateRequest, preserveContextQualifierQuery, preserveRequestedPlatformQuery, requestsAgentCapability, runtimeGroundingEvidenceState, unavailableSearchOutcome, ConversationCore, CONVERSATION_PROMPT_VERSION, MAX_MESSAGE_LENGTH, MAX_MODEL_CONTEXT_CHARS };
+module.exports = { alignComparisonQuery, buildConversationSystemPrompt, buildResolvedReferenceInstruction, comparisonTargetForQuery, directlyIdentifiesComparisonTarget, filterComparisonOutcome, mergeScopedOutcomes, modelContextWindow, parseDirectComputerLaunchRequest, parseDirectComputerWorkflowRequest, parseDirectFileCreateRequest, preserveContextQualifierQuery, preserveRequestedPlatformQuery, requestsAgentCapability, requiresScreenDrivenComputerTask, runtimeGroundingEvidenceState, unavailableSearchOutcome, ConversationCore, CONVERSATION_PROMPT_VERSION, MAX_MESSAGE_LENGTH, MAX_MODEL_CONTEXT_CHARS };

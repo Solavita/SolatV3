@@ -19,6 +19,8 @@ const { WinAppComputerUseAdapter } = require('./core/computer-use-adapter');
 const { createComputerAgentTools } = require('./core/computer-agent-tools');
 const { composeAgentTools } = require('./core/agent-tool-composer');
 const { AgentChatBridge } = require('./core/agent-chat-bridge');
+const { ComputerTaskLoop } = require('./core/computer-task-loop');
+const { WindowScreenCapture } = require('./core/computer-screen-capture');
 
 let mainWindow;
 let core;
@@ -32,6 +34,7 @@ let searchService;
 let commerceService;
 let agentService;
 let filesystemWorkspace;
+let computerTaskLoop;
 
 function resolveOwnedExportPath(requestedPath) {
   const candidate = String(requestedPath || '').trim();
@@ -65,9 +68,25 @@ function createWindow() {
 
 function registerIpc() {
   ipcMain.handle('solat:status', () => core.status());
-  ipcMain.handle('solat:send', async (_event, request) => {
+  const emitComputerTaskEvent = (event, payload) => {
+    if (!event?.sender || event.sender.isDestroyed() || !payload || typeof payload !== 'object') return;
+    event.sender.send('solat:computer-task-event', {
+      schema_version: payload.schema_version,
+      type: payload.type,
+      task_id: payload.task_id,
+      session_id: payload.session_id,
+      request_id: payload.request_id,
+      status: payload.status,
+      planner_turns: payload.planner_turns,
+      observation_count: payload.observation_count,
+      revision: payload.revision,
+      summary: payload.summary,
+      tool: payload.tool,
+    });
+  };
+  ipcMain.handle('solat:send', async (event, request) => {
     try {
-      return { ok: true, value: await core.send(request) };
+      return { ok: true, value: await core.send({ ...request, onComputerTaskEvent: payload => emitComputerTaskEvent(event, payload) }) };
     } catch (error) {
       return {
         ok: false,
@@ -91,6 +110,49 @@ function registerIpc() {
   ipcMain.handle('solat:agent-approve', (_event, request) => agentCall(value => agentService.approve(value), request));
   ipcMain.handle('solat:agent-cancel', (_event, request) => agentCall(value => agentService.cancel(value), request));
   ipcMain.handle('solat:agent-run', (_event, request) => agentCall(value => agentService.run(value), request));
+  ipcMain.handle('solat:computer-task-continue', (event, request) => agentCall(async value => {
+    const taskId = String(value?.taskId || '').trim();
+    const idempotencyKey = String(value?.idempotencyKey || '').trim();
+    if (!taskId || !idempotencyKey) throw Object.assign(new Error('A computer task and approved action are required.'), { code: 'invalid_request' });
+    // The renderer cannot fabricate a successful observation: reload the
+    // owner-scoped persisted plan and pass only its verified tool output.
+    const plan = await agentService.inspect({ ownerId: value.ownerId, sessionId: value.sessionId, idempotencyKey });
+    const output = plan?.status === 'SUCCEEDED' ? plan.steps?.[0]?.output : null;
+    if (!output || output.status !== 'ready') throw Object.assign(new Error('The approved computer action did not return verified evidence.'), { code: 'unverified_observation' });
+    return computerTaskLoop.continue({
+      ownerId: value.ownerId,
+      sessionId: value.sessionId,
+      taskId,
+      actionIdempotencyKey: idempotencyKey,
+      verifiedObservation: output,
+      eventSink: payload => emitComputerTaskEvent(event, payload),
+    });
+  }, request));
+  ipcMain.handle('solat:computer-task-approve-and-continue', (event, request) => agentCall(async value => {
+    const taskId = String(value?.taskId || '').trim();
+    const idempotencyKey = String(value?.idempotencyKey || '').trim();
+    const approvalToken = String(value?.approvalToken || '').trim();
+    if (!taskId || !idempotencyKey || !approvalToken) throw Object.assign(new Error('A computer task, pending action, and approval token are required.'), { code: 'invalid_request' });
+    const before = computerTaskLoop.inspect({ ownerId: value.ownerId, sessionId: value.sessionId, taskId });
+    if (before.status !== 'AWAITING_APPROVAL' || before.pending_action?.action?.idempotency_key !== idempotencyKey) {
+      throw Object.assign(new Error('This approval does not match the current computer task action.'), { code: 'action_mismatch' });
+    }
+    await agentService.approve({ ownerId: value.ownerId, sessionId: value.sessionId, idempotencyKey, approvalToken });
+    const result = await agentService.run({ ownerId: value.ownerId, sessionId: value.sessionId, idempotencyKey });
+    const output = result.plan?.status === 'SUCCEEDED' ? result.plan.steps?.[0]?.output : null;
+    if (!output || output.status !== 'ready') throw Object.assign(new Error('The approved computer action did not return verified evidence.'), { code: 'unverified_observation' });
+    const nextTask = await computerTaskLoop.continue({
+      ownerId: value.ownerId, sessionId: value.sessionId, taskId,
+      actionIdempotencyKey: idempotencyKey, verifiedObservation: output,
+      eventSink: payload => emitComputerTaskEvent(event, payload),
+    });
+    return { plan: result.plan, next_task: nextTask };
+  }, request));
+  ipcMain.handle('solat:computer-task-cancel', (_event, request) => agentCall(value => {
+    const taskId = String(value?.taskId || '').trim();
+    if (!taskId) throw Object.assign(new Error('A computer task is required.'), { code: 'invalid_request' });
+    return computerTaskLoop.cancel({ ownerId: value.ownerId, sessionId: value.sessionId, taskId });
+  }, request));
   ipcMain.handle('solat:agent-read-artifact', (_event, request) => agentCall(async value => {
     const relativePath = String(value?.relativePath || '').trim();
     const expectedSha256 = String(value?.expectedSha256 || '').trim();
@@ -111,6 +173,23 @@ function registerIpc() {
       content: artifact.content.slice(0, previewLimit),
       truncated: artifact.content.length > previewLimit,
     };
+  }, request));
+  ipcMain.handle('solat:agent-export-artifact', (_event, request) => agentCall(async value => {
+    const relativePath = String(value?.relativePath || '').trim();
+    const expectedSha256 = String(value?.expectedSha256 || '').trim();
+    const exportName = String(value?.exportName || '').trim();
+    if (!relativePath || !exportName || !/^sha256:[a-f0-9]{64}$/u.test(expectedSha256)) {
+      throw Object.assign(new Error('A verified workspace file and export name are required.'), { code: 'invalid_artifact_export' });
+    }
+    // A download is a user-initiated copy to the fixed, owner-scoped export
+    // directory. The renderer never chooses an arbitrary local destination.
+    return filesystemWorkspace.exportFile({
+      ownerId: value.ownerId,
+      sessionId: value.sessionId,
+      relativePath,
+      exportName,
+      expectedSha256,
+    });
   }, request));
   ipcMain.handle('solat:save-conversation', async (_event, request) => {
     try {
@@ -283,14 +362,22 @@ app.whenReady().then(() => {
     exportRoot: path.join(app.getPath('userData'), 'agent-exports'),
   });
   const filesystemTools = createAgentTools({ fileContextProvider, fileWorkspace: filesystemWorkspace });
-  const computerTools = createComputerAgentTools({ adapter: new WinAppComputerUseAdapter() });
+  const computerAdapter = new WinAppComputerUseAdapter();
+  const computerTools = createComputerAgentTools({ adapter: computerAdapter });
+  const screenCapture = new WindowScreenCapture({
+    assertTarget: input => computerAdapter.assertTarget(input),
+    tempRoot: path.join(app.getPath('temp'), 'solat-screen-capture'),
+  });
   const agentTools = composeAgentTools(filesystemTools, computerTools);
   agentService = new AgentService({
     rootDir: path.join(app.getPath('userData'), 'agent-plans'),
     toolRegistry: agentTools.registry,
     executeTool: agentTools.executeTool,
   });
-  const agentBridge = new AgentChatBridge({ agentService, toolDefinitions: agentTools.definitions });
+  const agentBridge = new AgentChatBridge({
+    agentService, toolDefinitions: agentTools.definitions,
+    targetResolver: ({ hwnd }) => computerAdapter.assertTarget({ hwnd }),
+  });
   commerceService = new CommerceClient({
     baseUrl: config.commerceBaseUrl,
     userId: config.commerceUserId,
@@ -304,6 +391,8 @@ app.whenReady().then(() => {
     },
   });
   core = new ConversationCore({ config, searchService, commerceService, fileContextProvider, agentBridge });
+  computerTaskLoop = new ComputerTaskLoop({ provider: core.provider, bridge: agentBridge, toolRegistry: computerTools.registry, screenCapture });
+  core.computerTaskLoop = computerTaskLoop;
   creativePersistence = new CreativePersistence({ rootDir: path.join(app.getPath('userData'), 'creative-history') });
   conversationPersistence = new ConversationPersistence({ rootDir: path.join(app.getPath('userData'), 'conversation-history') });
   creativeWorkflow = new CreativeWorkflow({ provider: core.provider, workspace: core.workspace });

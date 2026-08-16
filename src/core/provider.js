@@ -395,6 +395,10 @@ function buildCompletionRequestBody(config, messages, { responseFormat, tools, t
     if (!Array.isArray(tools)) throw new ProviderError('invalid_tools', 'Provider tools must be an array.');
     body.tools = tools;
     body.tool_choice = toolChoice;
+    // Computer-use is deliberately sequential: the model must observe the
+    // result of one action before selecting the next. vLLM supports this
+    // OpenAI-compatible flag and will emit at most one tool call per turn.
+    if (String(config?.provider || '').toLowerCase() === 'runpod_vllm') body.parallel_tool_calls = false;
   }
   return body;
 }
@@ -571,12 +575,15 @@ class OpenAICompatibleProvider {
 }
 
 function createProvider(config, fetchImpl = globalThis.fetch) {
-  // Milestone 1 uses the DeepSeek OpenAI-compatible API only. Other provider
-  // adapters must not become an accidental paid path in this rebuild.
+  // RunPod vLLM and the former DeepSeek transport both implement the same
+  // validated OpenAI-compatible boundary. Provider-specific behavior stays
+  // in request shaping instead of leaking into conversation or Agent code.
   return new OpenAICompatibleProvider(config, fetchImpl);
 }
 
 function providerLabel(config) {
+  const configured = String(config?.provider || '').trim().toLowerCase();
+  if (configured) return configured;
   return safeHost(config?.baseUrl) === 'api.deepseek.com' ? 'deepseek_api' : 'openai-compatible';
 }
 

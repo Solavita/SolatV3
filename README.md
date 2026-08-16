@@ -1,6 +1,6 @@
 # SOLAT V2
 
-SOLAT V2 is a clean Electron rebuild using the DeepSeek OpenAI-compatible API (`deepseek-v4-flash`) as its configured provider. V1 remains in the parent project as an archive/reference and is not imported into this app.
+SOLAT V2 is a clean Electron rebuild using the DeepSeek OpenAI-compatible API (`deepseek-v4-flash`) as its configured provider. RunPod vLLM remains available as an alternate OpenAI-compatible configuration. V1 remains in the parent project as an archive/reference and is not imported into this app.
 
 The post-Milestone 1 foundation includes versioned creative contracts and a first
 Music-to-Deck planning path. Through secure IPC, the UI can submit a goal, audience,
@@ -40,9 +40,9 @@ configuration error instead of pretending that a model response succeeded.
 - `npm.cmd test` passes the deterministic core/provider/router/search/workflow/export/UI contract suite (93 tests at the current revision).
 - `npm.cmd run dev` starts the Electron development window without a manual port.
 - `npm.cmd run build` creates `dist/win-unpacked/SOLAT.exe`.
-- One explicit DeepSeek smoke request passed through the provider boundary with
-  `deepseek-v4-flash`; the key value was never printed or committed. The V4
-  request explicitly selects non-thinking mode for stable normal chat.
+- The current default provider is DeepSeek. RunPod vLLM can be selected later
+  by setting `SOLAT_MODEL_PROVIDER=runpod_vllm`, its OpenAI-compatible base URL,
+  API key, and served model id.
 - One isolated packaged UI E2E request returned `SOLAT_UI_E2E_OK` through the
   renderer/IPC/provider path; the completed response had no thinking bubble or
   error node.

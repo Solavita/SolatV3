@@ -1,5 +1,21 @@
 # SOLAT V2 verification report
 
+## Provider selection rollback (2026-08-16)
+
+| Criterion | Status | Evidence | Limitation |
+|---|---|---|---|
+| Active model transport restored to DeepSeek | PASS | `src/core/config.js` defaults, `.env.example`, and the active local `.env` now resolve to `deepseek_api` / `https://api.deepseek.com` / `deepseek-v4-flash` | The previous RunPod values are no longer active |
+| RunPod vLLM support retained as an alternate | PASS | OpenAI-compatible provider path and RunPod sequential-tool contract remain covered by tests | RunPod is not the active provider in this build |
+| Live DeepSeek response after rollback | NOT VERIFIED | No provider request was made in this rollback step | Requires a separately authorized live smoke |
+
+## Computer Use reliability hardening (2026-08-15)
+
+| Criterion | Status | Evidence | Limitation |
+|---|---|---|---|
+| Requested website is not confused with a stale Chrome tab | PASS | `test/computer-use-adapter.test.js` waits for the requested site title and prefers a newly opened Chrome HWND; stale Gmail/Google Search test passes | Browser title availability varies by site; an unobservable title yields a truthful timeout rather than success |
+| Computer planner cannot spin on the same action | PASS | `test/computer-task-loop.test.js` stops after the bounded identical-action limit without reporting success | This is a safety/control bound, not proof that every real UI workflow can finish |
+| Regression verification | PASS | `npm.cmd test` 244/244; `npm.cmd run check`; `git diff --check` | A fresh live music-playback run remains `NOT VERIFIED` until it completes without concurrent user input |
+
 ## Model-first Agent planning update (2026-08-15)
 
 | Criterion | Status | Evidence | Limitation |
@@ -2621,3 +2637,22 @@ Milestone 193 status: `IMPLEMENTED BUT NOT FULLY VERIFIED`.
 | @ command scope | PASS (local/package source) | `npm.cmd test`; `npm.cmd run check`; `npm.cmd run check:agent`; `npm.cmd run build`; launched packaged SOLAT and inspected composer | Composer shows the CPU icon; typing `@` is the only menu trigger; the only declared commands are `@create-file` and `@computer-use`; CPU becomes red while menu/command is active | `renderer/index.html`; `renderer/renderer.js`; `src/core/conversation-core.js`; `test/ui.test.js`; `test/agent-conversation.test.js` | A live click-through of the popup was interrupted by concurrent user input; static UI, trigger logic, and packaged CPU presence are verified |
 | Direct create routing | PASS (local contract) | `node --test test/agent-conversation.test.js` | Thai/English create requests with explicit filename/content call `filesystem_create` directly, produce `confirmation_required`, and do not call the model first; missing filename/content returns a truthful request for the missing fields | `src/core/conversation-core.js`; `test/agent-conversation.test.js` | Provider-generated file content remains model-dependent when the user does not provide content |
 | @ command selection reliability | PASS (local UI contract) | The command menu handles `pointerdown` before the composer blur can close its body-level popover; `select()` ignores its immediate synthetic click, retains explicit checked/active state, and restores focus to the composer | `node --test test/ui.test.js` passes 9/9; `npm.cmd run check` and `git diff --check` pass | `renderer/index.html`; `renderer/renderer.js`; `test/ui.test.js` | This source change must be included in the next desktop rebuild before it is asserted for the packaged EXE |
+
+## Model-planned Agent safety completion (2026-08-15)
+
+| criterion | status | exact command/action | exact input/output | files/evidence | limitation |
+|---|---|---|---|---|---|
+| Live model file planning respects approval | PASS | `npm.cmd run smoke:agent-planner-live -- --execute` | Configured `deepseek_api` / `deepseek-v4-flash` selected `filesystem_create`; approval was required and `live-smoke.txt` was confirmed absent before approval | `scripts/smoke-agent-planner-live.js` | One controlled file-create request; not a semantic quality benchmark |
+| Live model computer planning respects approval | PASS | `npm.cmd run smoke:computer-task-planner-live -- --execute` | Model selected `computer_open_website` for an open-Google goal; no browser or computer mutation occurred before approval | `scripts/smoke-computer-task-planner-live.js`; `src/core/computer-task-loop.js` | Uses an inert adapter to prove planning and approval only; external websites were not opened |
+| Interrupt and result binding | PASS | `npm.cmd test`; focused task/Agent tests | Newer Computer Use instructions cancel old persistent approval actions; UI removes stale dialogs; a continuation must supply the exact pending action idempotency key; unobserved success claims are rejected | `src/core/computer-task-loop.js`; `src/core/agent-chat-bridge.js`; `renderer/renderer.js`; `test/computer-task-loop.test.js`; `test/agent-e2e.test.js` | Task-loop state itself is in-memory across an app restart; persisted Agent plans remain owner/session scoped and cannot auto-run |
+| Final package and desktop launch | PASS | `npm.cmd test`; `npm.cmd run check`; `npm.cmd run check:agent`; `npm.cmd run build`; launch `D:\SOLAT_V3\dist\win-unpacked\SOLAT.exe` | 226/226 local tests pass; checks/build pass; packaged SOLAT starts from the stated path | `D:\SOLAT_V3\dist\win-unpacked\SOLAT.exe` | Arbitrary third-party apps, authentication, UAC/secure desktop and game automation remain out of scope and fail closed |
+
+## Computer Use completion lifecycle and media-control recovery (2026-08-15)
+
+| criterion | status | exact command/action | exact input/output | files/evidence | limitation |
+|---|---|---|---|---|---|
+| High-level YouTube command routing | PASS | `npm.cmd run smoke:agent-youtube-planner-live -- --execute` | DeepSeek selected `computer_play_youtube_music(query: Lllies)` and stopped at owner approval; the request no longer enters the screen planner twice | `src/core/conversation-core.js`; `src/core/agent-command-planner.js`; `scripts/smoke-agent-youtube-planner-live.js` | One live planning request; playback itself still requires explicit approval and verified UI state |
+| Dynamic YouTube control recovery | PASS | `npm.cmd test -- --test-name-pattern="computer adapter retries a transient"` | A transient `element_not_found` media-control result triggers bounded re-inspection; no success is returned without a verified playback state | `src/core/computer-use-adapter.js`; `test/computer-use-adapter.test.js` | Real websites can change markup or deny playback; failures remain visible after the deadline |
+| Computer Use five-case fixture | PASS | `npm.cmd run smoke:computer-use-5-cases -- --execute` | CU-01 list windows, CU-02 inspect, CU-03 approval gate, CU-04 approved set-value, CU-05 approved invoke/postcondition: 5/5 PASS | `scripts/smoke-computer-use-5-cases.js` | Disposable WinForms fixture only; no credentials, UAC, game, or arbitrary third-party app |
+| Agent completion UI state | PASS | `npm.cmd test`; rebuilt packaged app and inspected the SOLAT window | Verified actions use a cyan success state, cancelled actions use a neutral state, failures remain red with truthful error text; successful approval ends the pending task and reports `Completed · verified` | `renderer/renderer.js`; `renderer/index.html`; `test/ui.test.js` | Historical failures remain visible as history and are not erased |
+| Current packaged desktop | PASS | `npm.cmd run build`; launch `D:\SOLAT_V3\dist\win-unpacked\SOLAT.exe`; inspect via Windows accessibility | Packaged executable starts and exposes the SOLAT workspace; build includes the lifecycle/UI/media-control fixes | `D:\SOLAT_V3\dist\win-unpacked\SOLAT.exe` | Two returned Electron window records were observed during verification; both are the same packaged app title |

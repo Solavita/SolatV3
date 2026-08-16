@@ -50,3 +50,26 @@ test('chat Agent computer mutation does not reach adapter before approval', asyn
   assert.equal(completed.plan.status, 'SUCCEEDED');
   assert.equal(mutationCalls, 1);
 });
+
+test('a superseded pending chat action is cancelled durably and cannot run later', async t => {
+  const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'solat-agent-supersede-'));
+  t.after(() => fs.promises.rm(root, { recursive: true, force: true }));
+  let writes = 0;
+  const computer = createComputerAgentTools({ adapter: {
+    async listWindows() { return { schema_version: 'solat.computer-result.v1', status: 'ready', operation: 'list_windows', windows: [] }; },
+    async inspect() { return { schema_version: 'solat.computer-result.v1', status: 'ready', operation: 'inspect', tree: {} }; },
+    async invoke() { writes += 1; return { schema_version: 'solat.computer-result.v1', status: 'ready', operation: 'invoke', verified: true }; },
+    async setValue() { writes += 1; return { schema_version: 'solat.computer-result.v1', status: 'ready', operation: 'set_value', verified: true }; },
+  } });
+  const tools = composeAgentTools(computer);
+  const service = new AgentService({ rootDir: path.join(root, 'plans'), toolRegistry: tools.registry, executeTool: tools.executeTool });
+  const bridge = new AgentChatBridge({ agentService: service, toolDefinitions: tools.definitions });
+  const pending = await bridge.execute({ sessionId: 'owner-3', requestId: 'old-instruction', call: {
+    name: 'computer_invoke', arguments: { hwnd: 123, selector: 'old-button', verify_selector: 'done', verify_state: 'present' },
+  } });
+  const cancelled = await bridge.cancelAction({ sessionId: 'owner-3', idempotencyKey: pending.action.idempotency_key });
+  assert.equal(cancelled.status, 'CANCELLED');
+  const lateRun = await service.run({ ownerId: 'owner-3', sessionId: 'owner-3', idempotencyKey: pending.action.idempotency_key });
+  assert.equal(lateRun.plan.status, 'CANCELLED');
+  assert.equal(writes, 0);
+});

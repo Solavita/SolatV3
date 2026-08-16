@@ -234,7 +234,7 @@ test('readConfig can load a packaged-app env file without requiring a writable a
   assert.equal(config.model, 'packaged-model');
 });
 
-test('readConfig defaults to the DeepSeek V4 Flash milestone provider', () => {
+test('readConfig defaults to the DeepSeek provider', () => {
   const config = readConfig({ cwd: 'C:\\path-that-does-not-exist', env: {} });
   assert.equal(config.provider, 'deepseek_api');
   assert.equal(config.baseUrl, 'https://api.deepseek.com');
@@ -242,6 +242,19 @@ test('readConfig defaults to the DeepSeek V4 Flash milestone provider', () => {
   assert.equal(config.thinkingMode, 'disabled');
   assert.equal(config.searchProvider, 'ddg');
   assert.equal(config.apiKey, '');
+  assert.equal(config.timeoutMs, 45000);
+});
+
+test('readConfig converts a RunPod runsync URL to the vLLM OpenAI base URL', () => {
+  const config = readConfig({
+    cwd: 'C:\\path-that-does-not-exist',
+    env: {
+      SOLAT_MODEL_PROVIDER: 'runpod_vllm',
+      SOLAT_MODEL_BASE_URL: 'https://api.runpod.ai/v2/endpoint-id/runsync',
+      SOLAT_MODEL_API_KEY: 'key',
+    },
+  });
+  assert.equal(config.baseUrl, 'https://api.runpod.ai/v2/endpoint-id/openai/v1');
 });
 
 test('readConfig accepts the existing seconds-based provider timeout without exposing it', () => {
@@ -295,6 +308,29 @@ test('OpenAI-compatible provider sends only the configured model request and ret
   assert.equal(JSON.parse(calls[0].options.body).model, 'test-model');
   assert.equal(JSON.parse(calls[0].options.body).stream, false);
   assert.equal('thinking' in JSON.parse(calls[0].options.body), false);
+});
+
+test('RunPod vLLM uses its OpenAI endpoint and forces sequential tool calls', async () => {
+  let request;
+  const provider = new OpenAICompatibleProvider({
+    provider: 'runpod_vllm',
+    baseUrl: 'https://api.runpod.ai/v2/endpoint-id/openai/v1',
+    apiKey: 'local-key',
+    model: 'Qwen/Qwen3.8-27B',
+    timeoutMs: 1000,
+  }, async (url, options) => {
+    request = { url, body: JSON.parse(options.body) };
+    return { ok: true, async json() { return { choices: [{ message: { content: 'ok' } }] }; } };
+  });
+  const result = await provider.complete([{ role: 'user', content: 'hi' }], {
+    tools: [{ type: 'function', function: { name: 'observe', parameters: { type: 'object', properties: {}, additionalProperties: false } } }],
+  });
+  assert.equal(request.url, 'https://api.runpod.ai/v2/endpoint-id/openai/v1/chat/completions');
+  assert.equal(request.body.parallel_tool_calls, false);
+  assert.equal(request.body.tool_choice, 'auto');
+  assert.equal('thinking' in request.body, false);
+  assert.equal(result.provider, 'runpod_vllm');
+  assert.equal(provider.status().baseHost, 'api.runpod.ai');
 });
 
 test('DeepSeek V4 request explicitly disables thinking for a reliable chat response', async () => {

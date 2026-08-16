@@ -1,0 +1,1300 @@
+{
+  "schema_version": "solat.capability-local-report.v1",
+  "execution_mode": "local production boundaries",
+  "case_count": 100,
+  "pass": 80,
+  "fail": 0,
+  "not_verified": 20,
+  "results": [
+    {
+      "id": "cap100_000_file_intake_safety",
+      "category": "file_intake_safety",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_intake_safety",
+        "operation": "file_intake_safety",
+        "status": "stored",
+        "asset_id": "asset_e890a06e-d20f-4bc5-b9fa-338c06a65758"
+      }
+    },
+    {
+      "id": "cap100_001_file_intake_safety",
+      "category": "file_intake_safety",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_intake_safety",
+        "operation": "file_intake_safety",
+        "status": "stored",
+        "asset_id": "asset_bd462609-54cb-4acc-91e8-2ea0095dd35f"
+      }
+    },
+    {
+      "id": "cap100_002_file_intake_safety",
+      "category": "file_intake_safety",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_intake_safety",
+        "operation": "file_intake_safety",
+        "status": "stored",
+        "asset_id": "asset_14ce50a7-a50c-4125-b73c-6c245e28a0d4"
+      }
+    },
+    {
+      "id": "cap100_003_file_intake_safety",
+      "category": "file_intake_safety",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_intake_safety",
+        "operation": "file_intake_safety",
+        "status": "stored",
+        "asset_id": "asset_01ef5359-8cd4-43a2-8dc2-811c440c2ee5"
+      }
+    },
+    {
+      "id": "cap100_004_file_intake_safety",
+      "category": "file_intake_safety",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_intake_safety",
+        "operation": "file_intake_safety",
+        "status": "stored",
+        "asset_id": "asset_f52b5221-1801-4c8f-84e2-496ebb6496e7"
+      }
+    },
+    {
+      "id": "cap100_005_file_intake_safety",
+      "category": "file_intake_safety",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_intake_safety",
+        "operation": "file_intake_safety",
+        "status": "stored",
+        "asset_id": "asset_c07433c0-69e7-416a-979e-bedb95310bbc"
+      }
+    },
+    {
+      "id": "cap100_006_file_intake_safety",
+      "category": "file_intake_safety",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_intake_safety",
+        "operation": "file_intake_safety",
+        "status": "stored",
+        "asset_id": "asset_8dff3500-70b6-4902-a42e-606d8321f2ab"
+      }
+    },
+    {
+      "id": "cap100_007_file_intake_safety",
+      "category": "file_intake_safety",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_intake_safety",
+        "operation": "file_intake_safety",
+        "status": "stored",
+        "asset_id": "asset_f96d83f9-0e6d-4e5a-b60d-205c898eb4fe"
+      }
+    },
+    {
+      "id": "cap100_008_file_intake_safety",
+      "category": "file_intake_safety",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_intake_safety",
+        "operation": "file_intake_safety",
+        "status": "stored",
+        "asset_id": "asset_dafa99e9-4d13-4169-9f43-8145494f5018"
+      }
+    },
+    {
+      "id": "cap100_009_file_intake_safety",
+      "category": "file_intake_safety",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_intake_safety",
+        "operation": "file_intake_safety",
+        "status": "stored",
+        "asset_id": "asset_1f628af5-1afa-49a8-b52a-b350d9917240"
+      }
+    },
+    {
+      "id": "cap100_010_file_duplicate_isolation",
+      "category": "file_duplicate_isolation",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_duplicate_isolation",
+        "operation": "file_duplicate_isolation",
+        "first": "stored",
+        "second": "duplicate",
+        "owner": "session-010"
+      }
+    },
+    {
+      "id": "cap100_011_file_duplicate_isolation",
+      "category": "file_duplicate_isolation",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_duplicate_isolation",
+        "operation": "file_duplicate_isolation",
+        "first": "stored",
+        "second": "duplicate",
+        "owner": "session-011"
+      }
+    },
+    {
+      "id": "cap100_012_file_duplicate_isolation",
+      "category": "file_duplicate_isolation",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_duplicate_isolation",
+        "operation": "file_duplicate_isolation",
+        "first": "stored",
+        "second": "duplicate",
+        "owner": "session-012"
+      }
+    },
+    {
+      "id": "cap100_013_file_duplicate_isolation",
+      "category": "file_duplicate_isolation",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_duplicate_isolation",
+        "operation": "file_duplicate_isolation",
+        "first": "stored",
+        "second": "duplicate",
+        "owner": "session-013"
+      }
+    },
+    {
+      "id": "cap100_014_file_duplicate_isolation",
+      "category": "file_duplicate_isolation",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_duplicate_isolation",
+        "operation": "file_duplicate_isolation",
+        "first": "stored",
+        "second": "duplicate",
+        "owner": "session-014"
+      }
+    },
+    {
+      "id": "cap100_015_file_duplicate_isolation",
+      "category": "file_duplicate_isolation",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_duplicate_isolation",
+        "operation": "file_duplicate_isolation",
+        "first": "stored",
+        "second": "duplicate",
+        "owner": "session-015"
+      }
+    },
+    {
+      "id": "cap100_016_file_duplicate_isolation",
+      "category": "file_duplicate_isolation",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_duplicate_isolation",
+        "operation": "file_duplicate_isolation",
+        "first": "stored",
+        "second": "duplicate",
+        "owner": "session-016"
+      }
+    },
+    {
+      "id": "cap100_017_file_duplicate_isolation",
+      "category": "file_duplicate_isolation",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_duplicate_isolation",
+        "operation": "file_duplicate_isolation",
+        "first": "stored",
+        "second": "duplicate",
+        "owner": "session-017"
+      }
+    },
+    {
+      "id": "cap100_018_file_duplicate_isolation",
+      "category": "file_duplicate_isolation",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_duplicate_isolation",
+        "operation": "file_duplicate_isolation",
+        "first": "stored",
+        "second": "duplicate",
+        "owner": "session-018"
+      }
+    },
+    {
+      "id": "cap100_019_file_duplicate_isolation",
+      "category": "file_duplicate_isolation",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_duplicate_isolation",
+        "operation": "file_duplicate_isolation",
+        "first": "stored",
+        "second": "duplicate",
+        "owner": "session-019"
+      }
+    },
+    {
+      "id": "cap100_020_file_status_provenance",
+      "category": "file_status_provenance",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_status_provenance",
+        "operation": "file_status_provenance",
+        "intake_status": "stored",
+        "extraction_status": "EXTRACTED",
+        "original_hash": "sha256:b6858b03a6cae635deeaeab09a74e598979b72c917cbfff0bb3fe2cd05111dbc",
+        "citations": [
+          {
+            "line": 1,
+            "text": "line one"
+          },
+          {
+            "line": 2,
+            "text": "line two"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cap100_021_file_status_provenance",
+      "category": "file_status_provenance",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_status_provenance",
+        "operation": "file_status_provenance",
+        "intake_status": "stored",
+        "extraction_status": "EXTRACTED",
+        "original_hash": "sha256:b6858b03a6cae635deeaeab09a74e598979b72c917cbfff0bb3fe2cd05111dbc",
+        "citations": [
+          {
+            "line": 1,
+            "text": "line one"
+          },
+          {
+            "line": 2,
+            "text": "line two"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cap100_022_file_status_provenance",
+      "category": "file_status_provenance",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_status_provenance",
+        "operation": "file_status_provenance",
+        "intake_status": "stored",
+        "extraction_status": "EXTRACTED",
+        "original_hash": "sha256:b6858b03a6cae635deeaeab09a74e598979b72c917cbfff0bb3fe2cd05111dbc",
+        "citations": [
+          {
+            "line": 1,
+            "text": "line one"
+          },
+          {
+            "line": 2,
+            "text": "line two"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cap100_023_file_status_provenance",
+      "category": "file_status_provenance",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_status_provenance",
+        "operation": "file_status_provenance",
+        "intake_status": "stored",
+        "extraction_status": "EXTRACTED",
+        "original_hash": "sha256:b6858b03a6cae635deeaeab09a74e598979b72c917cbfff0bb3fe2cd05111dbc",
+        "citations": [
+          {
+            "line": 1,
+            "text": "line one"
+          },
+          {
+            "line": 2,
+            "text": "line two"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cap100_024_file_status_provenance",
+      "category": "file_status_provenance",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_status_provenance",
+        "operation": "file_status_provenance",
+        "intake_status": "stored",
+        "extraction_status": "EXTRACTED",
+        "original_hash": "sha256:b6858b03a6cae635deeaeab09a74e598979b72c917cbfff0bb3fe2cd05111dbc",
+        "citations": [
+          {
+            "line": 1,
+            "text": "line one"
+          },
+          {
+            "line": 2,
+            "text": "line two"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cap100_025_file_status_provenance",
+      "category": "file_status_provenance",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_status_provenance",
+        "operation": "file_status_provenance",
+        "intake_status": "stored",
+        "extraction_status": "EXTRACTED",
+        "original_hash": "sha256:b6858b03a6cae635deeaeab09a74e598979b72c917cbfff0bb3fe2cd05111dbc",
+        "citations": [
+          {
+            "line": 1,
+            "text": "line one"
+          },
+          {
+            "line": 2,
+            "text": "line two"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cap100_026_file_status_provenance",
+      "category": "file_status_provenance",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_status_provenance",
+        "operation": "file_status_provenance",
+        "intake_status": "stored",
+        "extraction_status": "EXTRACTED",
+        "original_hash": "sha256:b6858b03a6cae635deeaeab09a74e598979b72c917cbfff0bb3fe2cd05111dbc",
+        "citations": [
+          {
+            "line": 1,
+            "text": "line one"
+          },
+          {
+            "line": 2,
+            "text": "line two"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cap100_027_file_status_provenance",
+      "category": "file_status_provenance",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_status_provenance",
+        "operation": "file_status_provenance",
+        "intake_status": "stored",
+        "extraction_status": "EXTRACTED",
+        "original_hash": "sha256:b6858b03a6cae635deeaeab09a74e598979b72c917cbfff0bb3fe2cd05111dbc",
+        "citations": [
+          {
+            "line": 1,
+            "text": "line one"
+          },
+          {
+            "line": 2,
+            "text": "line two"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cap100_028_file_status_provenance",
+      "category": "file_status_provenance",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_status_provenance",
+        "operation": "file_status_provenance",
+        "intake_status": "stored",
+        "extraction_status": "EXTRACTED",
+        "original_hash": "sha256:b6858b03a6cae635deeaeab09a74e598979b72c917cbfff0bb3fe2cd05111dbc",
+        "citations": [
+          {
+            "line": 1,
+            "text": "line one"
+          },
+          {
+            "line": 2,
+            "text": "line two"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cap100_029_file_status_provenance",
+      "category": "file_status_provenance",
+      "status": "PASS",
+      "evidence": {
+        "category": "file_status_provenance",
+        "operation": "file_status_provenance",
+        "intake_status": "stored",
+        "extraction_status": "EXTRACTED",
+        "original_hash": "sha256:b6858b03a6cae635deeaeab09a74e598979b72c917cbfff0bb3fe2cd05111dbc",
+        "citations": [
+          {
+            "line": 1,
+            "text": "line one"
+          },
+          {
+            "line": 2,
+            "text": "line two"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cap100_030_agent_registry_permissions",
+      "category": "agent_registry_permissions",
+      "status": "PASS",
+      "evidence": {
+        "category": "agent_registry_permissions",
+        "operation": "agent_registry_permissions",
+        "status": "FAILED",
+        "failure": {
+          "code": "unauthorized_tool",
+          "message": "Tool is not registered: write.",
+          "step_id": "step-1"
+        }
+      }
+    },
+    {
+      "id": "cap100_031_agent_registry_permissions",
+      "category": "agent_registry_permissions",
+      "status": "PASS",
+      "evidence": {
+        "category": "agent_registry_permissions",
+        "operation": "agent_registry_permissions",
+        "status": "FAILED",
+        "failure": {
+          "code": "unauthorized_tool",
+          "message": "Tool is not registered: write.",
+          "step_id": "step-1"
+        }
+      }
+    },
+    {
+      "id": "cap100_032_agent_registry_permissions",
+      "category": "agent_registry_permissions",
+      "status": "PASS",
+      "evidence": {
+        "category": "agent_registry_permissions",
+        "operation": "agent_registry_permissions",
+        "status": "FAILED",
+        "failure": {
+          "code": "unauthorized_tool",
+          "message": "Tool is not registered: write.",
+          "step_id": "step-1"
+        }
+      }
+    },
+    {
+      "id": "cap100_033_agent_registry_permissions",
+      "category": "agent_registry_permissions",
+      "status": "PASS",
+      "evidence": {
+        "category": "agent_registry_permissions",
+        "operation": "agent_registry_permissions",
+        "status": "FAILED",
+        "failure": {
+          "code": "unauthorized_tool",
+          "message": "Tool is not registered: write.",
+          "step_id": "step-1"
+        }
+      }
+    },
+    {
+      "id": "cap100_034_agent_registry_permissions",
+      "category": "agent_registry_permissions",
+      "status": "PASS",
+      "evidence": {
+        "category": "agent_registry_permissions",
+        "operation": "agent_registry_permissions",
+        "status": "FAILED",
+        "failure": {
+          "code": "unauthorized_tool",
+          "message": "Tool is not registered: write.",
+          "step_id": "step-1"
+        }
+      }
+    },
+    {
+      "id": "cap100_035_agent_registry_permissions",
+      "category": "agent_registry_permissions",
+      "status": "PASS",
+      "evidence": {
+        "category": "agent_registry_permissions",
+        "operation": "agent_registry_permissions",
+        "status": "FAILED",
+        "failure": {
+          "code": "unauthorized_tool",
+          "message": "Tool is not registered: write.",
+          "step_id": "step-1"
+        }
+      }
+    },
+    {
+      "id": "cap100_036_agent_registry_permissions",
+      "category": "agent_registry_permissions",
+      "status": "PASS",
+      "evidence": {
+        "category": "agent_registry_permissions",
+        "operation": "agent_registry_permissions",
+        "status": "FAILED",
+        "failure": {
+          "code": "unauthorized_tool",
+          "message": "Tool is not registered: write.",
+          "step_id": "step-1"
+        }
+      }
+    },
+    {
+      "id": "cap100_037_agent_registry_permissions",
+      "category": "agent_registry_permissions",
+      "status": "PASS",
+      "evidence": {
+        "category": "agent_registry_permissions",
+        "operation": "agent_registry_permissions",
+        "status": "FAILED",
+        "failure": {
+          "code": "unauthorized_tool",
+          "message": "Tool is not registered: write.",
+          "step_id": "step-1"
+        }
+      }
+    },
+    {
+      "id": "cap100_038_agent_registry_permissions",
+      "category": "agent_registry_permissions",
+      "status": "PASS",
+      "evidence": {
+        "category": "agent_registry_permissions",
+        "operation": "agent_registry_permissions",
+        "status": "FAILED",
+        "failure": {
+          "code": "unauthorized_tool",
+          "message": "Tool is not registered: write.",
+          "step_id": "step-1"
+        }
+      }
+    },
+    {
+      "id": "cap100_039_agent_registry_permissions",
+      "category": "agent_registry_permissions",
+      "status": "PASS",
+      "evidence": {
+        "category": "agent_registry_permissions",
+        "operation": "agent_registry_permissions",
+        "status": "FAILED",
+        "failure": {
+          "code": "unauthorized_tool",
+          "message": "Tool is not registered: write.",
+          "step_id": "step-1"
+        }
+      }
+    },
+    {
+      "id": "cap100_040_agent_approval",
+      "category": "agent_approval",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_approval",
+        "operation": "agent_approval",
+        "verification": "No production write tool is registered; approval side-effect path remains unverified."
+      }
+    },
+    {
+      "id": "cap100_041_agent_approval",
+      "category": "agent_approval",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_approval",
+        "operation": "agent_approval",
+        "verification": "No production write tool is registered; approval side-effect path remains unverified."
+      }
+    },
+    {
+      "id": "cap100_042_agent_approval",
+      "category": "agent_approval",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_approval",
+        "operation": "agent_approval",
+        "verification": "No production write tool is registered; approval side-effect path remains unverified."
+      }
+    },
+    {
+      "id": "cap100_043_agent_approval",
+      "category": "agent_approval",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_approval",
+        "operation": "agent_approval",
+        "verification": "No production write tool is registered; approval side-effect path remains unverified."
+      }
+    },
+    {
+      "id": "cap100_044_agent_approval",
+      "category": "agent_approval",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_approval",
+        "operation": "agent_approval",
+        "verification": "No production write tool is registered; approval side-effect path remains unverified."
+      }
+    },
+    {
+      "id": "cap100_045_agent_approval",
+      "category": "agent_approval",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_approval",
+        "operation": "agent_approval",
+        "verification": "No production write tool is registered; approval side-effect path remains unverified."
+      }
+    },
+    {
+      "id": "cap100_046_agent_approval",
+      "category": "agent_approval",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_approval",
+        "operation": "agent_approval",
+        "verification": "No production write tool is registered; approval side-effect path remains unverified."
+      }
+    },
+    {
+      "id": "cap100_047_agent_approval",
+      "category": "agent_approval",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_approval",
+        "operation": "agent_approval",
+        "verification": "No production write tool is registered; approval side-effect path remains unverified."
+      }
+    },
+    {
+      "id": "cap100_048_agent_approval",
+      "category": "agent_approval",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_approval",
+        "operation": "agent_approval",
+        "verification": "No production write tool is registered; approval side-effect path remains unverified."
+      }
+    },
+    {
+      "id": "cap100_049_agent_approval",
+      "category": "agent_approval",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_approval",
+        "operation": "agent_approval",
+        "verification": "No production write tool is registered; approval side-effect path remains unverified."
+      }
+    },
+    {
+      "id": "cap100_050_agent_failure_control",
+      "category": "agent_failure_control",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_failure_control",
+        "operation": "agent_failure_control",
+        "verification": "No production tool with a bounded timeout/failure injection is registered."
+      }
+    },
+    {
+      "id": "cap100_051_agent_failure_control",
+      "category": "agent_failure_control",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_failure_control",
+        "operation": "agent_failure_control",
+        "verification": "No production tool with a bounded timeout/failure injection is registered."
+      }
+    },
+    {
+      "id": "cap100_052_agent_failure_control",
+      "category": "agent_failure_control",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_failure_control",
+        "operation": "agent_failure_control",
+        "verification": "No production tool with a bounded timeout/failure injection is registered."
+      }
+    },
+    {
+      "id": "cap100_053_agent_failure_control",
+      "category": "agent_failure_control",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_failure_control",
+        "operation": "agent_failure_control",
+        "verification": "No production tool with a bounded timeout/failure injection is registered."
+      }
+    },
+    {
+      "id": "cap100_054_agent_failure_control",
+      "category": "agent_failure_control",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_failure_control",
+        "operation": "agent_failure_control",
+        "verification": "No production tool with a bounded timeout/failure injection is registered."
+      }
+    },
+    {
+      "id": "cap100_055_agent_failure_control",
+      "category": "agent_failure_control",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_failure_control",
+        "operation": "agent_failure_control",
+        "verification": "No production tool with a bounded timeout/failure injection is registered."
+      }
+    },
+    {
+      "id": "cap100_056_agent_failure_control",
+      "category": "agent_failure_control",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_failure_control",
+        "operation": "agent_failure_control",
+        "verification": "No production tool with a bounded timeout/failure injection is registered."
+      }
+    },
+    {
+      "id": "cap100_057_agent_failure_control",
+      "category": "agent_failure_control",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_failure_control",
+        "operation": "agent_failure_control",
+        "verification": "No production tool with a bounded timeout/failure injection is registered."
+      }
+    },
+    {
+      "id": "cap100_058_agent_failure_control",
+      "category": "agent_failure_control",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_failure_control",
+        "operation": "agent_failure_control",
+        "verification": "No production tool with a bounded timeout/failure injection is registered."
+      }
+    },
+    {
+      "id": "cap100_059_agent_failure_control",
+      "category": "agent_failure_control",
+      "status": "NOT_VERIFIED",
+      "evidence": {
+        "category": "agent_failure_control",
+        "operation": "agent_failure_control",
+        "verification": "No production tool with a bounded timeout/failure injection is registered."
+      }
+    },
+    {
+      "id": "cap100_060_audit_idempotency",
+      "category": "audit_idempotency",
+      "status": "PASS",
+      "evidence": {
+        "category": "audit_idempotency",
+        "operation": "audit_idempotency",
+        "first": "SUCCEEDED",
+        "audit_events": [
+          "plan_created",
+          "step_started",
+          "step_succeeded",
+          "plan_succeeded"
+        ],
+        "same_plan": true
+      }
+    },
+    {
+      "id": "cap100_061_audit_idempotency",
+      "category": "audit_idempotency",
+      "status": "PASS",
+      "evidence": {
+        "category": "audit_idempotency",
+        "operation": "audit_idempotency",
+        "first": "SUCCEEDED",
+        "audit_events": [
+          "plan_created",
+          "step_started",
+          "step_succeeded",
+          "plan_succeeded"
+        ],
+        "same_plan": true
+      }
+    },
+    {
+      "id": "cap100_062_audit_idempotency",
+      "category": "audit_idempotency",
+      "status": "PASS",
+      "evidence": {
+        "category": "audit_idempotency",
+        "operation": "audit_idempotency",
+        "first": "SUCCEEDED",
+        "audit_events": [
+          "plan_created",
+          "step_started",
+          "step_succeeded",
+          "plan_succeeded"
+        ],
+        "same_plan": true
+      }
+    },
+    {
+      "id": "cap100_063_audit_idempotency",
+      "category": "audit_idempotency",
+      "status": "PASS",
+      "evidence": {
+        "category": "audit_idempotency",
+        "operation": "audit_idempotency",
+        "first": "SUCCEEDED",
+        "audit_events": [
+          "plan_created",
+          "step_started",
+          "step_succeeded",
+          "plan_succeeded"
+        ],
+        "same_plan": true
+      }
+    },
+    {
+      "id": "cap100_064_audit_idempotency",
+      "category": "audit_idempotency",
+      "status": "PASS",
+      "evidence": {
+        "category": "audit_idempotency",
+        "operation": "audit_idempotency",
+        "first": "SUCCEEDED",
+        "audit_events": [
+          "plan_created",
+          "step_started",
+          "step_succeeded",
+          "plan_succeeded"
+        ],
+        "same_plan": true
+      }
+    },
+    {
+      "id": "cap100_065_audit_idempotency",
+      "category": "audit_idempotency",
+      "status": "PASS",
+      "evidence": {
+        "category": "audit_idempotency",
+        "operation": "audit_idempotency",
+        "first": "SUCCEEDED",
+        "audit_events": [
+          "plan_created",
+          "step_started",
+          "step_succeeded",
+          "plan_succeeded"
+        ],
+        "same_plan": true
+      }
+    },
+    {
+      "id": "cap100_066_audit_idempotency",
+      "category": "audit_idempotency",
+      "status": "PASS",
+      "evidence": {
+        "category": "audit_idempotency",
+        "operation": "audit_idempotency",
+        "first": "SUCCEEDED",
+        "audit_events": [
+          "plan_created",
+          "step_started",
+          "step_succeeded",
+          "plan_succeeded"
+        ],
+        "same_plan": true
+      }
+    },
+    {
+      "id": "cap100_067_audit_idempotency",
+      "category": "audit_idempotency",
+      "status": "PASS",
+      "evidence": {
+        "category": "audit_idempotency",
+        "operation": "audit_idempotency",
+        "first": "SUCCEEDED",
+        "audit_events": [
+          "plan_created",
+          "step_started",
+          "step_succeeded",
+          "plan_succeeded"
+        ],
+        "same_plan": true
+      }
+    },
+    {
+      "id": "cap100_068_audit_idempotency",
+      "category": "audit_idempotency",
+      "status": "PASS",
+      "evidence": {
+        "category": "audit_idempotency",
+        "operation": "audit_idempotency",
+        "first": "SUCCEEDED",
+        "audit_events": [
+          "plan_created",
+          "step_started",
+          "step_succeeded",
+          "plan_succeeded"
+        ],
+        "same_plan": true
+      }
+    },
+    {
+      "id": "cap100_069_audit_idempotency",
+      "category": "audit_idempotency",
+      "status": "PASS",
+      "evidence": {
+        "category": "audit_idempotency",
+        "operation": "audit_idempotency",
+        "first": "SUCCEEDED",
+        "audit_events": [
+          "plan_created",
+          "step_started",
+          "step_succeeded",
+          "plan_succeeded"
+        ],
+        "same_plan": true
+      }
+    },
+    {
+      "id": "cap100_070_prompt_injection_evidence",
+      "category": "prompt_injection_evidence",
+      "status": "PASS",
+      "evidence": {
+        "category": "prompt_injection_evidence",
+        "operation": "prompt_injection_evidence",
+        "trust": "untrusted_external_data",
+        "contains_text": true
+      }
+    },
+    {
+      "id": "cap100_071_prompt_injection_evidence",
+      "category": "prompt_injection_evidence",
+      "status": "PASS",
+      "evidence": {
+        "category": "prompt_injection_evidence",
+        "operation": "prompt_injection_evidence",
+        "trust": "untrusted_external_data",
+        "contains_text": true
+      }
+    },
+    {
+      "id": "cap100_072_prompt_injection_evidence",
+      "category": "prompt_injection_evidence",
+      "status": "PASS",
+      "evidence": {
+        "category": "prompt_injection_evidence",
+        "operation": "prompt_injection_evidence",
+        "trust": "untrusted_external_data",
+        "contains_text": true
+      }
+    },
+    {
+      "id": "cap100_073_prompt_injection_evidence",
+      "category": "prompt_injection_evidence",
+      "status": "PASS",
+      "evidence": {
+        "category": "prompt_injection_evidence",
+        "operation": "prompt_injection_evidence",
+        "trust": "untrusted_external_data",
+        "contains_text": true
+      }
+    },
+    {
+      "id": "cap100_074_prompt_injection_evidence",
+      "category": "prompt_injection_evidence",
+      "status": "PASS",
+      "evidence": {
+        "category": "prompt_injection_evidence",
+        "operation": "prompt_injection_evidence",
+        "trust": "untrusted_external_data",
+        "contains_text": true
+      }
+    },
+    {
+      "id": "cap100_075_prompt_injection_evidence",
+      "category": "prompt_injection_evidence",
+      "status": "PASS",
+      "evidence": {
+        "category": "prompt_injection_evidence",
+        "operation": "prompt_injection_evidence",
+        "trust": "untrusted_external_data",
+        "contains_text": true
+      }
+    },
+    {
+      "id": "cap100_076_prompt_injection_evidence",
+      "category": "prompt_injection_evidence",
+      "status": "PASS",
+      "evidence": {
+        "category": "prompt_injection_evidence",
+        "operation": "prompt_injection_evidence",
+        "trust": "untrusted_external_data",
+        "contains_text": true
+      }
+    },
+    {
+      "id": "cap100_077_prompt_injection_evidence",
+      "category": "prompt_injection_evidence",
+      "status": "PASS",
+      "evidence": {
+        "category": "prompt_injection_evidence",
+        "operation": "prompt_injection_evidence",
+        "trust": "untrusted_external_data",
+        "contains_text": true
+      }
+    },
+    {
+      "id": "cap100_078_prompt_injection_evidence",
+      "category": "prompt_injection_evidence",
+      "status": "PASS",
+      "evidence": {
+        "category": "prompt_injection_evidence",
+        "operation": "prompt_injection_evidence",
+        "trust": "untrusted_external_data",
+        "contains_text": true
+      }
+    },
+    {
+      "id": "cap100_079_prompt_injection_evidence",
+      "category": "prompt_injection_evidence",
+      "status": "PASS",
+      "evidence": {
+        "category": "prompt_injection_evidence",
+        "operation": "prompt_injection_evidence",
+        "trust": "untrusted_external_data",
+        "contains_text": true
+      }
+    },
+    {
+      "id": "cap100_080_structured_output_validation",
+      "category": "structured_output_validation",
+      "status": "PASS",
+      "evidence": {
+        "category": "structured_output_validation",
+        "operation": "structured_output_validation",
+        "error_code": "malformed_response"
+      }
+    },
+    {
+      "id": "cap100_081_structured_output_validation",
+      "category": "structured_output_validation",
+      "status": "PASS",
+      "evidence": {
+        "category": "structured_output_validation",
+        "operation": "structured_output_validation",
+        "error_code": "malformed_response"
+      }
+    },
+    {
+      "id": "cap100_082_structured_output_validation",
+      "category": "structured_output_validation",
+      "status": "PASS",
+      "evidence": {
+        "category": "structured_output_validation",
+        "operation": "structured_output_validation",
+        "error_code": "malformed_response"
+      }
+    },
+    {
+      "id": "cap100_083_structured_output_validation",
+      "category": "structured_output_validation",
+      "status": "PASS",
+      "evidence": {
+        "category": "structured_output_validation",
+        "operation": "structured_output_validation",
+        "error_code": "malformed_response"
+      }
+    },
+    {
+      "id": "cap100_084_structured_output_validation",
+      "category": "structured_output_validation",
+      "status": "PASS",
+      "evidence": {
+        "category": "structured_output_validation",
+        "operation": "structured_output_validation",
+        "error_code": "malformed_response"
+      }
+    },
+    {
+      "id": "cap100_085_structured_output_validation",
+      "category": "structured_output_validation",
+      "status": "PASS",
+      "evidence": {
+        "category": "structured_output_validation",
+        "operation": "structured_output_validation",
+        "error_code": "malformed_response"
+      }
+    },
+    {
+      "id": "cap100_086_structured_output_validation",
+      "category": "structured_output_validation",
+      "status": "PASS",
+      "evidence": {
+        "category": "structured_output_validation",
+        "operation": "structured_output_validation",
+        "error_code": "malformed_response"
+      }
+    },
+    {
+      "id": "cap100_087_structured_output_validation",
+      "category": "structured_output_validation",
+      "status": "PASS",
+      "evidence": {
+        "category": "structured_output_validation",
+        "operation": "structured_output_validation",
+        "error_code": "malformed_response"
+      }
+    },
+    {
+      "id": "cap100_088_structured_output_validation",
+      "category": "structured_output_validation",
+      "status": "PASS",
+      "evidence": {
+        "category": "structured_output_validation",
+        "operation": "structured_output_validation",
+        "error_code": "malformed_response"
+      }
+    },
+    {
+      "id": "cap100_089_structured_output_validation",
+      "category": "structured_output_validation",
+      "status": "PASS",
+      "evidence": {
+        "category": "structured_output_validation",
+        "operation": "structured_output_validation",
+        "error_code": "malformed_response"
+      }
+    },
+    {
+      "id": "cap100_090_context_encoding_preflight",
+      "category": "context_encoding_preflight",
+      "status": "PASS",
+      "evidence": {
+        "category": "context_encoding_preflight",
+        "operation": "context_encoding_preflight",
+        "context_preserved": true,
+        "invalid_encoding_code": "magic_mismatch"
+      }
+    },
+    {
+      "id": "cap100_091_context_encoding_preflight",
+      "category": "context_encoding_preflight",
+      "status": "PASS",
+      "evidence": {
+        "category": "context_encoding_preflight",
+        "operation": "context_encoding_preflight",
+        "context_preserved": true,
+        "invalid_encoding_code": "magic_mismatch"
+      }
+    },
+    {
+      "id": "cap100_092_context_encoding_preflight",
+      "category": "context_encoding_preflight",
+      "status": "PASS",
+      "evidence": {
+        "category": "context_encoding_preflight",
+        "operation": "context_encoding_preflight",
+        "context_preserved": true,
+        "invalid_encoding_code": "magic_mismatch"
+      }
+    },
+    {
+      "id": "cap100_093_context_encoding_preflight",
+      "category": "context_encoding_preflight",
+      "status": "PASS",
+      "evidence": {
+        "category": "context_encoding_preflight",
+        "operation": "context_encoding_preflight",
+        "context_preserved": true,
+        "invalid_encoding_code": "magic_mismatch"
+      }
+    },
+    {
+      "id": "cap100_094_context_encoding_preflight",
+      "category": "context_encoding_preflight",
+      "status": "PASS",
+      "evidence": {
+        "category": "context_encoding_preflight",
+        "operation": "context_encoding_preflight",
+        "context_preserved": true,
+        "invalid_encoding_code": "magic_mismatch"
+      }
+    },
+    {
+      "id": "cap100_095_context_encoding_preflight",
+      "category": "context_encoding_preflight",
+      "status": "PASS",
+      "evidence": {
+        "category": "context_encoding_preflight",
+        "operation": "context_encoding_preflight",
+        "context_preserved": true,
+        "invalid_encoding_code": "magic_mismatch"
+      }
+    },
+    {
+      "id": "cap100_096_context_encoding_preflight",
+      "category": "context_encoding_preflight",
+      "status": "PASS",
+      "evidence": {
+        "category": "context_encoding_preflight",
+        "operation": "context_encoding_preflight",
+        "context_preserved": true,
+        "invalid_encoding_code": "magic_mismatch"
+      }
+    },
+    {
+      "id": "cap100_097_context_encoding_preflight",
+      "category": "context_encoding_preflight",
+      "status": "PASS",
+      "evidence": {
+        "category": "context_encoding_preflight",
+        "operation": "context_encoding_preflight",
+        "context_preserved": true,
+        "invalid_encoding_code": "magic_mismatch"
+      }
+    },
+    {
+      "id": "cap100_098_context_encoding_preflight",
+      "category": "context_encoding_preflight",
+      "status": "PASS",
+      "evidence": {
+        "category": "context_encoding_preflight",
+        "operation": "context_encoding_preflight",
+        "context_preserved": true,
+        "invalid_encoding_code": "magic_mismatch"
+      }
+    },
+    {
+      "id": "cap100_099_context_encoding_preflight",
+      "category": "context_encoding_preflight",
+      "status": "PASS",
+      "evidence": {
+        "category": "context_encoding_preflight",
+        "operation": "context_encoding_preflight",
+        "context_preserved": true,
+        "invalid_encoding_code": "magic_mismatch"
+      }
+    }
+  ]
+}
