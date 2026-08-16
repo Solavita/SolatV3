@@ -18,8 +18,40 @@ const WEBSITE_TITLE_HINTS = Object.freeze({
 });
 const DENIED_PROCESSES = new Set(['lockapp', 'logonui', 'credentialuibroker', 'taskmgr', 'regedit']);
 const SENSITIVE_TITLE_THAI = /(?:บัตร|รหัสผ่าน|ธนาคาร|ชำระเงิน)/iu;
-const SENSITIVE_ELEMENT = /(?:password|passcode|credential|isPassword\s*[=:]\s*true|รหัสผ่าน|เลขบัตร|บัญชีธนาคาร)/iu;
+// One-time codes, PIN and card verification values are credential inputs at
+// the execution boundary too; word boundaries keep "pin"/"otp" from matching
+// unrelated words such as "pinterest" in serialized UI trees.
+const SENSITIVE_ELEMENT = /(?:password|passcode|credential|isPassword\s*[=:]\s*true|\botp\b|\b2fa\b|\bpin\b|\bcvv\b|security\s*code|รหัสผ่าน|เลขบัตร|บัญชีธนาคาร|โอทีพี)/iu;
 const SENSITIVE_TITLE = /(?:password|passcode|credential|sign[ -]?in|login|bank|wallet|payment|บัตร|รหัสผ่าน|ธนาคาร)/iu;
+// Structural sensitivity must not depend on human-readable keywords alone: a
+// masked field can carry a benign name ("Field 7") while its UIA property or
+// control type still proves it is a secret input. The execution boundary
+// therefore walks parsed nodes in addition to the lexical check.
+const SENSITIVE_PASSWORD_PROPERTIES = Object.freeze(['isPassword', 'IsPassword', 'is_password']);
+const SENSITIVE_CONTROL_TYPE = /(?:password|credential|secure)/iu;
+
+function isSensitiveUiaNode(node) {
+  if (!node || typeof node !== 'object' || Array.isArray(node)) return false;
+  for (const key of SENSITIVE_PASSWORD_PROPERTIES) {
+    if (node[key] === true || node[key] === 'true') return true;
+  }
+  const controlType = String(node.type || node.controlType || node.control_type || node.role || '');
+  const className = String(node.class || node.className || node.class_name || '');
+  return SENSITIVE_CONTROL_TYPE.test(controlType) || SENSITIVE_CONTROL_TYPE.test(className);
+}
+
+function containsSensitiveUiaNode(tree) {
+  if (!tree || typeof tree !== 'object') return false;
+  if (Array.isArray(tree)) return tree.some(item => containsSensitiveUiaNode(item));
+  if (isSensitiveUiaNode(tree)) return true;
+  return Object.values(tree).some(value => value && typeof value === 'object' && containsSensitiveUiaNode(value));
+}
+
+function assertNotSensitiveTree(tree) {
+  if (SENSITIVE_ELEMENT.test(JSON.stringify(tree)) || containsSensitiveUiaNode(tree)) {
+    throw new ComputerUseError('sensitive_target', 'Password or credential fields cannot be controlled.');
+  }
+}
 
 class ComputerUseError extends Error {
   constructor(code, message, details = {}) {
@@ -616,7 +648,7 @@ class WinAppComputerUseAdapter {
     const target = await this.#assertTarget(hwnd, signal);
     const element = boundedText(selector, 'selector', 300);
     const before = await this.inspect({ hwnd: target.hwnd, selector: element, depth: 2, signal });
-    if (SENSITIVE_ELEMENT.test(JSON.stringify(before.tree))) throw new ComputerUseError('sensitive_target', 'Password or credential fields cannot be controlled.');
+    assertNotSensitiveTree(before.tree);
     await this.#run(['invoke', element, '--window', String(target.hwnd)], { signal });
     const verification = await this.#verify({ hwnd: target.hwnd, selector: verifySelector, state: verifyState, value: verifyValue, signal });
     return { schema_version: COMPUTER_RESULT_SCHEMA_VERSION, status: 'ready', operation: 'invoke', target, selector: element, verified: true, verification };
@@ -627,7 +659,7 @@ class WinAppComputerUseAdapter {
     const element = boundedText(selector, 'selector', 300);
     const text = boundedText(value, 'value', 4_000);
     const before = await this.inspect({ hwnd: target.hwnd, selector: element, depth: 2, signal });
-    if (SENSITIVE_ELEMENT.test(JSON.stringify(before.tree))) throw new ComputerUseError('sensitive_target', 'Password or credential fields cannot be controlled.');
+    assertNotSensitiveTree(before.tree);
     await this.#run(['set-value', element, text, '--window', String(target.hwnd)], { signal });
     const verification = await this.#verify({ hwnd: target.hwnd, selector: element, state: 'value', value: text, signal });
     return { schema_version: COMPUTER_RESULT_SCHEMA_VERSION, status: 'ready', operation: 'set_value', target, selector: element, value_length: text.length, verified: true, verification };
@@ -638,7 +670,7 @@ class WinAppComputerUseAdapter {
     const element = boundedText(selector, 'selector', 300);
     const expectedTitle = boundedText(verifyTitleContains, 'expected title', 200).toLocaleLowerCase();
     const before = await this.inspect({ hwnd: target.hwnd, selector: element, depth: 2, signal });
-    if (SENSITIVE_ELEMENT.test(JSON.stringify(before.tree))) throw new ComputerUseError('sensitive_target', 'Password or credential fields cannot be controlled.');
+    assertNotSensitiveTree(before.tree);
     await this.#run(['send-keys', 'enter', '--window', String(target.hwnd), '--target', element], { signal });
     const deadline = Date.now() + 5_000;
     do {
@@ -655,7 +687,7 @@ class WinAppComputerUseAdapter {
     const target = await this.#assertTarget(hwnd, signal);
     const element = boundedText(selector, 'selector', 300);
     const before = await this.inspect({ hwnd: target.hwnd, selector: element, depth: 2, signal });
-    if (SENSITIVE_ELEMENT.test(JSON.stringify(before.tree))) throw new ComputerUseError('sensitive_target', 'Password or credential fields cannot be controlled.');
+    assertNotSensitiveTree(before.tree);
     await this.#run(['scroll-into-view', element, '--window', String(target.hwnd)], { signal });
     const after = await this.inspect({ hwnd: target.hwnd, selector: element, depth: 2, signal });
     if (!after?.tree) throw new ComputerUseError('verification_failed', 'The target was not visible after scrolling.');
@@ -663,4 +695,4 @@ class WinAppComputerUseAdapter {
   }
 }
 
-module.exports = { COMPUTER_RESULT_SCHEMA_VERSION, ComputerUseError, SAFE_WEBSITES, WinAppComputerUseAdapter, defaultRunner, defaultLaunchRunner, isSensitiveWindow, resolveLaunchableApp, YOUTUBE_SEARCH_BASE_URL };
+module.exports = { COMPUTER_RESULT_SCHEMA_VERSION, ComputerUseError, SAFE_WEBSITES, WinAppComputerUseAdapter, defaultRunner, defaultLaunchRunner, isSensitiveWindow, isSensitiveUiaNode, containsSensitiveUiaNode, resolveLaunchableApp, YOUTUBE_SEARCH_BASE_URL };

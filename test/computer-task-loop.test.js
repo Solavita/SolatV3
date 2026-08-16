@@ -117,6 +117,39 @@ test('task authorization never auto-runs a freshly observed high-risk control', 
   assert.equal(confirmations, 2);
 });
 
+test('task authorization never auto-runs a structurally sensitive control without risk keywords', async () => {
+  const outputs = [
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Open Google.', tool: 'computer_open_website', arguments: { site: 'google' } } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'List windows.', tool: 'computer_list_windows', arguments: {} } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Inspect page.', tool: 'computer_inspect', arguments: { hwnd: 42 } } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Fill the form field.', tool: 'computer_invoke', arguments: { hwnd: 42, selector: 'field-a', verify_selector: 'field-a', verify_state: 'present' } } },
+  ];
+  let confirmations = 0;
+  const bridge = {
+    owns: () => true,
+    issueTaskAuthorization(input) { return { id: 'grant-struct', task_id: input.taskId, instruction_revision: input.instructionRevision }; },
+    extendTaskAuthorization() {}, async revokeTaskAuthorization() { return true; },
+    async execute({ call, taskAuthorization }) {
+      if (call.name === 'computer_list_windows') return { model_result: { status: 'ready', operation: 'list_windows', windows: [{ hwnd: 42, title: 'Chrome' }] } };
+      // The observed control carries no lexical risk keyword; its UIA
+      // control type alone must deny approval reuse.
+      if (call.name === 'computer_inspect') return { model_result: { status: 'ready', operation: 'inspect', target: { hwnd: 42 }, tree: { elements: [{ selector: 'field-a', name: 'Field A', controlType: 'SecureTextField' }] } } };
+      if (taskAuthorization) return { model_result: { status: 'ready', operation: call.name, verified: true }, action: null, approval_reused: true };
+      confirmations += 1;
+      return { action: { status: 'confirmation_required', idempotency_key: `confirm-${confirmations}`, approval_token: 'once', arguments: call.arguments } };
+    },
+  };
+  const grantRegistry = registry();
+  grantRegistry.computer_open_website.task_grant_eligible = true;
+  grantRegistry.computer_invoke.task_grant_eligible = true;
+  const loop = new ComputerTaskLoop({ provider: { async completeStructured() { return outputs.shift(); } }, bridge, toolRegistry: grantRegistry, idFactory: () => 'struct-task' });
+  const first = await loop.start({ ownerId: 'owner', sessionId: 'session', requestId: 'struct', goal: 'Open Chrome, inspect the page, then fill the form field.' });
+  const second = await loop.continue({ ownerId: 'owner', sessionId: 'session', taskId: first.task_id, actionIdempotencyKey: 'confirm-1', verifiedObservation: { status: 'ready', operation: 'open_website', site: 'google', hwnd: 42, verified: true } });
+  assert.equal(second.status, 'AWAITING_APPROVAL');
+  assert.equal(second.pending_action.tool, 'computer_invoke');
+  assert.equal(confirmations, 2);
+});
+
 test('computer task loop rejects untrusted tools, unverified continuation, and cross-session reads', async () => {
   const loop = new ComputerTaskLoop({
     provider: { async completeStructured() { return { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'bad', tool: 'computer_shell', arguments: {} } }; } },

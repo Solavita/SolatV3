@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { WinAppComputerUseAdapter, ComputerUseError } = require('../src/core/computer-use-adapter');
+const { WinAppComputerUseAdapter, ComputerUseError, isSensitiveUiaNode, containsSensitiveUiaNode } = require('../src/core/computer-use-adapter');
 
 function runnerWith(fixtures) {
   const calls = [];
@@ -481,6 +481,42 @@ test('computer adapter rejects unknown and credential targets', async () => {
     inspect: { elements: [{ name: 'Password', isPassword: true }] },
   });
   await assert.rejects(() => new WinAppComputerUseAdapter({ runner: protectedRunner.runner }).setValue({ hwnd: 10, selector: 'password', value: 'secret' }), error => error.code === 'sensitive_target');
+});
+
+test('computer adapter denies structurally sensitive controls even when names stay benign', async () => {
+  assert.equal(isSensitiveUiaNode({ name: 'Field A', controlType: 'Edit' }), false);
+  assert.equal(isSensitiveUiaNode({ name: 'Field A', controlType: 'Edit', isPassword: true }), true);
+  assert.equal(isSensitiveUiaNode({ name: 'Field A', controlType: 'SecureTextField' }), true);
+  assert.equal(isSensitiveUiaNode({ name: 'Field A', className: 'PasswordBox' }), true);
+  assert.equal(containsSensitiveUiaNode({ windows: [{ elements: [{ name: 'Field A', controlType: 'Edit' }] }] }), false);
+  assert.equal(containsSensitiveUiaNode({ windows: [{ elements: [{ name: 'Field A', controlType: 'Edit' }, { name: 'Code', className: 'PasswordBox' }] }] }), true);
+  // The serialized tree contains no lexical credential keyword; only the
+  // structural control-type signal proves the field is a secret input.
+  const { runner, calls } = runnerWith({
+    'list-windows': [{ hwnd: 10, processId: 2, processName: 'notepad', title: 'notes' }],
+    inspect: { elements: [{ name: 'Field A', controlType: 'SecureTextField', selector: 'edit-a' }] },
+    'set-value': { success: true },
+    'wait-for': { found: true, timedOut: false },
+  });
+  await assert.rejects(
+    () => new WinAppComputerUseAdapter({ runner }).setValue({ hwnd: 10, selector: 'edit-a', value: '1234' }),
+    error => error.code === 'sensitive_target',
+  );
+  assert.equal(calls.some(args => args[1] === 'set-value'), false);
+});
+
+test('computer adapter denies one-time-code fields at the execution boundary', async () => {
+  const { runner, calls } = runnerWith({
+    'list-windows': [{ hwnd: 10, processId: 2, processName: 'notepad', title: 'notes' }],
+    inspect: { elements: [{ name: 'Enter OTP', controlType: 'Edit', selector: 'edit-code' }] },
+    'set-value': { success: true },
+    'wait-for': { found: true, timedOut: false },
+  });
+  await assert.rejects(
+    () => new WinAppComputerUseAdapter({ runner }).setValue({ hwnd: 10, selector: 'edit-code', value: '123456' }),
+    error => error.code === 'sensitive_target',
+  );
+  assert.equal(calls.some(args => args[1] === 'set-value'), false);
 });
 
 test('computer adapter exposes malformed CLI output as failure', async () => {

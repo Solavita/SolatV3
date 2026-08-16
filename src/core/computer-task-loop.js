@@ -1,4 +1,5 @@
 const crypto = require('node:crypto');
+const { containsSensitiveUiaNode } = require('./computer-use-adapter');
 
 const COMPUTER_TASK_STEP_SCHEMA_VERSION = 'solat.computer-task-step.v1';
 const DEFAULT_LIMITS = Object.freeze({ maxPlannerTurns: 20, maxObservationChars: 12_000, maxStructuredRetries: 2, maxRepeatedAction: 2, maxProviderCalls: 48, maxActions: 32, maxTaskMs: 10 * 60_000 });
@@ -133,7 +134,7 @@ function observedNode(observations, hwnd, selector, revision) {
   return match;
 }
 
-const HIGH_RISK_CONTROL = /(?:password|passcode|credential|otp|2fa|delete|remove|purchase|buy|pay|checkout|send|submit|post|publish|upload|share|subscribe|bank|wallet|credit.?card|รหัส|โอน|จ่าย|ซื้อ|ลบ|ส่ง|เผยแพร่|อัปโหลด)/iu;
+const HIGH_RISK_CONTROL = /(?:password|passcode|credential|otp|2fa|\bpin\b|\bcvv\b|delete|remove|purchase|buy|pay|checkout|send|submit|post|publish|upload|share|subscribe|bank|wallet|credit.?card|รหัส|โอน|จ่าย|ซื้อ|ลบ|ส่ง|เผยแพร่|อัปโหลด)/iu;
 
 function completeTarget(value) {
   const source = value?.target && typeof value.target === 'object' ? value.target : value;
@@ -377,7 +378,9 @@ class ComputerTaskLoop {
     if (!task.task_authorization || definition.task_grant_eligible !== true) return false;
     if (!['computer_invoke', 'computer_set_value', 'computer_press_enter', 'computer_scroll_into_view'].includes(step.tool)) return true;
     const node = observedNode(task.observations, step.arguments?.hwnd, step.arguments?.selector, task.revision);
-    if (!node || HIGH_RISK_CONTROL.test(JSON.stringify(node))) return false;
+    // A benign control name must not hide a structurally sensitive field:
+    // UIA properties and control types deny reuse even without risk keywords.
+    if (!node || HIGH_RISK_CONTROL.test(JSON.stringify(node)) || containsSensitiveUiaNode(node)) return false;
     if (step.tool === 'computer_set_value' && HIGH_RISK_CONTROL.test(String(step.arguments?.value || ''))) return false;
     return true;
   }
