@@ -296,6 +296,7 @@ class ComputerTaskLoop {
     }
     const completedTool = task.pending_action.tool;
     const completedCall = clone(task.pending_action.call || { name: completedTool, arguments: task.pending_action.action?.arguments || {} });
+    const grantedScope = clone(task.pending_action.action?.granted_scope || null);
     task.pending_action = null;
     task.status = 'RUNNING';
     task.revision += 1;
@@ -306,7 +307,7 @@ class ComputerTaskLoop {
       await this.#revokeAuthorization(task);
       task.task_authorization = this.bridge.issueTaskAuthorization({
         sessionId: task.session_id, taskId: task.task_id, instructionRevision: task.instruction_revision,
-        scope: this.#approvalScope(task, completedCall, verifiedObservation),
+        scope: this.#issuedScope(task, grantedScope || this.#grantedScope(task, completedCall), verifiedObservation),
       });
     }
     if (typeof eventSink === 'function') task.event_sink = eventSink;
@@ -340,23 +341,46 @@ class ComputerTaskLoop {
 
   #scope(task) { return `${task.owner_id}\u0000${task.session_id}`; }
 
-  #approvalScope(task, call, verifiedObservation) {
-    const goal = task.goal.toLocaleLowerCase();
+  // Task authority comes only from the approved call and verified evidence.
+  // Goal text is untrusted input: keywords inside it must never widen which
+  // apps, sites, or windows an approval covers. The same object is shown to
+  // the owner before approval and carried with the pending action.
+  #grantedScope(task, call) {
     const allowedApps = new Set();
     const allowedSites = new Set();
-    if (/(?:chrome|google|youtube|wikipedia|classroom|เว็บ|ค้นหา)/iu.test(goal)) allowedApps.add('chrome');
-    if (/(?:notepad|โน้ตแพด)/iu.test(goal)) allowedApps.add('notepad');
-    if (/(?:google|wikipedia|ค้นหา|search)/iu.test(goal)) allowedSites.add('google');
-    if (/(?:classroom|ห้องเรียน)/iu.test(goal)) allowedSites.add('google_classroom');
-    if (/youtube/iu.test(goal)) allowedSites.add('youtube');
+    const allowedHwnds = new Set();
     if (call?.name === 'computer_launch_app' && call.arguments?.app_id) allowedApps.add(String(call.arguments.app_id).toLowerCase());
     if (call?.name === 'computer_open_website' && call.arguments?.site) allowedSites.add(String(call.arguments.site).toLowerCase());
     if (call?.name === 'computer_play_youtube_music') allowedSites.add('youtube');
-    const hwnds = new Set();
-    for (const value of [call?.arguments?.hwnd, verifiedObservation?.hwnd, verifiedObservation?.target?.hwnd]) {
+    const hwnd = Number(call?.arguments?.hwnd);
+    if (Number.isSafeInteger(hwnd) && hwnd > 0) allowedHwnds.add(hwnd);
+    const targets = [];
+    for (const observation of task.observations) {
+      if (observation.revision !== task.revision || !Array.isArray(observation?.data?.windows)) continue;
+      for (const window of observation.data.windows) {
+        if (allowedHwnds.has(Number(window?.hwnd))) {
+          const target = completeTarget(window);
+          if (target) targets.push(target);
+        }
+      }
+    }
+    return {
+      allowed_tools: Object.entries(this.registry).filter(([, definition]) => definition.task_grant_eligible === true).map(([name]) => name),
+      allowed_apps: [...allowedApps], allowed_sites: [...allowedSites], allowed_hwnds: [...allowedHwnds], allowed_targets: targets,
+    };
+  }
+
+  // The issued grant equals the owner-visible granted scope plus the verified
+  // result of exactly the approved action; nothing else can enter it.
+  #issuedScope(task, grantedScope, verifiedObservation) {
+    const base = grantedScope && typeof grantedScope === 'object' && !Array.isArray(grantedScope)
+      ? grantedScope
+      : this.#grantedScope(task, null);
+    const hwnds = new Set((Array.isArray(base.allowed_hwnds) ? base.allowed_hwnds : []).map(Number).filter(value => Number.isSafeInteger(value) && value > 0));
+    for (const value of [verifiedObservation?.hwnd, verifiedObservation?.target?.hwnd]) {
       if (Number.isSafeInteger(Number(value)) && Number(value) > 0) hwnds.add(Number(value));
     }
-    const targets = [];
+    const targets = [...(Array.isArray(base.allowed_targets) ? base.allowed_targets : [])];
     const verifiedTarget = completeTarget(verifiedObservation);
     if (verifiedTarget) targets.push(verifiedTarget);
     for (const observation of task.observations) {
@@ -369,8 +393,10 @@ class ComputerTaskLoop {
       }
     }
     return {
-      allowed_tools: Object.entries(this.registry).filter(([, definition]) => definition.task_grant_eligible === true).map(([name]) => name),
-      allowed_apps: [...allowedApps], allowed_sites: [...allowedSites], allowed_hwnds: [...hwnds], allowed_targets: targets,
+      allowed_tools: Array.isArray(base.allowed_tools) ? [...base.allowed_tools] : [],
+      allowed_apps: Array.isArray(base.allowed_apps) ? [...base.allowed_apps] : [],
+      allowed_sites: Array.isArray(base.allowed_sites) ? [...base.allowed_sites] : [],
+      allowed_hwnds: [...hwnds], allowed_targets: targets,
     };
   }
 
@@ -554,7 +580,11 @@ class ComputerTaskLoop {
           continue;
         }
         if (!pending?.action || pending.action.status !== 'confirmation_required') {
-          task.status = 'FAILED'; task.summary = 'The requested computer action did not produce a reviewable approval step.';
+          const cause = pending?.model_result?.status === 'failed' ? pending.model_result.error : null;
+          task.status = 'FAILED';
+          task.summary = cause?.code
+            ? `The automatically approved computer action failed. (${cause.code}: ${String(cause.message || 'no detail').slice(0, 300)})`
+            : 'The requested computer action did not produce a reviewable approval step.';
           this.#clearActive(task);
           return this.#view(task);
         }
@@ -562,7 +592,10 @@ class ComputerTaskLoop {
         task.summary = step.summary;
         task.pending_action = {
           summary: step.summary, tool: step.tool, call: clone(call),
-          action: clone({ ...pending.action, approval_scope: 'computer_task', task_goal: task.goal, task_id: task.task_id }),
+          action: clone({
+            ...pending.action, approval_scope: 'computer_task', task_goal: task.goal, task_id: task.task_id,
+            granted_scope: this.#grantedScope(task, call),
+          }),
         };
         this.#emit(task, 'approval_required', { summary: task.task_authorization ? 'Additional approval is required because the next action is outside the existing task scope.' : 'Approve this bounded Computer Use task once to continue within its safe scope.', tool: step.tool });
         return this.#view(task);
@@ -674,4 +707,4 @@ class ComputerTaskLoop {
   }
 }
 
-module.exports = { COMPUTER_TASK_STEP_SCHEMA_VERSION, ComputerTaskLoop, ComputerTaskLoopError, STEP_SCHEMA, validateStep };
+module.exports = { COMPUTER_TASK_STEP_SCHEMA_VERSION, ComputerTaskLoop, ComputerTaskLoopError, STEP_SCHEMA, validateStep, completeTarget };

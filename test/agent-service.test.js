@@ -52,6 +52,59 @@ test('agent timeout aborts the per-attempt signal', async () => {
   assert.equal(plan.approval_token_hash.length, 64);
 });
 
+test('restart-interrupted plans are reported once, owner-scoped, and marked cancelled', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'solat-agent-interrupted-'));
+  const registry = {
+    write_tool: { side_effect_level: 'write' },
+    read_tool: { side_effect_level: 'read', validate_output: result => result.status === 'ready' },
+  };
+  const make = () => new AgentService({ rootDir: root, toolRegistry: registry, executeTool: async () => ({ status: 'ready' }) });
+  const first = make();
+  // PLANNED: created but never run before the restart.
+  await first.createPlan({ ownerId: 'owner-r', sessionId: 'session-r', idempotencyKey: 'planned', steps: [{ tool: 'write_tool' }], approvalRequired: true });
+  // PAUSED_APPROVAL: run reached the approval gate before the restart.
+  await first.createPlan({ ownerId: 'owner-r', sessionId: 'session-r', idempotencyKey: 'paused', steps: [{ tool: 'write_tool' }], approvalRequired: true });
+  await first.run({ ownerId: 'owner-r', sessionId: 'session-r', idempotencyKey: 'paused' });
+  // Terminal plans must never be reported as interrupted.
+  await first.createPlan({ ownerId: 'owner-r', sessionId: 'session-r', idempotencyKey: 'done', steps: [{ tool: 'read_tool' }], approvalRequired: false });
+  await first.run({ ownerId: 'owner-r', sessionId: 'session-r', idempotencyKey: 'done' });
+  // Another session's plan must not leak into this report.
+  await first.createPlan({ ownerId: 'owner-other', sessionId: 'owner-other', idempotencyKey: 'foreign', steps: [{ tool: 'write_tool' }], approvalRequired: true });
+
+  // A fresh service instance models the process restart: no in-memory loop.
+  const second = make();
+  const report = await second.collectInterrupted({ ownerId: 'owner-r', sessionId: 'session-r' });
+  assert.equal(report.schema_version, 'solat.agent-interrupted.v1');
+  assert.equal(report.session_id, 'session-r');
+  assert.deepEqual(report.plans.map(plan => plan.idempotency_key).sort(), ['paused', 'planned']);
+  const paused = report.plans.find(plan => plan.idempotency_key === 'paused');
+  assert.equal(paused.status_at_interrupt, 'PAUSED_APPROVAL');
+  assert.equal(paused.tool, 'write_tool');
+  const planned = report.plans.find(plan => plan.idempotency_key === 'planned');
+  assert.equal(planned.status_at_interrupt, 'PLANNED');
+
+  // The report is one-shot: interrupted plans are durably marked cancelled.
+  const again = await second.collectInterrupted({ ownerId: 'owner-r', sessionId: 'session-r' });
+  assert.equal(again.plans.length, 0);
+  const cancelled = await second.inspect({ ownerId: 'owner-r', sessionId: 'session-r', idempotencyKey: 'paused' });
+  assert.equal(cancelled.status, 'CANCELLED');
+  const succeeded = await second.inspect({ ownerId: 'owner-r', sessionId: 'session-r', idempotencyKey: 'done' });
+  assert.equal(succeeded.status, 'SUCCEEDED');
+  const foreign = await second.inspect({ ownerId: 'owner-other', sessionId: 'owner-other', idempotencyKey: 'foreign' });
+  assert.equal(foreign.status, 'PLANNED');
+});
+
+test('collectInterrupted is empty when no durable plans exist yet', async () => {
+  const service = new AgentService({
+    rootDir: await fs.mkdtemp(path.join(os.tmpdir(), 'solat-agent-empty-')),
+    toolRegistry: { read: { side_effect_level: 'read' } },
+    executeTool: async () => ({ status: 'ready' }),
+  });
+  await fs.rm(service.rootDir, { recursive: true, force: true });
+  const report = await service.collectInterrupted({ ownerId: 'owner-empty', sessionId: 'owner-empty' });
+  assert.deepEqual(report.plans, []);
+});
+
 test('trusted file-context tool propagates orchestrator timeout without success', async () => {
   let aborted = false;
   const tools = createReadOnlyAgentTools({ fileContextProvider: {

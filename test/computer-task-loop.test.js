@@ -85,6 +85,90 @@ test('one owner approval lets later low-risk writes continue inside the same bou
   assert.equal(autoWrites, 1);
 });
 
+test('a failed automatically approved write keeps its real cause visible', async () => {
+  const outputs = [
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Open Google.', tool: 'computer_open_website', arguments: { site: 'google' } } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'List windows.', tool: 'computer_list_windows', arguments: {} } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Inspect the window.', tool: 'computer_inspect', arguments: { hwnd: 42 } } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Use the search control.', tool: 'computer_invoke', arguments: { hwnd: 42, selector: 'search', verify_selector: 'search', verify_state: 'present' } } },
+  ];
+  const authorizations = new Map();
+  const bridge = {
+    owns: () => true,
+    issueTaskAuthorization(input) { const auth = { id: 'grant-fail', task_id: input.taskId, instruction_revision: input.instructionRevision }; authorizations.set(auth.id, auth); return auth; },
+    extendTaskAuthorization() {},
+    async revokeTaskAuthorization() { return true; },
+    async execute({ call, taskAuthorization }) {
+      if (call.name === 'computer_list_windows') return { model_result: { status: 'ready', operation: 'list_windows', windows: [{ hwnd: 42, title: 'Google', process_id: 8, process_name: 'chrome' }] } };
+      if (call.name === 'computer_inspect') return { model_result: { status: 'ready', operation: 'inspect', target: { hwnd: 42 }, tree: { elements: [{ selector: 'search', name: 'Search' }] } } };
+      if (taskAuthorization && authorizations.has(taskAuthorization.id)) {
+        return { model_result: { status: 'failed', tool: call.name, error: { code: 'computer_tool_failed', message: '{"error":{"code":"internal_error"}}' } }, action: null };
+      }
+      return { model_result: { status: 'confirmation_required' }, action: { status: 'confirmation_required', idempotency_key: 'first-write', approval_token: 'once', arguments: call.arguments } };
+    },
+  };
+  const grantRegistry = registry();
+  grantRegistry.computer_open_website.task_grant_origin = true;
+  grantRegistry.computer_invoke.task_grant_eligible = true;
+  const loop = new ComputerTaskLoop({ provider: { async completeStructured() { return outputs.shift(); } }, bridge, toolRegistry: grantRegistry, idFactory: () => 'fail-visible' });
+  const waiting = await loop.start({ ownerId: 'owner', sessionId: 'session', requestId: 'fail-visible', goal: 'Open Google and search.' });
+  assert.equal(waiting.status, 'AWAITING_APPROVAL');
+  const failed = await loop.continue({
+    ownerId: 'owner', sessionId: 'session', taskId: waiting.task_id, actionIdempotencyKey: 'first-write',
+    verifiedObservation: { status: 'ready', operation: 'open_website', site: 'google', hwnd: 42, process_id: 8, app_id: 'chrome', window_title: 'Google', verified: true },
+  });
+  assert.equal(failed.status, 'FAILED');
+  assert.match(failed.summary, /computer_tool_failed/, 'the owner-visible failure must keep the real adapter cause');
+});
+
+test('approval scope is bound to the approved call and verified result, never to goal keywords', async () => {
+  const outputs = [
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Open Google.', tool: 'computer_open_website', arguments: { site: 'google' } } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'List windows.', tool: 'computer_list_windows', arguments: {} } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Inspect the approved window.', tool: 'computer_inspect', arguments: { hwnd: 42 } } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Use the observed safe control.', tool: 'computer_invoke', arguments: { hwnd: 42, selector: 'search', verify_selector: 'results', verify_state: 'present' } } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Refresh the target.', tool: 'computer_list_windows', arguments: {} } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Verify the final page.', tool: 'computer_inspect', arguments: { hwnd: 42 } } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'completed', summary: 'Done.', tool: 'none', arguments: {}, evidence_sequences: [4, 6] } },
+  ];
+  let issuedScope = null;
+  const authorizations = new Map();
+  const bridge = {
+    owns: () => true,
+    issueTaskAuthorization(input) { issuedScope = input.scope; const auth = { id: 'grant-scope', task_id: input.taskId, instruction_revision: input.instructionRevision }; authorizations.set(auth.id, auth); return auth; },
+    extendTaskAuthorization() {}, async revokeTaskAuthorization() { return true; },
+    async execute({ call, taskAuthorization }) {
+      if (call.name === 'computer_list_windows') return { model_result: { status: 'ready', operation: 'list_windows', windows: [{ hwnd: 42, title: 'Google', process_id: 8, process_name: 'chrome' }] } };
+      if (call.name === 'computer_inspect') return { model_result: { status: 'ready', operation: 'inspect', hwnd: 42, target: { hwnd: 42 }, tree: { elements: [{ selector: 'search', name: 'Search' }, { selector: 'results', name: 'Results' }] } } };
+      if (taskAuthorization && authorizations.has(taskAuthorization.id)) return { model_result: { status: 'ready', operation: 'invoke', hwnd: 42, verified: true }, action: null, approval_reused: true };
+      return { model_result: { status: 'confirmation_required' }, action: { status: 'confirmation_required', idempotency_key: 'scope-write', approval_token: 'once', arguments: call.arguments } };
+    },
+  };
+  const grantRegistry = registry();
+  grantRegistry.computer_open_website.task_grant_origin = true;
+  grantRegistry.computer_invoke.task_grant_eligible = true;
+  const loop = new ComputerTaskLoop({ provider: { async completeStructured() { return outputs.shift(); } }, bridge, toolRegistry: grantRegistry, idFactory: () => 'scope-task' });
+  // The goal mentions other apps and sites; none of those keywords may
+  // widen what the owner is actually approving.
+  const waiting = await loop.start({ ownerId: 'owner', sessionId: 'session', requestId: 'scope', goal: 'Open Chrome, then also use Notepad, YouTube, and Classroom later.' });
+  assert.equal(waiting.status, 'AWAITING_APPROVAL');
+  const granted = waiting.pending_action.action.granted_scope;
+  assert.deepEqual(granted.allowed_sites, ['google']);
+  assert.deepEqual(granted.allowed_apps, []);
+  assert.deepEqual(granted.allowed_hwnds, []);
+  assert.deepEqual(granted.allowed_targets, []);
+  assert.ok(granted.allowed_tools.includes('computer_invoke'));
+  const completed = await loop.continue({
+    ownerId: 'owner', sessionId: 'session', taskId: waiting.task_id, actionIdempotencyKey: 'scope-write',
+    verifiedObservation: { status: 'ready', operation: 'open_website', site: 'google', hwnd: 42, process_id: 8, app_id: 'chrome', window_title: 'Google', verified: true },
+  });
+  assert.equal(completed.status, 'COMPLETED');
+  assert.deepEqual(issuedScope.allowed_sites, ['google']);
+  assert.deepEqual(issuedScope.allowed_apps, []);
+  assert.deepEqual(issuedScope.allowed_hwnds, [42]);
+  assert.ok(issuedScope.allowed_targets.some(target => target.hwnd === 42 && target.process_name === 'chrome'));
+});
+
 test('task authorization never auto-runs a freshly observed high-risk control', async () => {
   const outputs = [
     { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Open Google.', tool: 'computer_open_website', arguments: { site: 'google' } } },

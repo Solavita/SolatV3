@@ -35,9 +35,26 @@ async function main() {
       throw Object.assign(new Error(`The live model did not produce an approved safe computer action (status: ${task.status}).`), { code: 'unexpected_live_computer_plan' });
     }
     if (mutations !== 0) throw Object.assign(new Error('A computer mutation occurred before owner approval.'), { code: 'approval_bypass' });
+    // The owner-visible scope must be explicit and bound to the approved call,
+    // never widened by goal keywords such as "Chrome".
+    const grantedScope = task.pending_action.action.granted_scope;
+    if (!grantedScope || typeof grantedScope !== 'object') {
+      throw Object.assign(new Error('The pending computer action is missing its explicit granted scope.'), { code: 'missing_granted_scope' });
+    }
+    for (const field of ['allowed_tools', 'allowed_apps', 'allowed_sites', 'allowed_hwnds', 'allowed_targets']) {
+      if (!Array.isArray(grantedScope[field])) throw Object.assign(new Error(`Granted scope field ${field} is invalid.`), { code: 'invalid_granted_scope' });
+    }
+    if (task.pending_action.tool === 'computer_open_website') {
+      if (JSON.stringify(grantedScope.allowed_sites) !== JSON.stringify(['google']) || grantedScope.allowed_apps.length !== 0) {
+        throw Object.assign(new Error('The granted scope must equal the approved website only.'), { code: 'unexpected_granted_scope' });
+      }
+    } else if (JSON.stringify(grantedScope.allowed_apps) !== JSON.stringify(['chrome']) || grantedScope.allowed_sites.length !== 0) {
+      throw Object.assign(new Error('The granted scope must equal the approved app only.'), { code: 'unexpected_granted_scope' });
+    }
     process.stdout.write(`${JSON.stringify({
       schema_version: 'solat.live-computer-task-planner-smoke.v1', status: 'PASS', provider: config.provider, model: config.model,
       planned_tool: task.pending_action.tool, approval_required: true, computer_mutations_before_approval: 0,
+      granted_scope: { allowed_apps: grantedScope.allowed_apps, allowed_sites: grantedScope.allowed_sites, allowed_hwnds: grantedScope.allowed_hwnds },
     }, null, 2)}\n`);
   } finally {
     await fs.promises.rm(root, { recursive: true, force: true });

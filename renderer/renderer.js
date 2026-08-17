@@ -1071,6 +1071,7 @@
 
   const AgentUI = {
     enabled: false, pending: null, queue: [], plan: null, busy: false, workingMessageId: null, lastCommandSelectionAt: 0,
+    interruptedSessions: new Set(),
     progressMessages: new Map(), activeTaskBySession: new Map(), latestRevisionByTask: new Map(), unsubscribeComputerEvents: null,
     isEnabled() { return this.enabled; },
     canInterruptCurrent() {
@@ -1220,12 +1221,27 @@
       }
       return preview;
     },
+    actionScopeLine(scope) {
+      if (!scope || typeof scope !== 'object') return '';
+      const parts = [];
+      if (Array.isArray(scope.allowed_apps) && scope.allowed_apps.length) parts.push(`apps: ${scope.allowed_apps.map(app => text(app)).join(', ')}`);
+      if (Array.isArray(scope.allowed_sites) && scope.allowed_sites.length) parts.push(`sites: ${scope.allowed_sites.map(site => text(site).replaceAll('_', ' ')).join(', ')}`);
+      if (Array.isArray(scope.allowed_targets) && scope.allowed_targets.length) {
+        parts.push(`windows: ${scope.allowed_targets.map(target => `${text(target?.process_name)} — ${text(target?.window_title)}`).join('; ')}`);
+      } else if (Array.isArray(scope.allowed_hwnds) && scope.allowed_hwnds.length) {
+        parts.push(`windows: ${scope.allowed_hwnds.length} observed window handle(s)`);
+      }
+      return parts.join(' · ');
+    },
     actionSummary(action) {
       const args = action?.arguments && typeof action.arguments === 'object' ? action.arguments : {};
-      if (action?.approval_scope === 'computer_task' && action?.task_goal) {
-        const goal = text(action.task_goal).slice(0, 500);
+      if (action?.approval_scope === 'computer_task') {
         const firstAction = JSON.stringify(this.actionPreview(action));
-        return `Authorize this bounded Computer Use task once: ${goal}\n\nFirst action: ${firstAction}`;
+        // The dialog must state what the approval actually covers. The scope
+        // comes from the pending action itself, never from goal keywords.
+        const scopeLine = this.actionScopeLine(action.granted_scope) || 'only this single verified action';
+        const goal = text(action.task_goal).slice(0, 500);
+        return `Authorize this bounded Computer Use task once.\nApproved scope: ${scopeLine}\nTask: ${goal}\n\nFirst action: ${firstAction}`;
       }
       switch (action?.tool) {
         case 'filesystem_create': return `Create “${text(args.path || 'new file')}” with ${Number(args.content?.length || 0).toLocaleString()} characters of generated content.`;
@@ -1497,6 +1513,28 @@
       }
       if (cancel) { cancel.textContent = this.pending ? 'Cancel action' : 'Close'; cancel.disabled = this.busy; }
     },
+    async reportInterrupted(threadId) {
+      if (!window.solat?.agentInterruptedPlans || !threadId) return;
+      const sessionId = sessionFor(threadId);
+      if (this.interruptedSessions.has(sessionId)) return;
+      this.interruptedSessions.add(sessionId);
+      try {
+        const report = await window.solat.agentInterruptedPlans({ sessionId });
+        const plans = Array.isArray(report?.plans) ? report.plans : [];
+        if (!plans.length) return;
+        const shown = plans.slice(0, 5);
+        const lines = shown.map(plan => `- \`${text(plan.tool) || 'agent action'}\` was ${plan.status_at_interrupt === 'PAUSED_APPROVAL' ? 'waiting for approval' : 'in progress'}`);
+        if (plans.length > shown.length) lines.push(`- …and ${plans.length - shown.length} more`);
+        State.add(threadId, {
+          role: 'assistant',
+          content: `SOLAT restarted before these Agent actions finished, so they were interrupted and not run again automatically:\n${lines.join('\n')}\nAsk again if you still want them.`,
+          responseMeta: {
+            provider: 'SOLAT Agent', model: 'interrupted task report', mode: 'agent_interrupted',
+            agentMode: true, agentStatus: 'interrupted', webSearchStatus: 'not_requested', sources: [], searchEvidence: [],
+          },
+        });
+      } catch { /* Interrupted-task reporting must never block the conversation. */ }
+    },
     init() {
       const commandMenu = $('#agentCommandMenu');
       if (commandMenu && commandMenu.parentElement !== document.body) document.body.append(commandMenu);
@@ -1515,6 +1553,14 @@
       $('#agentCancelBtn')?.addEventListener('click', () => this.cancel());
       $('[data-agent-close]')?.addEventListener('click', () => this.close());
       if (window.solat?.onComputerTaskEvent) this.unsubscribeComputerEvents = window.solat.onComputerTaskEvent(event => this.receiveComputerTaskEvent(event));
+      // Restart interrupts the in-memory computer task loop. Surface durable
+      // plans that were left behind on the active thread, once per session.
+      State.subscribe(reason => {
+        if (reason !== 'active' && reason !== 'durable-restore') return;
+        const thread = State.active;
+        if (thread) this.reportInterrupted(thread.id);
+      });
+      if (State.active) this.reportInterrupted(State.active.id);
       this.syncCommandMenu(); this.render();
     },
   };

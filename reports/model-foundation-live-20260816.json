@@ -1,0 +1,575 @@
+{
+  "schema_version": "solat.model-foundation-live-report.v1",
+  "generated_at": "2026-08-16T15:42:01.795Z",
+  "provider": "deepseek_api",
+  "model": "deepseek-v4-flash",
+  "base_host": "api.deepseek.com",
+  "request_count": 6,
+  "retry_count": 0,
+  "cost": {
+    "status": "not_calculated",
+    "reason": "Provider response does not include monetary cost; usage metadata is preserved per request."
+  },
+  "counts": {
+    "PASS": 3,
+    "FAIL": 1
+  },
+  "cases": [
+    {
+      "case_id": "fact_vs_inference",
+      "status": "PASS",
+      "runs": [
+        {
+          "attempt": 1,
+          "timestamp": "2026-08-16T15:41:52.701Z",
+          "latency_ms": 2239.95,
+          "provider": "deepseek_api",
+          "model": "deepseek-v4-flash",
+          "usage": {
+            "prompt_tokens": 291,
+            "completion_tokens": 199,
+            "total_tokens": 490,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 291
+          },
+          "raw_visible_response": "{\n  \"case_id\": \"fact_vs_inference\",\n  \"final_status\": \"answered\",\n  \"verdicts\": [\n    {\n      \"claim_id\": \"c1\",\n      \"classification\": \"fact\",\n      \"supported\": true,\n      \"evidence_ids\": [\"E1\"],\n      \"rationale\": \"The claim directly restates evidence E1.\"\n    },\n    {\n      \"claim_id\": \"c2\",\n      \"classification\": \"inference\",\n      \"supported\": true,\n      \"evidence_ids\": [\"E1\"],\n      \"rationale\": \"The claim is a reasoned interpretation of E1, which records the temperature but does not explicitly state the cause, so it is an evidence-based inference.\"\n    },\n    {\n      \"claim_id\": \"c3\",\n      \"classification\": \"unknown\",\n      \"supported\": false,\n      \"evidence_ids\": [],\n      \"rationale\": \"No evidence mentions the technician's identity.\"\n    }\n  ]\n}",
+          "data": {
+            "case_id": "fact_vs_inference",
+            "final_status": "answered",
+            "verdicts": [
+              {
+                "claim_id": "c1",
+                "classification": "fact",
+                "supported": true,
+                "evidence_ids": [
+                  "E1"
+                ],
+                "rationale": "The claim directly restates evidence E1."
+              },
+              {
+                "claim_id": "c2",
+                "classification": "inference",
+                "supported": true,
+                "evidence_ids": [
+                  "E1"
+                ],
+                "rationale": "The claim is a reasoned interpretation of E1, which records the temperature but does not explicitly state the cause, so it is an evidence-based inference."
+              },
+              {
+                "claim_id": "c3",
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": [],
+                "rationale": "No evidence mentions the technician's identity."
+              }
+            ]
+          },
+          "evaluation": {
+            "status": "PASS",
+            "checks": [
+              {
+                "label": "case_id",
+                "pass": true
+              },
+              {
+                "label": "c1.classification",
+                "pass": true
+              },
+              {
+                "label": "c1.supported",
+                "pass": true
+              },
+              {
+                "label": "c1.evidence_ids",
+                "pass": true
+              },
+              {
+                "label": "c2.classification",
+                "pass": true
+              },
+              {
+                "label": "c2.supported",
+                "pass": true
+              },
+              {
+                "label": "c2.evidence_ids",
+                "pass": true
+              },
+              {
+                "label": "c3.classification",
+                "pass": true
+              },
+              {
+                "label": "c3.supported",
+                "pass": true
+              },
+              {
+                "label": "c3.evidence_ids",
+                "pass": true
+              },
+              {
+                "label": "no_extra_claims",
+                "pass": true
+              }
+            ],
+            "normalized_verdicts": {
+              "c1": {
+                "classification": "fact",
+                "supported": true,
+                "evidence_ids": [
+                  "E1"
+                ]
+              },
+              "c2": {
+                "classification": "inference",
+                "supported": true,
+                "evidence_ids": [
+                  "E1"
+                ]
+              },
+              "c3": {
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": []
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "unknown_handling",
+      "status": "PASS",
+      "runs": [
+        {
+          "attempt": 1,
+          "timestamp": "2026-08-16T15:41:54.944Z",
+          "latency_ms": 1641.36,
+          "provider": "deepseek_api",
+          "model": "deepseek-v4-flash",
+          "usage": {
+            "prompt_tokens": 261,
+            "completion_tokens": 108,
+            "total_tokens": 369,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 261
+          },
+          "raw_visible_response": "{\n  \"case_id\": \"unknown_handling\",\n  \"final_status\": \"answered\",\n  \"verdicts\": [\n    {\n      \"claim_id\": \"c1\",\n      \"classification\": \"unknown\",\n      \"supported\": false,\n      \"evidence_ids\": [],\n      \"rationale\": \"The claim about Nira's birth year is not supported by any evidence. The only evidence (E1) mentions her joining the club in 2022, but does not provide a birth year.\"\n    }\n  ]\n}",
+          "data": {
+            "case_id": "unknown_handling",
+            "final_status": "answered",
+            "verdicts": [
+              {
+                "claim_id": "c1",
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": [],
+                "rationale": "The claim about Nira's birth year is not supported by any evidence. The only evidence (E1) mentions her joining the club in 2022, but does not provide a birth year."
+              }
+            ]
+          },
+          "evaluation": {
+            "status": "PASS",
+            "checks": [
+              {
+                "label": "case_id",
+                "pass": true
+              },
+              {
+                "label": "truthful_final_status",
+                "pass": true
+              },
+              {
+                "label": "c1.classification",
+                "pass": true
+              },
+              {
+                "label": "c1.supported",
+                "pass": true
+              },
+              {
+                "label": "c1.evidence_ids",
+                "pass": true
+              },
+              {
+                "label": "no_extra_claims",
+                "pass": true
+              }
+            ],
+            "normalized_verdicts": {
+              "c1": {
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": []
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "hallucination_guard",
+      "status": "FAIL",
+      "runs": [
+        {
+          "attempt": 1,
+          "timestamp": "2026-08-16T15:41:56.585Z",
+          "latency_ms": 1125.7,
+          "provider": "deepseek_api",
+          "model": "deepseek-v4-flash",
+          "usage": {
+            "prompt_tokens": 242,
+            "completion_tokens": 55,
+            "total_tokens": 297,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 242
+          },
+          "raw_visible_response": "{\"case_id\":\"hallucination_guard\",\"final_status\":\"answered\",\"verdicts\":[{\"claim_id\":\"c1\",\"classification\":\"unknown\",\"supported\":false,\"evidence_ids\":[],\"rationale\":\"No evidence provided to support or refute the claim.\"}]}",
+          "data": {
+            "case_id": "hallucination_guard",
+            "final_status": "answered",
+            "verdicts": [
+              {
+                "claim_id": "c1",
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": [],
+                "rationale": "No evidence provided to support or refute the claim."
+              }
+            ]
+          },
+          "evaluation": {
+            "status": "FAIL",
+            "checks": [
+              {
+                "label": "case_id",
+                "pass": true
+              },
+              {
+                "label": "truthful_final_status",
+                "pass": false
+              },
+              {
+                "label": "c1.classification",
+                "pass": true
+              },
+              {
+                "label": "c1.supported",
+                "pass": true
+              },
+              {
+                "label": "c1.evidence_ids",
+                "pass": true
+              },
+              {
+                "label": "no_extra_claims",
+                "pass": true
+              }
+            ],
+            "normalized_verdicts": {
+              "c1": {
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": []
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "answer_consistency",
+      "status": "PASS",
+      "consistency": {
+        "status": "PASS",
+        "stable": true,
+        "distinct_signatures": 1
+      },
+      "runs": [
+        {
+          "attempt": 1,
+          "timestamp": "2026-08-16T15:41:57.711Z",
+          "latency_ms": 1318.27,
+          "provider": "deepseek_api",
+          "model": "deepseek-v4-flash",
+          "usage": {
+            "prompt_tokens": 274,
+            "completion_tokens": 121,
+            "total_tokens": 395,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 146
+          },
+          "raw_visible_response": "{\n  \"case_id\": \"answer_consistency\",\n  \"final_status\": \"answered\",\n  \"verdicts\": [\n    {\n      \"claim_id\": \"c1\",\n      \"classification\": \"fact\",\n      \"supported\": true,\n      \"evidence_ids\": [\"E1\"],\n      \"rationale\": \"Directly stated in evidence.\"\n    },\n    {\n      \"claim_id\": \"c2\",\n      \"classification\": \"unknown\",\n      \"supported\": false,\n      \"evidence_ids\": [],\n      \"rationale\": \"No evidence supports the claim.\"\n    }\n  ]\n}",
+          "data": {
+            "case_id": "answer_consistency",
+            "final_status": "answered",
+            "verdicts": [
+              {
+                "claim_id": "c1",
+                "classification": "fact",
+                "supported": true,
+                "evidence_ids": [
+                  "E1"
+                ],
+                "rationale": "Directly stated in evidence."
+              },
+              {
+                "claim_id": "c2",
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": [],
+                "rationale": "No evidence supports the claim."
+              }
+            ]
+          },
+          "evaluation": {
+            "status": "PASS",
+            "checks": [
+              {
+                "label": "case_id",
+                "pass": true
+              },
+              {
+                "label": "c1.classification",
+                "pass": true
+              },
+              {
+                "label": "c1.supported",
+                "pass": true
+              },
+              {
+                "label": "c1.evidence_ids",
+                "pass": true
+              },
+              {
+                "label": "c2.classification",
+                "pass": true
+              },
+              {
+                "label": "c2.supported",
+                "pass": true
+              },
+              {
+                "label": "c2.evidence_ids",
+                "pass": true
+              },
+              {
+                "label": "no_extra_claims",
+                "pass": true
+              }
+            ],
+            "normalized_verdicts": {
+              "c1": {
+                "classification": "fact",
+                "supported": true,
+                "evidence_ids": [
+                  "E1"
+                ]
+              },
+              "c2": {
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": []
+              }
+            }
+          }
+        },
+        {
+          "attempt": 2,
+          "timestamp": "2026-08-16T15:41:59.029Z",
+          "latency_ms": 1228.68,
+          "provider": "deepseek_api",
+          "model": "deepseek-v4-flash",
+          "usage": {
+            "prompt_tokens": 274,
+            "completion_tokens": 125,
+            "total_tokens": 399,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 18
+          },
+          "raw_visible_response": "{\n  \"case_id\": \"answer_consistency\",\n  \"final_status\": \"partial\",\n  \"verdicts\": [\n    {\n      \"claim_id\": \"c1\",\n      \"classification\": \"fact\",\n      \"supported\": true,\n      \"evidence_ids\": [\"E1\"],\n      \"rationale\": \"Directly supported by E1.\"\n    },\n    {\n      \"claim_id\": \"c2\",\n      \"classification\": \"unknown\",\n      \"supported\": false,\n      \"evidence_ids\": [],\n      \"rationale\": \"No evidence mentions a staffing shortage or delay.\"\n    }\n  ]\n}",
+          "data": {
+            "case_id": "answer_consistency",
+            "final_status": "partial",
+            "verdicts": [
+              {
+                "claim_id": "c1",
+                "classification": "fact",
+                "supported": true,
+                "evidence_ids": [
+                  "E1"
+                ],
+                "rationale": "Directly supported by E1."
+              },
+              {
+                "claim_id": "c2",
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": [],
+                "rationale": "No evidence mentions a staffing shortage or delay."
+              }
+            ]
+          },
+          "evaluation": {
+            "status": "PASS",
+            "checks": [
+              {
+                "label": "case_id",
+                "pass": true
+              },
+              {
+                "label": "c1.classification",
+                "pass": true
+              },
+              {
+                "label": "c1.supported",
+                "pass": true
+              },
+              {
+                "label": "c1.evidence_ids",
+                "pass": true
+              },
+              {
+                "label": "c2.classification",
+                "pass": true
+              },
+              {
+                "label": "c2.supported",
+                "pass": true
+              },
+              {
+                "label": "c2.evidence_ids",
+                "pass": true
+              },
+              {
+                "label": "no_extra_claims",
+                "pass": true
+              }
+            ],
+            "normalized_verdicts": {
+              "c1": {
+                "classification": "fact",
+                "supported": true,
+                "evidence_ids": [
+                  "E1"
+                ]
+              },
+              "c2": {
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": []
+              }
+            }
+          }
+        },
+        {
+          "attempt": 3,
+          "timestamp": "2026-08-16T15:42:00.258Z",
+          "latency_ms": 1536.69,
+          "provider": "deepseek_api",
+          "model": "deepseek-v4-flash",
+          "usage": {
+            "prompt_tokens": 274,
+            "completion_tokens": 146,
+            "total_tokens": 420,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 18
+          },
+          "raw_visible_response": "{\n  \"case_id\": \"answer_consistency\",\n  \"final_status\": \"answered\",\n  \"verdicts\": [\n    {\n      \"claim_id\": \"c1\",\n      \"classification\": \"fact\",\n      \"supported\": true,\n      \"evidence_ids\": [\"E1\"],\n      \"rationale\": \"Directly stated in evidence E1 that version 2.0 shipped on March 3.\"\n    },\n    {\n      \"claim_id\": \"c2\",\n      \"classification\": \"unknown\",\n      \"supported\": false,\n      \"evidence_ids\": [],\n      \"rationale\": \"No evidence provided about a delay or staffing shortage; claim is unsupported, thus unknown.\"\n    }\n  ]\n}",
+          "data": {
+            "case_id": "answer_consistency",
+            "final_status": "answered",
+            "verdicts": [
+              {
+                "claim_id": "c1",
+                "classification": "fact",
+                "supported": true,
+                "evidence_ids": [
+                  "E1"
+                ],
+                "rationale": "Directly stated in evidence E1 that version 2.0 shipped on March 3."
+              },
+              {
+                "claim_id": "c2",
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": [],
+                "rationale": "No evidence provided about a delay or staffing shortage; claim is unsupported, thus unknown."
+              }
+            ]
+          },
+          "evaluation": {
+            "status": "PASS",
+            "checks": [
+              {
+                "label": "case_id",
+                "pass": true
+              },
+              {
+                "label": "c1.classification",
+                "pass": true
+              },
+              {
+                "label": "c1.supported",
+                "pass": true
+              },
+              {
+                "label": "c1.evidence_ids",
+                "pass": true
+              },
+              {
+                "label": "c2.classification",
+                "pass": true
+              },
+              {
+                "label": "c2.supported",
+                "pass": true
+              },
+              {
+                "label": "c2.evidence_ids",
+                "pass": true
+              },
+              {
+                "label": "no_extra_claims",
+                "pass": true
+              }
+            ],
+            "normalized_verdicts": {
+              "c1": {
+                "classification": "fact",
+                "supported": true,
+                "evidence_ids": [
+                  "E1"
+                ]
+              },
+              "c2": {
+                "classification": "unknown",
+                "supported": false,
+                "evidence_ids": []
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "status": "FAIL"
+}

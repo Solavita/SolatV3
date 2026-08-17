@@ -4,6 +4,8 @@ const fs = require('node:fs');
 const { AgentContractError, AgentOrchestrator } = require('./agent-orchestrator');
 
 const AGENT_STORAGE_SCHEMA_VERSION = 'solat.agent-storage.v1';
+const AGENT_INTERRUPTED_SCHEMA_VERSION = 'solat.agent-interrupted.v1';
+const NON_TERMINAL_PLAN_STATUSES = Object.freeze(['PLANNED', 'PAUSED_APPROVAL', 'APPROVED', 'RUNNING']);
 
 function required(value, field) {
   const normalized = String(value || '').trim();
@@ -76,6 +78,60 @@ class AgentService {
     return { plan: this.preview(result.plan), audit: result.audit };
   }
 
+  // The in-memory task loop does not survive a process restart, and approval
+  // tokens are redacted on disk, so any persisted non-terminal plan is by
+  // definition interrupted. Report it once and mark it cancelled so it is
+  // never silently left behind or reported twice.
+  async collectInterrupted({ ownerId, sessionId = ownerId }) {
+    const session = required(sessionId, 'session_id');
+    const plans = await this.#storedPlans({ ownerId, sessionId });
+    const interrupted = [];
+    for (const plan of plans.sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')))) {
+      if (!NON_TERMINAL_PLAN_STATUSES.includes(plan.status)) continue;
+      const statusAtInterrupt = plan.status;
+      try {
+        await this.cancel({ ownerId, sessionId, idempotencyKey: plan.idempotency_key, reason: 'interrupted_by_restart' });
+      } catch {
+        // A record that fails its integrity check cannot be marked; it must
+        // not break the rest of the interrupted report.
+        continue;
+      }
+      interrupted.push({
+        plan_id: plan.plan_id,
+        idempotency_key: plan.idempotency_key,
+        tool: plan.steps?.[0]?.tool || null,
+        status_at_interrupt: statusAtInterrupt,
+        updated_at: plan.updated_at || null,
+      });
+    }
+    return { schema_version: AGENT_INTERRUPTED_SCHEMA_VERSION, session_id: session, plans: interrupted };
+  }
+
+  async #storedPlans({ ownerId, sessionId = ownerId }) {
+    const owner = required(ownerId, 'owner_id');
+    const session = required(sessionId, 'session_id');
+    let entries;
+    try {
+      entries = await this.fs.readdir(this.rootDir);
+    } catch (error) {
+      if (error?.code === 'ENOENT') return [];
+      throw error;
+    }
+    const plans = [];
+    for (const entry of entries) {
+      if (!String(entry).endsWith('.json')) continue;
+      try {
+        const record = JSON.parse(await this.fs.readFile(path.join(this.rootDir, entry), 'utf8'));
+        if (record?.schema_version !== AGENT_STORAGE_SCHEMA_VERSION || !record.plan) continue;
+        if (record.plan.owner_id !== owner || record.plan.session_id !== session) continue;
+        plans.push(record.plan);
+      } catch {
+        // An unreadable record must not break the interrupted-task report.
+      }
+    }
+    return plans;
+  }
+
   async #ensureLoaded(input) {
     const current = this.orchestrator.getPlan(input);
     if (current) return current;
@@ -120,4 +176,4 @@ class AgentService {
   }
 }
 
-module.exports = { AGENT_STORAGE_SCHEMA_VERSION, AgentService, redact };
+module.exports = { AGENT_INTERRUPTED_SCHEMA_VERSION, AGENT_STORAGE_SCHEMA_VERSION, AgentService, redact };

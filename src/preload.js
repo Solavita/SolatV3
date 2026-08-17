@@ -36,6 +36,11 @@ contextBridge.exposeInMainWorld('solat', Object.freeze({
     if (result?.ok === false) { const error = new Error(result.error?.message || 'Agent plan could not run.'); error.code = result.error?.code || 'agent_error'; throw error; }
     return result?.value;
   },
+  agentInterruptedPlans: async request => {
+    const result = await ipcRenderer.invoke('solat:agent-interrupted-plans', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Interrupted agent plans could not be read.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
   computerTaskContinue: async request => {
     const result = await ipcRenderer.invoke('solat:computer-task-continue', request);
     if (result?.ok === false) { const error = new Error(result.error?.message || 'Computer task could not continue.'); error.code = result.error?.code || 'agent_error'; throw error; }
