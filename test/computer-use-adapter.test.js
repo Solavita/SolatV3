@@ -439,20 +439,53 @@ test('computer adapter binds mutations to a listed hwnd and semantic selector', 
   assert.ok(calls.some(args => args.includes('--window') && args.includes('10')));
 });
 
-test('computer adapter focuses a trusted background window before semantic inspection', async () => {
+test('computer adapter activates a trusted background window before semantic inspection', async () => {
   let listed = 0;
   const { runner, calls } = runnerWith({
     'list-windows': () => {
       listed += 1;
       return [{ hwnd: 10, processId: 2, processName: 'chrome', title: 'Google', isForeground: listed > 1 }];
     },
-    focus: { success: true },
     inspect: { windows: [{ elements: [{ name: 'Search', controlType: 'Edit', selector: 'edit-search' }] }] },
   });
-  const result = await new WinAppComputerUseAdapter({ runner }).inspect({ hwnd: 10 });
+  const activations = [];
+  const adapter = new WinAppComputerUseAdapter({
+    runner,
+    activator: async hwnd => { activations.push(hwnd); return { activated: true, hwnd }; },
+  });
+  const result = await adapter.inspect({ hwnd: 10 });
   assert.equal(result.status, 'ready');
-  assert.ok(calls.some(args => args[1] === 'focus' && args.includes('10')));
+  assert.deepEqual(activations, [10]);
+  assert.equal(calls.some(args => args[1] === 'focus'), false, 'window activation must not reuse the element-focus CLI verb');
   assert.equal(result.target.is_foreground, true);
+});
+
+test('computer adapter surfaces a failed window activation instead of inspecting blind', async () => {
+  const { runner } = runnerWith({
+    'list-windows': [{ hwnd: 10, processId: 2, processName: 'chrome', title: 'Google', isForeground: false }],
+  });
+  const adapter = new WinAppComputerUseAdapter({
+    runner,
+    activator: async () => { throw new ComputerUseError('activation_failed', 'Window activation failed (1).'); },
+  });
+  await assert.rejects(() => adapter.inspect({ hwnd: 10 }), error => error instanceof ComputerUseError && error.code === 'activation_failed');
+});
+
+test('computer adapter falls back to a bounded click when the element has no invoke pattern', async () => {
+  const verbs = [];
+  const runner = async (_executable, args) => {
+    verbs.push(args[1]);
+    if (args[1] === 'list-windows') return { code: 0, stdout: JSON.stringify([{ hwnd: 10, processId: 2, processName: 'chrome', title: 'Google', isForeground: true }]), stderr: '' };
+    if (args[1] === 'inspect') return { code: 0, stdout: JSON.stringify({ elements: [{ name: 'Search', selector: 'cmb-search', type: 'ComboBox' }] }), stderr: '' };
+    if (args[1] === 'invoke') return { code: 1, stdout: '', stderr: '{"error":{"code":"internal_error","message":"Element cmb-search (ComboBox) does not support any invoke pattern. No invokable ancestor was found either — this element is display-only and cannot be activated."}}' };
+    if (args[1] === 'click') return { code: 0, stdout: JSON.stringify({ success: true }), stderr: '' };
+    if (args[1] === 'wait-for') return { code: 0, stdout: JSON.stringify({ found: true, timedOut: false, elapsedMs: 5 }), stderr: '' };
+    throw new Error(`unexpected verb ${args[1]}`);
+  };
+  const result = await new WinAppComputerUseAdapter({ runner }).invoke({ hwnd: 10, selector: 'cmb-search', verifySelector: 'cmb-search', verifyState: 'present' });
+  assert.equal(result.status, 'ready');
+  assert.equal(result.verified, true);
+  assert.deepEqual(verbs, ['list-windows', 'list-windows', 'inspect', 'invoke', 'click', 'wait-for']);
 });
 
 test('computer adapter submits an inspected field with Enter and verifies the resulting title', async () => {

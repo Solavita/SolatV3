@@ -51,14 +51,18 @@ test('approval cannot follow an HWND reused by another app or process', () => {
   }
 });
 
-test('approval cannot authorize changed page/title or changed bound screen', () => {
+test('approval follows benign title changes but never a changed bound screen', () => {
   const attestation = createTargetAttestation({ revision: 3, target, screenSha256 });
-  assert.throws(() => assertCurrentTarget({
+  // A browsing window legitimately retitles as pages load; identity is
+  // hwnd + process + revision, and content safety comes from the caller's
+  // current-window sensitivity flag plus execution-boundary gates.
+  const retitled = assertCurrentTarget({
     attestation,
     revision: 3,
-    currentTarget: { ...target, title: 'Bank login' },
+    currentTarget: { ...target, title: 'SOLAT - Google Search' },
     currentScreenSha256: screenSha256,
-  }), error => error.code === 'target_state_changed');
+  });
+  assert.equal(retitled.window_title, 'SOLAT - Google Search');
   assert.throws(() => assertCurrentTarget({
     attestation,
     revision: 3,

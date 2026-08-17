@@ -1,6 +1,8 @@
 const crypto = require('node:crypto');
 const { AgentContractError } = require('./agent-orchestrator');
 const { assertCurrentTarget, createTargetAttestation } = require('./computer-target-attestation');
+const { completeTarget } = require('./computer-task-loop');
+const { isSensitiveWindow } = require('./computer-use-adapter');
 
 const AGENT_CHAT_RESULT_SCHEMA_VERSION = 'solat.agent-chat-result.v1';
 
@@ -44,11 +46,13 @@ class AgentChatBridge {
       allowed_sites: new Set(Array.isArray(scope.allowed_sites) ? scope.allowed_sites.map(value => String(value).toLowerCase()) : []),
       allowed_hwnds: new Set(Array.isArray(scope.allowed_hwnds) ? scope.allowed_hwnds.map(Number).filter(Number.isSafeInteger) : []),
       target_attestations: new Map(),
+      allowed_processes: new Set(),
     };
     for (const target of Array.isArray(scope.allowed_targets) ? scope.allowed_targets : []) {
       const attestation = createTargetAttestation({ revision, target });
       record.allowed_hwnds.add(attestation.target.hwnd);
       record.target_attestations.set(attestation.target.hwnd, attestation);
+      if (String(attestation.target.process_name || '').trim()) record.allowed_processes.add(String(attestation.target.process_name).toLowerCase());
     }
     this.taskAuthorizations.set(id, record);
     return Object.freeze({ id, task_id: task, instruction_revision: revision });
@@ -61,17 +65,28 @@ class AgentChatBridge {
       const attestation = createTargetAttestation({ revision: grant.instruction_revision, target });
       grant.allowed_hwnds.add(attestation.target.hwnd);
       grant.target_attestations.set(attestation.target.hwnd, attestation);
+      if (String(attestation.target.process_name || '').trim()) grant.allowed_processes.add(String(attestation.target.process_name).toLowerCase());
     }
     return true;
   }
 
   refreshTaskAuthorizationTargets({ authorization, sessionId, targets = [] } = {}) {
-    this.#authorizationStillActive(authorization, sessionId);
-    // Generic discovery is evidence, not authority. In particular, do not
-    // bless another Chrome window or rewrite an attestation after HWND reuse.
-    // A target can enter the grant only through the approved action result or
-    // a subsequently verified in-scope action result.
-    void targets;
+    const grant = this.#authorizationStillActive(authorization, sessionId);
+    // Discovery is evidence, not open-ended authority: a listed window joins
+    // the existing one-approval grant only when its process already belongs
+    // to a verified approved-action target, and sensitive windows never join.
+    // This keeps one owner approval per command while HWND churn inside the
+    // approved app stays bounded; cross-process discovery still requires a
+    // fresh approval.
+    for (const window of Array.isArray(targets) ? targets : []) {
+      const target = completeTarget(window);
+      if (!target || grant.target_attestations.has(target.hwnd)) continue;
+      if (!grant.allowed_processes.has(target.process_name.toLowerCase())) continue;
+      if (isSensitiveWindow({ process_name: target.process_name, title: target.window_title })) continue;
+      const attestation = createTargetAttestation({ revision: grant.instruction_revision, target });
+      grant.allowed_hwnds.add(target.hwnd);
+      grant.target_attestations.set(target.hwnd, attestation);
+    }
     return true;
   }
 
@@ -140,7 +155,7 @@ class AgentChatBridge {
     const attestation = grant.target_attestations.get(hwnd);
     if (!attestation || !this.targetResolver) throw new AgentContractError('target_attestation_missing', 'The current window identity is not bound to this task approval.');
     const current = await this.targetResolver({ hwnd });
-    assertCurrentTarget({ attestation, revision: grant.instruction_revision, currentTarget: current, sensitive: false });
+    assertCurrentTarget({ attestation, revision: grant.instruction_revision, currentTarget: current, sensitive: isSensitiveWindow(current) });
   }
 
   // A newer computer task can supersede an unapproved action only through

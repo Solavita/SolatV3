@@ -124,3 +124,54 @@ test('generic window discovery never expands a task authorization', async t => {
   });
   assert.equal(blocked.model_result.status, 'confirmation_required');
 });
+
+test('one approval covers same-process windows discovered during the task but never sensitive ones', async t => {
+  const rootDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'solat-one-approval-'));
+  t.after(() => fs.promises.rm(rootDir, { recursive: true, force: true }));
+  const approved = { hwnd: 73, process_id: 9001, process_name: 'chrome', title: 'Google' };
+  const sibling = { hwnd: 74, process_id: 9001, process_name: 'chrome', title: 'Google - Google Chrome' };
+  const bank = { hwnd: 75, process_id: 9001, process_name: 'chrome', title: 'Bank login' };
+  const other = { hwnd: 99, process_id: 9002, process_name: 'notepad', title: 'Notes' };
+  const identities = new Map([[73, approved], [74, sibling], [75, bank], [99, other]]);
+  const toolDefinitions = [{ type: 'function', function: { name: 'computer_invoke', parameters: { type: 'object' } } }];
+  const registry = { computer_invoke: { side_effect_level: 'write', validate_arguments: () => true, validate_output: result => result.status === 'ready' } };
+  const service = new AgentService({ rootDir, toolRegistry: registry, executeTool: async () => ({ status: 'ready', operation: 'invoke', verified: true }) });
+  const bridge = new AgentChatBridge({ agentService: service, toolDefinitions, targetResolver: async ({ hwnd }) => identities.get(Number(hwnd)) });
+  const authorization = bridge.issueTaskAuthorization({
+    sessionId: 'owner', taskId: 'task-one-approval', instructionRevision: 1,
+    scope: { allowed_tools: ['computer_invoke'], allowed_targets: [approved] },
+  });
+  bridge.refreshTaskAuthorizationTargets({ authorization, sessionId: 'owner', targets: [approved, sibling, bank, other] });
+  const sameProcess = await bridge.execute({
+    sessionId: 'owner', requestId: 'sibling-window', taskAuthorization: authorization,
+    call: { name: 'computer_invoke', arguments: { hwnd: 74, selector: 'search-box' } },
+  });
+  assert.equal(sameProcess.approval_reused, true);
+  // A benign retitle (page finished loading) must not void the one approval.
+  identities.set(74, { ...sibling, title: 'SOLAT - Google Search' });
+  const retitled = await bridge.execute({
+    sessionId: 'owner', requestId: 'retitled-window', taskAuthorization: authorization,
+    call: { name: 'computer_invoke', arguments: { hwnd: 74, selector: 'search-box' } },
+  });
+  assert.equal(retitled.approval_reused, true);
+  // ...but the same HWND navigated to a sensitive page fails closed.
+  identities.set(74, { ...sibling, title: 'Bank login' });
+  await assert.rejects(
+    () => bridge.execute({
+      sessionId: 'owner', requestId: 'navigated-sensitive', taskAuthorization: authorization,
+      call: { name: 'computer_invoke', arguments: { hwnd: 74, selector: 'search-box' } },
+    }),
+    error => error.code === 'sensitive_target',
+  );
+  identities.set(74, sibling);
+  const sensitive = await bridge.execute({
+    sessionId: 'owner', requestId: 'bank-window', taskAuthorization: authorization,
+    call: { name: 'computer_invoke', arguments: { hwnd: 75, selector: 'safe-button' } },
+  });
+  assert.equal(sensitive.model_result.status, 'confirmation_required');
+  const crossProcess = await bridge.execute({
+    sessionId: 'owner', requestId: 'other-window', taskAuthorization: authorization,
+    call: { name: 'computer_invoke', arguments: { hwnd: 99, selector: 'safe-button' } },
+  });
+  assert.equal(crossProcess.model_result.status, 'confirmation_required');
+});

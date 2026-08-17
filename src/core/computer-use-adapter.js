@@ -232,6 +232,35 @@ function resolveLaunchableApp(appId) {
   throw new ComputerUseError('app_unavailable', `The approved ${normalized} application is not installed in its expected location.`);
 }
 
+// The installed winapp CLI can set element focus but cannot activate a
+// backgrounded window, and backgrounded Chromium hides its page tree from
+// UIA until the window is foreground. Activation therefore goes through a
+// tiny injected OS-level boundary, testable like every other runner here.
+function defaultWindowActivator(hwnd, { signal } = {}) {
+  const target = Number(hwnd);
+  const script = `Add-Type -MemberDefinition '[DllImport("user32.dll")] public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo); [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);' -Name Win32 -Namespace SolatActivate; [SolatActivate.Win32]::keybd_event(0x12, 0, 0, [UIntPtr]::Zero); [SolatActivate.Win32]::SetForegroundWindow([IntPtr]${target}) | Out-Null; [SolatActivate.Win32]::keybd_event(0x12, 0, 2, [UIntPtr]::Zero)`;
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(new ComputerUseError('cancelled', 'Computer action was cancelled.'));
+    const child = spawn('powershell', ['-NoProfile', '-Command', script], { shell: false, windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] });
+    let stderr = '';
+    let settled = false;
+    let timer;
+    const finish = error => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', abort);
+      error ? reject(error) : resolve({ activated: true, hwnd: target });
+    };
+    child.stderr.on('data', chunk => { stderr = (stderr + chunk.toString('utf8')).slice(-500); });
+    child.once('error', error => finish(new ComputerUseError('activation_failed', error.message)));
+    child.once('close', code => finish(code === 0 ? null : new ComputerUseError('activation_failed', `Window activation failed (${code}). ${stderr}`.trim())));
+    const abort = () => { child.kill(); finish(new ComputerUseError('cancelled', 'Computer action was cancelled.')); };
+    signal?.addEventListener('abort', abort, { once: true });
+    timer = setTimeout(() => { child.kill(); finish(new ComputerUseError('timeout', 'Window activation timed out.')); }, DEFAULT_TIMEOUT_MS);
+  });
+}
+
 function defaultLaunchRunner(executable, { args = [], signal, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) return reject(new ComputerUseError('cancelled', 'Computer action was cancelled.'));
@@ -260,11 +289,12 @@ class WinAppComputerUseAdapter {
   constructor({ executable = (() => {
     const alias = process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'Microsoft', 'WindowsApps', 'winapp.exe') : '';
     return alias && fs.existsSync(alias) ? alias : 'winapp';
-  })(), runner = defaultRunner, launcher = defaultLaunchRunner, appResolver = resolveLaunchableApp, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+  })(), runner = defaultRunner, launcher = defaultLaunchRunner, appResolver = resolveLaunchableApp, activator = defaultWindowActivator, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
     this.executable = executable;
     this.runner = runner;
     this.launcher = launcher;
     this.appResolver = appResolver;
+    this.activator = activator;
     this.timeoutMs = timeoutMs;
   }
 
@@ -630,7 +660,7 @@ class WinAppComputerUseAdapter {
     // the background. Bring the already allowlisted target to the foreground
     // before taking the semantic snapshot, then re-bind its identity.
     if (target.is_foreground === false) {
-      await this.#run(['focus', '--window', String(target.hwnd)], { signal });
+      await this.activator(validHwnd(target.hwnd), { signal });
       target = await this.#assertTarget(target.hwnd, signal);
     }
     const boundedDepth = Number(depth);
@@ -649,7 +679,15 @@ class WinAppComputerUseAdapter {
     const element = boundedText(selector, 'selector', 300);
     const before = await this.inspect({ hwnd: target.hwnd, selector: element, depth: 2, signal });
     assertNotSensitiveTree(before.tree);
-    await this.#run(['invoke', element, '--window', String(target.hwnd)], { signal });
+    try {
+      await this.#run(['invoke', element, '--window', String(target.hwnd)], { signal });
+    } catch (error) {
+      // Some Chromium controls (e.g. the search ComboBox) expose no invoke
+      // pattern; a bounded mouse click at the same observed element is the
+      // equivalent activation.
+      if (!(error instanceof ComputerUseError) || !/does not support any invoke pattern|cannot be activated/iu.test(error.message)) throw error;
+      await this.#run(['click', element, '--window', String(target.hwnd)], { signal });
+    }
     const verification = await this.#verify({ hwnd: target.hwnd, selector: verifySelector, state: verifyState, value: verifyValue, signal });
     return { schema_version: COMPUTER_RESULT_SCHEMA_VERSION, status: 'ready', operation: 'invoke', target, selector: element, verified: true, verification };
   }
@@ -695,4 +733,4 @@ class WinAppComputerUseAdapter {
   }
 }
 
-module.exports = { COMPUTER_RESULT_SCHEMA_VERSION, ComputerUseError, SAFE_WEBSITES, WinAppComputerUseAdapter, defaultRunner, defaultLaunchRunner, isSensitiveWindow, isSensitiveUiaNode, containsSensitiveUiaNode, resolveLaunchableApp, YOUTUBE_SEARCH_BASE_URL };
+module.exports = { COMPUTER_RESULT_SCHEMA_VERSION, ComputerUseError, SAFE_WEBSITES, WinAppComputerUseAdapter, defaultRunner, defaultLaunchRunner, defaultWindowActivator, isSensitiveWindow, isSensitiveUiaNode, containsSensitiveUiaNode, resolveLaunchableApp, YOUTUBE_SEARCH_BASE_URL };

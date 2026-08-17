@@ -81,12 +81,11 @@ function assertCurrentTarget({ attestation, revision, currentTarget, currentScre
     || current.process_name !== expected.process_name) {
     throw new TargetAttestationError('target_identity_changed', 'The approved HWND now belongs to a different application or process.');
   }
-  // A different title commonly means that the user changed tabs/pages while
-  // approval was open. Fail closed and re-observe instead of applying an old
-  // selector to new content.
-  if (current.window_title !== expected.window_title) {
-    throw new TargetAttestationError('target_state_changed', 'The approved window changed before execution.');
-  }
+  // Identity is hwnd + process + revision. A benign title change (a page
+  // finishing its load, a search result appearing) must not void an approval:
+  // content safety is enforced by the caller's current-window sensitivity flag
+  // and the execution-boundary sensitive-tree gates, while selectors stay
+  // bound to fresh verified observations.
   if (attestation.screen_sha256 !== null) {
     if (currentScreenSha256 === null
       || text(currentScreenSha256, 'current_screen_sha256', 71) !== attestation.screen_sha256) {
