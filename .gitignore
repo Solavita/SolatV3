@@ -22,6 +22,7 @@ reports/calculator-*.json
 reports/*.json
 check-*.png
 solat-*-review.png
+solat-*-verify.png
 tmp-pinterest-*
 index.html
 renderer/assets/*.mp4
