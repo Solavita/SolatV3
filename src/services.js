@@ -17,10 +17,24 @@ const { composeAgentTools } = require('./core/agent-tool-composer');
 const { AgentChatBridge } = require('./core/agent-chat-bridge');
 const { ComputerTaskLoop } = require('./core/computer-task-loop');
 const { WindowScreenCapture } = require('./core/computer-screen-capture');
+const { AdaptiveScreenSampler } = require('./core/adaptive-screen-sampler');
+const { createProvider } = require('./core/provider');
+const { GroundingProvider } = require('./core/grounding-provider');
+const { ModelRouter } = require('./core/model-router');
 
 // Composition root for the main process. Everything is wired here once; the
 // Electron shell in main.js only supplies paths and lifecycle.
 function createSolatServices({ config, userDataDir, tempDir }) {
+  const visionProvider = config.visionModel?.enabled === true
+    && config.visionModel.baseUrl && config.visionModel.model
+    ? new GroundingProvider({ transport: createProvider(config.visionModel) })
+    : null;
+  const provider = new ModelRouter({
+    localProvider: createProvider(config.localModel),
+    deepseekProvider: createProvider(config),
+    visionProvider,
+    mode: config.modelMode,
+  });
   const searchService = new WebSearchService({
     provider: config.searchProvider,
     baseUrl: config.searchBaseUrl,
@@ -44,6 +58,7 @@ function createSolatServices({ config, userDataDir, tempDir }) {
     assertTarget: input => computerAdapter.assertTarget(input),
     tempRoot: path.join(tempDir, 'solat-screen-capture'),
   });
+  const screenSampler = new AdaptiveScreenSampler({ screenCapture });
   const agentTools = composeAgentTools(filesystemTools, computerTools);
   const agentService = new AgentService({
     rootDir: path.join(userDataDir, 'agent-plans'),
@@ -66,8 +81,12 @@ function createSolatServices({ config, userDataDir, tempDir }) {
       return assetStore.readOriginal({ ownerId: normalizedSession, projectId: project.project_id, assetId });
     },
   });
-  const core = new ConversationCore({ config, searchService, commerceService, fileContextProvider, agentBridge });
-  const computerTaskLoop = new ComputerTaskLoop({ provider: core.provider, bridge: agentBridge, toolRegistry: computerTools.registry, screenCapture });
+  const core = new ConversationCore({ config, provider, searchService, commerceService, fileContextProvider, agentBridge });
+  const computerTaskLoop = new ComputerTaskLoop({
+    provider: core.provider, bridge: agentBridge, toolRegistry: computerTools.registry,
+    toolDefinitions: computerTools.definitions,
+    screenCapture, screenSampler,
+  });
   core.computerTaskLoop = computerTaskLoop;
   const creativePersistence = new CreativePersistence({ rootDir: path.join(userDataDir, 'creative-history') });
   const conversationPersistence = new ConversationPersistence({ rootDir: path.join(userDataDir, 'conversation-history') });

@@ -154,14 +154,14 @@ test('Create-file command without a filename or content asks for the missing fie
   assert.equal(result.agentActions.length, 0);
 });
 
-test('Computer-use launch command is model-planned before approval', async () => {
+test('Computer-use launch command uses the deterministic allowlisted fast path before approval', async () => {
   let plannerCalls = 0;
   let bridgeCall = null;
   const provider = {
     status: () => ({ configured: true, provider: 'fake', model: 'fake' }),
     async completeStructured() {
       plannerCalls += 1;
-      return { data: { schema_version: 'solat.agent-command-plan.v1', status: 'planned', summary: 'จะเปิด Chrome', tool: 'computer_launch_app', arguments: { app_id: 'chrome' } } };
+      throw new Error('A plain allowlisted app launch must not call the model planner.');
     },
   };
   const bridge = {
@@ -179,11 +179,37 @@ test('Computer-use launch command is model-planned before approval', async () =>
   const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: bridge }).send({
     sessionId: 'agent-launch', content: '@computer-use open chrome', agentMode: true, agentCommand: 'computer-use',
   });
-  assert.equal(plannerCalls, 1);
+  assert.equal(plannerCalls, 0);
   assert.equal(bridgeCall.name, 'computer_launch_app');
   assert.deepEqual(bridgeCall.arguments, { app_id: 'chrome' });
   assert.equal(result.agentActions.length, 1);
   assert.equal(result.agentCommand, 'computer-use');
+});
+
+test('natural Notepad launch uses the same deterministic fast path with Agent mode on', async () => {
+  let plannerCalls = 0;
+  let bridgeCall = null;
+  const provider = {
+    status: () => ({ configured: true, provider: 'fake', model: 'fake' }),
+    async completeStructured() { plannerCalls += 1; throw new Error('model planner must not run'); },
+  };
+  const bridge = {
+    definitions: () => [{ type: 'function', function: { name: 'computer_launch_app', parameters: { type: 'object' } } }],
+    owns: name => name === 'computer_launch_app',
+    async execute({ call }) {
+      bridgeCall = call;
+      return {
+        model_result: { status: 'confirmation_required', message: 'Approval required.' },
+        action: { status: 'confirmation_required', idempotency_key: 'notepad-k1', plan_id: 'notepad-p1', approval_token: 'notepad-token', tool: call.name, arguments: call.arguments },
+      };
+    },
+  };
+  const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: bridge }).send({
+    sessionId: 'agent-notepad-fast', content: 'เปิด Notepad', agentMode: true,
+  });
+  assert.equal(plannerCalls, 0);
+  assert.deepEqual(bridgeCall.arguments, { app_id: 'notepad' });
+  assert.equal(result.agentActions.length, 1);
 });
 
 test('Computer requests use the persistent model-guided task loop when it is available', async () => {
@@ -229,6 +255,34 @@ test('bounded YouTube playback stays inside the persistent task loop until verif
   assert.equal(result.agentActions.length, 1);
 });
 
+test('natural Thai Instagram profile request reaches the persistent workflow without a mode toggle', async () => {
+  let received = null;
+  let plannerCalls = 0;
+  const provider = {
+    status: () => ({ configured: true, provider: 'fake', model: 'fake' }),
+    async completeStructured() { plannerCalls += 1; throw new Error('The generic one-step planner must not truncate this workflow.'); },
+  };
+  const bridge = { definitions: () => [], owns: () => false };
+  const loop = {
+    hasActive: () => false,
+    async start(input) {
+      received = input;
+      return {
+        task_id: 'instagram-task', status: 'AWAITING_APPROVAL', summary: 'Open Instagram first.', planner_turns: 0,
+        pending_action: { tool: 'computer_open_website', action: { status: 'confirmation_required', idempotency_key: 'instagram-open', approval_token: 'once', arguments: { site: 'instagram' } } },
+      };
+    },
+  };
+  const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: bridge, computerTaskLoop: loop }).send({
+    sessionId: 'instagram-natural', requestId: 'instagram-natural-request',
+    content: 'เปิด Chrome แล้วเปิด Instagram แล้วไปที่หน้าโปรไฟล์ของฉัน', agentMode: true,
+  });
+  assert.equal(plannerCalls, 0);
+  assert.deepEqual(received.workflowHint, { workflow: 'instagram_profile' });
+  assert.equal(result.agentActions[0].tool, 'computer_open_website');
+  assert.deepEqual(result.agentActions[0].arguments, { site: 'instagram' });
+});
+
 test('screen-driven navigation keeps the persistent planner', () => {
   assert.equal(requiresScreenDrivenComputerTask('Open Google Classroom and find Physics'), true);
   assert.equal(requiresScreenDrivenComputerTask('เปิด Google Classroom แล้วหาวิชาฟิสิกส์'), true);
@@ -236,6 +290,9 @@ test('screen-driven navigation keeps the persistent planner', () => {
     requiresScreenDrivenComputerTask('เปิด Chrome พิมพ์ Diana King แล้วเข้าเว็บ Wikipedia เลื่อนไปดูส่วน Biography และสรุปเพลงชื่อดัง 10 เพลง'),
     true,
   );
+  assert.equal(requiresScreenDrivenComputerTask('สร้างไฟล์ page.html เนื้อหา: <main>ok</main>'), false);
+  assert.equal(requiresScreenDrivenComputerTask('สรุปว่าคำสั่งก่อนหน้าทำอะไร'), false);
+  assert.equal(requiresScreenDrivenComputerTask('เปิด Chrome แล้วสรุปหน้า Wikipedia นี้'), true);
 });
 
 test('Multi-step YouTube music command routes to one verified computer workflow', async () => {
@@ -260,6 +317,17 @@ test('Multi-step YouTube music command routes to one verified computer workflow'
     },
   };
   assert.deepEqual(parseDirectComputerWorkflowRequest('@computer-use เปิด chrome แล้วเปิด youtube แล้วเปิดเพลง Lllies'), { status: 'ready', workflow: 'youtube_music', query: 'Lllies' });
+  assert.deepEqual(parseDirectComputerWorkflowRequest('เปิด Chrome แล้วเปิด Instagram แล้วไปที่หน้าโปรไฟล์ของฉัน'), { status: 'ready', workflow: 'instagram_profile' });
+  assert.equal(requiresScreenDrivenComputerTask('เปิด Chrome แล้วเปิด Instagram แล้วไปที่หน้าโปรไฟล์ของฉัน'), true);
+  assert.deepEqual(parseDirectComputerWorkflowRequest('ค้นเพลง Lllies บน YouTube แล้วเปิดผลลัพธ์ที่ตรงที่สุด'), { status: 'ready', workflow: 'youtube_music', query: 'Lllies' });
+  assert.deepEqual(parseDirectComputerWorkflowRequest('เปลี่ยนเป็นเพลง Lllies (Acoustic Live) บน YouTube'), { status: 'ready', workflow: 'youtube_music', query: 'Lllies (Acoustic Live)' });
+  assert.deepEqual(parseDirectComputerWorkflowRequest('@computer-use Open Chrome and search Diana King'), { status: 'ready', workflow: 'web_search', query: 'Diana King' });
+  assert.deepEqual(parseDirectComputerWorkflowRequest('เปิด Chrome แล้วค้นหา Diana King ให้หน่อย'), { status: 'ready', workflow: 'web_search', query: 'Diana King' });
+  assert.deepEqual(parseDirectComputerWorkflowRequest('เปิด Chrome แล้วค้นหา computer use regression 15 เป็นงานสุดท้าย'), { status: 'ready', workflow: 'web_search', query: 'computer use regression 15' });
+  assert.deepEqual(parseDirectComputerWorkflowRequest('@computer-use เปิด Chrome แล้วค้นหา วิธีปลูกมะเขือเทศ'), { status: 'ready', workflow: 'web_search', query: 'วิธีปลูกมะเขือเทศ' });
+  assert.deepEqual(parseDirectComputerWorkflowRequest('เปลี่ยนไปค้นหา Persona 5 UI ใน Chrome'), { status: 'ready', workflow: 'web_search', query: 'Persona 5 UI' });
+  assert.deepEqual(parseDirectComputerWorkflowRequest('@computer-use open browser and search for SOLAT AI'), { status: 'ready', workflow: 'web_search', query: 'SOLAT AI' });
+  assert.equal(parseDirectComputerWorkflowRequest('@computer-use ค้นหา Diana King'), null, 'a browser target is required before the deterministic launch path');
   assert.deepEqual(
     parseDirectComputerWorkflowRequest('@computer-use เปิด Chrome แล้วเข้า YouTube ค้นหาและเล่นเพลง Lllies ดูจนแน่ใจว่าเพลงกำลังเล่นแบบไม่หยุดเอง แล้วจบงาน'),
     { status: 'ready', workflow: 'youtube_music', query: 'Lllies' },
@@ -272,4 +340,70 @@ test('Multi-step YouTube music command routes to one verified computer workflow'
   assert.deepEqual(bridgeCall.arguments, { query: 'Lllies' });
   assert.match(result.assistant, /Lllies/);
   assert.equal(result.agentActions.length, 1);
+});
+
+test('an unrelated file request interrupts a pending computer task instead of revising the old YouTube goal', async () => {
+  const calls = [];
+  let active = true;
+  const loop = {
+    hasActive: () => active,
+    async interruptActive(input) { active = false; calls.push({ type: 'interrupt', input }); return { status: 'CANCELLED' }; },
+    async revise() { throw new Error('an unrelated file request must not revise the old computer task'); },
+  };
+  const provider = {
+    status: () => ({ configured: true, provider: 'fake', model: 'fake' }),
+    async completeStructured() {
+      return { data: { schema_version: 'solat.agent-command-plan.v1', status: 'planned', summary: 'Create page.html.', tool: 'filesystem_create', arguments: { path: 'page.html', content: '<main>ok</main>' } } };
+    },
+  };
+  const bridge = {
+    definitions: () => [{ type: 'function', function: { name: 'filesystem_create', parameters: { type: 'object' } } }],
+    owns: name => name === 'filesystem_create',
+    async execute({ call }) {
+      calls.push({ type: 'execute', call });
+      return { model_result: { status: 'confirmation_required' }, action: { status: 'confirmation_required', idempotency_key: 'file-new', approval_token: 'once', tool: call.name, arguments: call.arguments } };
+    },
+  };
+  const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: bridge, computerTaskLoop: loop }).send({
+    sessionId: 'stale-youtube', requestId: 'new-file-request', content: 'สร้างไฟล์ page.html เนื้อหา: <main>ok</main>', agentMode: true,
+  });
+  assert.deepEqual(calls.map(item => item.type), ['interrupt', 'execute']);
+  assert.equal(result.agentActions[0].tool, 'filesystem_create');
+  assert.doesNotMatch(result.assistant, /youtube|music/iu);
+});
+
+test('a new screen instruction revises only the new goal and workflow', async () => {
+  let revised = null;
+  const loop = {
+    hasActive: () => true,
+    async interruptActive() { throw new Error('a screen steering instruction should use revise'); },
+    async revise(input) {
+      revised = input;
+      return { task_id: 'same-task', status: 'AWAITING_APPROVAL', summary: 'Play New Song.', planner_turns: 1, pending_action: { tool: 'computer_play_youtube_music', action: { status: 'confirmation_required', idempotency_key: 'new-song', approval_token: 'once', arguments: { query: 'New Song' } } } };
+    },
+  };
+  const provider = { status: () => ({ configured: true, provider: 'fake', model: 'fake' }) };
+  const bridge = { definitions: () => [], owns: () => false };
+  const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: bridge, computerTaskLoop: loop }).send({
+    sessionId: 'replace-youtube', requestId: 'new-song-request', content: 'เปิด YouTube แล้วเล่นเพลง New Song', agentMode: true,
+  });
+  assert.equal(revised.instruction, 'เปิด YouTube แล้วเล่นเพลง New Song');
+  assert.deepEqual(revised.workflowHint, { workflow: 'youtube_music', query: 'New Song' });
+  assert.equal(result.agentActions[0].arguments.query, 'New Song');
+});
+
+test('a terminal computer-task failure becomes one truthful task response instead of a provider delivery failure', async () => {
+  const failure = Object.assign(new Error('The model selected invalid arguments for a computer tool.'), {
+    code: 'invalid_tool_arguments',
+    computer_task_terminal: { task_id: 'failed-task', status: 'FAILED', summary: 'The model selected invalid arguments for a computer tool.', planner_turns: 1, pending_action: null },
+  });
+  const loop = { hasActive: () => false, async start() { throw failure; } };
+  const provider = { status: () => ({ configured: true, provider: 'fake', model: 'fake' }) };
+  const bridge = { definitions: () => [], owns: () => false };
+  const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: bridge, computerTaskLoop: loop }).send({
+    sessionId: 'terminal-error', requestId: 'terminal-error-request', content: 'เปิด Chrome แล้วค้นหา SOLAT', agentMode: true,
+  });
+  assert.equal(result.provider, 'solat_computer_task');
+  assert.match(result.assistant, /invalid arguments/iu);
+  assert.equal(result.agentActions.length, 0);
 });

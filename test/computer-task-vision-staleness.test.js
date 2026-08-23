@@ -80,3 +80,30 @@ test('approved mutation result clears the pre-action screenshot before replannin
   assert.equal(completed.status, 'COMPLETED');
   assert.deepEqual(calls, ['text', 'text', 'vision:1', 'text', 'text', 'vision:2']);
 });
+
+test('text-only providers do not pay for or fail on an unused screen capture', async () => {
+  const steps = [
+    action('List windows.', 'computer_list_windows', {}),
+    action('Inspect the target.', 'computer_inspect', { hwnd: 42 }),
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'completed', summary: 'The display was read.', tool: 'none', arguments: {}, evidence_sequences: [1, 2] } },
+  ];
+  const provider = { async completeStructured() { return steps.shift(); } };
+  const bridge = {
+    owns: () => true,
+    async execute({ call }) {
+      if (call.name === 'computer_list_windows') return { model_result: { status: 'ready', windows: [{ hwnd: 42, process_id: 10, process_name: 'calculator', title: 'Calculator' }] } };
+      return { model_result: { status: 'ready', target: { hwnd: 42 }, tree: { selector: 'display', name: 'Display is 0' } } };
+    },
+  };
+  let captures = 0;
+  const loop = new ComputerTaskLoop({
+    provider,
+    bridge,
+    toolRegistry: registry(),
+    screenCapture: { async capture() { captures += 1; throw new Error('must not capture'); } },
+    idFactory: () => 'text-only-no-capture',
+  });
+  const completed = await loop.start({ ownerId: 'owner', sessionId: 'session', requestId: 'read', goal: 'Read Calculator.' });
+  assert.equal(completed.status, 'COMPLETED');
+  assert.equal(captures, 0);
+});

@@ -54,13 +54,41 @@ function readConfig({ env = process.env, cwd = process.cwd(), envFiles = [] } = 
   const requestedThinkingMode = String(value('SOLAT_MODEL_THINKING', 'disabled')).trim().toLowerCase();
   const thinkingMode = ['enabled', 'disabled'].includes(requestedThinkingMode) ? requestedThinkingMode : 'disabled';
   const provider = String(value('SOLAT_MODEL_PROVIDER', 'deepseek_api'));
+  const requestedModelMode = String(value('SOLAT_MODEL_MODE', 'auto')).trim().toLowerCase();
+  const modelMode = ['auto', 'local', 'deepseek'].includes(requestedModelMode) ? requestedModelMode : 'auto';
+  const localTimeout = Number.parseInt(value('SOLAT_LOCAL_MODEL_TIMEOUT_MS', '120000'), 10);
+  const visionEnabled = /^(?:1|true|on)$/iu.test(String(value('SOLAT_VISION_ENABLED', 'false')));
+  const visionTimeout = Number.parseInt(value('SOLAT_VISION_MODEL_TIMEOUT_MS', '60000'), 10);
+  const visionProvider = String(value('SOLAT_VISION_MODEL_PROVIDER', 'qwencloud_vision')).trim().toLowerCase();
   return Object.freeze({
+    modelMode,
     provider,
     baseUrl: normalizeRunpodVllmBaseUrl(provider, value('SOLAT_MODEL_BASE_URL', 'https://api.deepseek.com')),
     apiKey: String(value('SOLAT_MODEL_API_KEY')),
     model: String(value('SOLAT_MODEL_NAME', 'deepseek-v4-flash')),
     thinkingMode,
     timeoutMs: Number.isFinite(timeout) && timeout > 0 ? timeout : 45000,
+    localModel: Object.freeze({
+      provider: 'ollama_local',
+      baseUrl: String(value('SOLAT_LOCAL_MODEL_BASE_URL', 'http://127.0.0.1:11434/v1')).replace(/\/+$/u, ''),
+      apiKey: String(value('SOLAT_LOCAL_MODEL_API_KEY', 'ollama')),
+      model: String(value('SOLAT_LOCAL_MODEL_NAME', 'hf.co/empero-ai/Qwen3.8-2B-GGUF:Q4_K_M')),
+      thinkingMode: 'disabled',
+      maxTokens: 256,
+      keepAlive: '2m',
+      timeoutMs: Number.isFinite(localTimeout) && localTimeout > 0 ? localTimeout : 120000,
+    }),
+    visionModel: Object.freeze({
+      enabled: visionEnabled,
+      provider: visionProvider,
+      baseUrl: String(value('SOLAT_VISION_MODEL_BASE_URL', 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1')).replace(/\/+$/u, ''),
+      apiKey: String(value('SOLAT_VISION_MODEL_API_KEY', '')),
+      model: String(value('SOLAT_VISION_MODEL_NAME', 'qwen3-vl-flash')),
+      thinkingMode: 'disabled',
+      maxTokens: 128,
+      keepAlive: '0s',
+      timeoutMs: Number.isFinite(visionTimeout) && visionTimeout > 0 ? visionTimeout : 60000,
+    }),
     // DuckDuckGo needs no additional credential, and its candidates are still
     // reduced to SOLAT's approved source allowlist before a model can use them.
     searchProvider: String(value('SOLAT_SEARCH_PROVIDER', 'ddg')).toLowerCase(),

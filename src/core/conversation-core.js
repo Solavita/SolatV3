@@ -4,7 +4,7 @@ const { SessionWorkspace } = require('./session-workspace');
 const { analyzeIntent } = require('./intent-router');
 const { canonicalUrl, directlyIdentifiesQuery, evidenceAuthorityLevel } = require('./web-search');
 const { createGroundedAnswerContract, groundedAnswerInstruction } = require('./grounded-answer-contract');
-const { planAgentCommand } = require('./agent-command-planner');
+const { planAgentCommand, requestedYoutubeMusicQuery } = require('./agent-command-planner');
 
 const MAX_MESSAGE_LENGTH = 12000;
 const MAX_MODEL_CONTEXT_CHARS = 56000;
@@ -53,6 +53,8 @@ function runtimeGroundingEvidenceState({ searchRequested, webSearchStatus, sourc
 
 function requestsAgentCapability(message) {
   const value = String(message || '').toLocaleLowerCase();
+  if (/(?:\binstagram\b|\u0e2d\u0e34\u0e19\u0e2a\u0e15\u0e32\u0e41\u0e01\u0e23\u0e21)/iu.test(value)
+    && /(?:\b(?:open|navigate|click)\b|\u0e40\u0e1b\u0e34\u0e14|\u0e40\u0e02\u0e49\u0e32\u0e44\u0e1b\u0e17\u0e35\u0e48|\u0e04\u0e25\u0e34\u0e01)/iu.test(value)) return true;
   const target = /(?:\b(?:file|folder|workspace|computer|screen|window|app|application|notepad|chrome|browser|youtube|classroom|google\s+classroom)\b|\.(?:txt|md|json|csv|html)\b|\u0e44\u0e1f\u0e25\u0e4c|\u0e42\u0e1f\u0e25\u0e40\u0e14\u0e2d\u0e23\u0e4c|\u0e40\u0e27\u0e34\u0e23\u0e4c\u0e01\u0e2a\u0e40\u0e1b\u0e0b|\u0e04\u0e2d\u0e21\u0e1e\u0e34\u0e27\u0e40\u0e15\u0e2d\u0e23\u0e4c|\u0e2b\u0e19\u0e49\u0e32\u0e08\u0e2d|\u0e2b\u0e19\u0e49\u0e32\u0e15\u0e48\u0e32\u0e07|\u0e42\u0e1b\u0e23\u0e41\u0e01\u0e23\u0e21|\u0e41\u0e2d\u0e1b)/iu;
   if (!target.test(value)) return false;
   return /(?:\b(?:create|write|edit|update|undo|export|read|open|control|click|type|inspect|screenshot)\b|\u0e2a\u0e23\u0e49\u0e32\u0e07|\u0e41\u0e01\u0e49\u0e44\u0e02|\u0e41\u0e01\u0e49|\u0e40\u0e02\u0e35\u0e22\u0e19|\u0e2d\u0e31\u0e1b\u0e40\u0e14\u0e15|\u0e22\u0e49\u0e2d\u0e19\u0e01\u0e25\u0e31\u0e1a|\u0e2a\u0e48\u0e07\u0e2d\u0e2d\u0e01|\u0e2d\u0e48\u0e32\u0e19|\u0e40\u0e1b\u0e34\u0e14|\u0e04\u0e27\u0e1a\u0e04\u0e38\u0e21|\u0e04\u0e25\u0e34\u0e01|\u0e1e\u0e34\u0e21\u0e1e\u0e4c|\u0e08\u0e31\u0e1a\u0e20\u0e32\u0e1e)/iu.test(value);
@@ -83,14 +85,39 @@ function parseDirectComputerLaunchRequest(message) {
 
 function parseDirectComputerWorkflowRequest(message) {
   const value = repairWindows874Mojibake(String(message || '')).trim();
+  const asksOwnInstagramProfile = /(?:\binstagram\b|\u0e2d\u0e34\u0e19\u0e2a\u0e15\u0e32\u0e41\u0e01\u0e23\u0e21)/iu.test(value)
+    && /(?:\b(?:my\s+profile|profile\s+page)\b|\u0e2b\u0e19\u0e49\u0e32\s*\u0e42\u0e1b\u0e23\u0e44\u0e1f\u0e25\u0e4c(?:\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19)?|\u0e42\u0e1b\u0e23\u0e44\u0e1f\u0e25\u0e4c\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19)/iu.test(value);
+  if (asksOwnInstagramProfile) return { status: 'ready', workflow: 'instagram_profile' };
+  const asksNotepad = /\bnotepad\b|\u0e42\u0e19\u0e49\u0e15\u0e41\u0e1e\u0e14/iu.test(value);
+  const asksTyping = /\b(?:type|write|append)\b|\u0e1e\u0e34\u0e21\u0e1e\u0e4c/iu.test(value);
+  if (asksNotepad && asksTyping) {
+    const append = /\bappend\b|\u0e15\u0e48\u0e2d\u0e17\u0e49\u0e32\u0e22/iu.test(value);
+    const textMatch = append
+      ? value.match(/(?:\bappend\b|\u0e1e\u0e34\u0e21\u0e1e\u0e4c(?:\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21)?\u0e15\u0e48\u0e2d\u0e17\u0e49\u0e32\u0e22)\s*(?:\b(?:text|word)\b|\u0e04\u0e33\u0e27\u0e48\u0e32|\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e27\u0e48\u0e32|\u0e27\u0e48\u0e32)?\s*[:=]?\s*([\s\S]+)$/iu)
+      : value.match(/(?:\b(?:type|write)\b|\u0e1e\u0e34\u0e21\u0e1e\u0e4c)\s*(?:\b(?:the\s+)?(?:text|word)\b|\u0e04\u0e33\u0e27\u0e48\u0e32|\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e27\u0e48\u0e32|\u0e27\u0e48\u0e32)?\s*[:=]?\s*([\s\S]+)$/iu);
+    const text = String(textMatch?.[1] || '').trim().replace(/^(["'`])([\s\S]*)\1$/u, '$2');
+    if (text && text.length <= 4_000) return { status: 'ready', workflow: 'notepad_text', text, mode: append ? 'append' : 'replace' };
+  }
   const asksYoutube = /\byoutube\b|\u0e22\u0e39\u0e17\u0e39\u0e1a/iu.test(value);
   const asksPlayback = /\b(?:play|music|song)\b|\u0e40\u0e1b\u0e34\u0e14\s*\u0e40\u0e1e\u0e25\u0e07|\u0e40\u0e25\u0e48\u0e19\s*\u0e40\u0e1e\u0e25\u0e07|\u0e40\u0e1e\u0e25\u0e07/iu.test(value);
   if (asksYoutube && asksPlayback) {
-    const queryMatch = value.match(/(?:\u0e40\u0e1b\u0e34\u0e14|\u0e40\u0e25\u0e48\u0e19)\s*\u0e40\u0e1e\u0e25\u0e07\s*[:=]?\s*([^,.;]+?)(?=\s+(?:\u0e14\u0e39\u0e08\u0e19|\u0e08\u0e19\u0e41\u0e19\u0e48\u0e43\u0e08|\u0e41\u0e25\u0e49\u0e27\u0e08\u0e1a|\u0e41\u0e25\u0e49\u0e27\u0e2b\u0e22\u0e38\u0e14|\u0e41\u0e25\u0e30\u0e15\u0e23\u0e27\u0e08)|$)/iu)
-      || value.match(/\bplay\s+(?:the\s+)?(?:song|music)\s*[:=]?\s*([^,.;]+?)(?=\s+(?:then|and\s+(?:verify|ensure|finish|stop)|until)|$)/iu);
-    const query = String(queryMatch?.[1] || 'music').trim();
-    return { status: 'ready', workflow: 'youtube_music', query };
+    const query = requestedYoutubeMusicQuery(value);
+    if (query) return { status: 'ready', workflow: 'youtube_music', query };
   }
+  const asksChrome = /\b(?:chrome|browser)\b|โครม|เบราว์เซอร์/iu.test(value);
+  const searchMatch = value.match(/\bsearch(?:\s+(?:for|google\s+for))?\s+(.+?)(?=\s+(?:(?:and\s+)?then|and\s+switch|and\s+return)\b|$)/iu)
+    || value.match(/(?:ค้นหา|เสิร์ช)\s*(?:คำว่า|เรื่อง)?\s*[:=]?\s*(.+?)(?=\s*(?:(?:แล้ว|เเล้ว|จากนั้น)\s*(?:กลับ|สลับ|เปิด|ไปที่|ตรวจ|ดู))|$)/iu);
+  const query = String(searchMatch?.[1] || '')
+    .replace(/\s+(?:ใน|บน|ด้วย)\s*(?:google\s+)?(?:chrome|browser|โครม|เบราว์เซอร์)\s*$/iu, '')
+    .replace(/\s+(?:(?:ให้)?หน่อย(?:นะ|ครับ|ค่ะ|คะ)?|please)\s*[.!?…]*$/iu, '')
+    .replace(/\s+(?:เป็น(?:งาน|อัน)(?:ที่)?สุดท้าย|as\s+the\s+(?:last|final)\s+(?:task|one))\s*[.!?…]*$/iu, '')
+    .trim();
+  const hasFollowupAction = /(?:(?:\band\s+)?\bthen\b|\band\s+(?:switch|return)\b|(?:แล้ว|เเล้ว|จากนั้น)\s*(?:กลับ|สลับ|เปิด|ไปที่|ตรวจ|ดู))/iu.test(value.slice(Number(searchMatch?.index || 0) + String(searchMatch?.[0] || '').length));
+  const returnsToNotepad = /(?:\b(?:return|switch)\s+(?:back\s+)?to\s+notepad\b|(?:กลับ|สลับ)(?:ไป)?(?:ที่|ยัง)?\s*(?:notepad|โน้ตแพด))/iu.test(value);
+  if (asksChrome && query && query.length <= 300 && hasFollowupAction && returnsToNotepad) {
+    return { status: 'ready', workflow: 'web_search_return_notepad', query };
+  }
+  if (asksChrome && query && query.length <= 300 && !hasFollowupAction) return { status: 'ready', workflow: 'web_search', query };
   return null;
 }
 
@@ -102,14 +129,21 @@ function parseDirectComputerWorkflowRequest(message) {
 function requiresScreenDrivenComputerTask(message) {
   const value = repairWindows874Mojibake(String(message || '')).trim();
   if (!value) return false;
+  if (parseDirectComputerWorkflowRequest(value)?.workflow === 'instagram_profile') return true;
   const asksYoutubePlayback = /(?:\byoutube\b|\u0e22\u0e39\u0e17\u0e39\u0e1a)/iu.test(value)
     && /(?:\b(?:play|music|song)\b|\u0e40\u0e1b\u0e34\u0e14\s*\u0e40\u0e1e\u0e25\u0e07|\u0e40\u0e25\u0e48\u0e19\s*\u0e40\u0e1e\u0e25\u0e07|\u0e40\u0e1e\u0e25\u0e07)/iu.test(value);
   if (asksYoutubePlayback) return true;
   // A request may start with "open Chrome" but continue with navigation,
   // inspection, scrolling, or summarisation. Detect the whole workflow before
   // applying the launch-only fast path, otherwise the remaining steps vanish.
-  const requiresScreenWork = /(?:\b(?:find|locate|select|choose|click|type|inspect|screenshot|navigate|scroll|wikipedia|summari[sz]e)\b|\u0e2b\u0e32|\u0e40\u0e25\u0e37\u0e2d\u0e01|\u0e04\u0e25\u0e34\u0e01|\u0e1e\u0e34\u0e21\u0e1e\u0e4c|\u0e15\u0e23\u0e27\u0e08\u0e14\u0e39|\u0e40\u0e02\u0e49\u0e32\u0e44\u0e1b\u0e17\u0e35\u0e48|\u0e40\u0e25\u0e37\u0e48\u0e2d\u0e19|\u0e2a\u0e23\u0e38\u0e1b)/iu.test(value);
+  const requiresScreenWork = /(?:\b(?:find|locate|select|choose|click|type|inspect|read|show|screenshot|navigate|scroll|switch|return|continue|wikipedia)\b|ค้นหา|ตามหา|(?:แล้ว|เเล้ว)\s*(?:หา|กลับ|สลับ|ทำต่อ)|เลือก|คลิก|พิมพ์|ตรวจดู|อ่าน|ดู\s*(?:หน้าต่าง|หน้าจอ|โปรแกรม|แอป)|บอก\s*(?:ตัวเลข|ข้อความ|สิ่งที่)|แสดง|เข้าไปที่|เลื่อน|กลับไป|สลับไป|ทำต่อ)/iu.test(value);
   if (requiresScreenWork) return true;
+  const ambiguousScreenReference = /(?:\b(?:it|that|previous)\b|โปรแกรมนั้น|หน้าต่างนั้น|แอปนั้น|อันนั้น|เมื่อกี้|ก่อนหน้า)/iu.test(value)
+    && /(?:\b(?:open|continue|switch|return)\b|เปิด|ทำต่อ|สลับ|กลับ)/iu.test(value);
+  if (ambiguousScreenReference) return true;
+  const asksScreenSummary = /(?:\bsummari[sz]e\b|สรุป)/iu.test(value)
+    && /(?:\b(?:chrome|browser|screen|window|app|page|website|youtube|classroom|wikipedia)\b|โครม|เบราว์เซอร์|หน้าจอ|หน้าต่าง|แอป|หน้าเว็บ|เว็บไซต์|ยูทูบ)/iu.test(value);
+  if (asksScreenSummary) return true;
   if (parseDirectComputerLaunchRequest(value)) return false;
   return false;
 }
@@ -466,7 +500,9 @@ class ConversationCore {
       ? intentHints.disambiguation.candidate_entities.filter(entity => typeof entity?.raw === 'string' && entity.raw.trim())
       : [];
     const searchEnabled = this.searchService?.status?.().enabled && intentHints.allowed_tools.includes('web_search');
-    const commerceEnabled = this.commerceService?.status?.().enabled && this.commerceService?.status?.().configured;
+    const commerceEnabled = this.commerceService?.status?.().enabled
+      && this.commerceService?.status?.().configured
+      && intentHints.allowed_tools.includes('commerce');
     const normalizedAgentCommand = ['create-file', 'computer-use'].includes(String(agentCommand || '')) ? String(agentCommand) : null;
     // Keep the legacy IPC contract usable for existing sessions/tests that
     // still send agentMode=true without an @ command. The renderer now always
@@ -493,8 +529,19 @@ class ConversationCore {
       const activeComputerTask = Boolean(this.computerTaskLoop && agentEnabled
         && typeof this.computerTaskLoop.hasActive === 'function'
         && this.computerTaskLoop.hasActive({ ownerId: normalizedSession, sessionId: normalizedSession }));
+      // An active task does not make every later chat turn a steering command.
+      // Only a new screen-driven instruction may revise it. File work, normal
+      // chat, and a different bounded Agent request supersede the old task.
       const computerTaskRequested = Boolean(this.computerTaskLoop)
-        && (requiresScreenDrivenComputerTask(modelContent) || activeComputerTask);
+        && requiresScreenDrivenComputerTask(modelContent);
+      if (activeComputerTask && !computerTaskRequested && typeof this.computerTaskLoop.interruptActive === 'function') {
+        await this.computerTaskLoop.interruptActive({
+          ownerId: normalizedSession,
+          sessionId: normalizedSession,
+          eventSink: onComputerTaskEvent,
+          reason: 'This computer task was replaced by a newer, unrelated owner instruction.',
+        });
+      }
       if (this.agentBridge && !agentEnabled && requestsAgentCapability(modelContent)) {
         const thai = /[\u0E00-\u0E7F]/u.test(modelContent);
         result = {
@@ -513,14 +560,24 @@ class ConversationCore {
           sessionId: normalizedSession,
           requestId: normalizedRequestId,
           eventSink: onComputerTaskEvent,
-          workflowHint: directWorkflow?.workflow === 'youtube_music'
-            ? { workflow: 'youtube_music', query: directWorkflow.query }
-            : null,
+          workflowHint: ['youtube_music', 'web_search', 'web_search_return_notepad'].includes(directWorkflow?.workflow)
+            ? { workflow: directWorkflow.workflow, query: directWorkflow.query }
+            : directWorkflow?.workflow === 'instagram_profile'
+              ? { workflow: 'instagram_profile' }
+            : directWorkflow?.workflow === 'notepad_text'
+              ? { workflow: 'notepad_text', text: directWorkflow.text, mode: directWorkflow.mode }
+              : null,
         };
-        const task = typeof this.computerTaskLoop.hasActive === 'function'
-          && this.computerTaskLoop.hasActive({ ownerId: normalizedSession, sessionId: normalizedSession })
-          ? await this.computerTaskLoop.revise({ ...taskInput, instruction: modelContent })
-          : await this.computerTaskLoop.start({ ...taskInput, goal: modelContent });
+        let task;
+        try {
+          task = typeof this.computerTaskLoop.hasActive === 'function'
+            && this.computerTaskLoop.hasActive({ ownerId: normalizedSession, sessionId: normalizedSession })
+            ? await this.computerTaskLoop.revise({ ...taskInput, instruction: modelContent })
+            : await this.computerTaskLoop.start({ ...taskInput, goal: modelContent });
+        } catch (error) {
+          if (!error?.computer_task_terminal) throw error;
+          task = error.computer_task_terminal;
+        }
         if (task.pending_action?.action) {
           agentActions.push({
             ...task.pending_action.action,
@@ -543,7 +600,20 @@ class ConversationCore {
         // still narrows the tool family; without one, code asks the model for
         // one bounded capability plan and validates it before execution.
         const planningCommand = normalizedAgentCommand || 'auto';
-        const plan = await planAgentCommand({ provider: this.provider, messages: modelMessages, command: planningCommand });
+        const directLaunch = planningCommand !== 'create-file'
+          && !requiresScreenDrivenComputerTask(modelContent)
+          ? parseDirectComputerLaunchRequest(modelContent)
+          : null;
+        // A plain allowlisted app launch is deterministic. Asking a model to
+        // restate “open Notepad” adds tens of seconds without adding safety;
+        // approval, ownership and post-launch verification still happen in
+        // the same Agent bridge as every other computer mutation.
+        const plan = directLaunch?.status === 'ready'
+          ? {
+            status: 'planned', summary: `Open ${directLaunch.appId}.`,
+            tool: 'computer_launch_app', arguments: { app_id: directLaunch.appId },
+          }
+          : await planAgentCommand({ provider: this.provider, messages: modelMessages, command: planningCommand });
         if (plan.status !== 'planned') {
           result = { content: plan.summary, provider: 'solat_agent_planner', model: 'model planned clarification', usage: null, toolRounds: 0 };
         } else {
@@ -849,7 +919,10 @@ class ConversationCore {
     } catch (error) {
       this.workspace.failJob({ sessionId: normalizedSession, requestId: normalizedRequestId, error });
       if (error instanceof ProviderError) throw error;
-      throw new ProviderError('provider_error', 'The model provider failed.');
+      throw new ProviderError('provider_error', 'The model provider failed.', {
+        cause_code: typeof error?.code === 'string' ? error.code : 'unexpected_error',
+        cause_message: String(error?.message || 'Unknown provider failure').slice(0, 500),
+      });
     }
     if (!result || typeof result.content !== 'string' || !result.content.trim()) {
       const malformed = new ProviderError('malformed_response', 'The model returned an empty response.');
@@ -995,6 +1068,8 @@ class ConversationCore {
       provider: result.provider,
       model: result.model,
       usage: result.usage || null,
+      routing: result.routing || null,
+      timing: result.timing || result.routing?.provider_timing || null,
       intentHints,
       toolRounds: result.toolRounds || 0,
       searchRecoveryUsed,

@@ -9,6 +9,7 @@ const main = fs.readFileSync(path.join(__dirname, '..', 'src', 'main.js'), 'utf8
 const ipcRouter = fs.readFileSync(path.join(__dirname, '..', 'src', 'ipc-router.js'), 'utf8');
 const services = fs.readFileSync(path.join(__dirname, '..', 'src', 'services.js'), 'utf8');
 const preload = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload.js'), 'utf8');
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 const v1Candidates = [
   path.join(__dirname, '..', '..', 'frontend', 'claude', 'SolatUI.html'),
   path.join(__dirname, 'fixtures', 'SolatUI.html'),
@@ -43,13 +44,48 @@ test('renderer preserves the owner visual shell while exposing the V2 IPC surfac
   assert.doesNotMatch(html, /<script\s*>/i, 'inline V1 application logic must not enter V2');
   assert.doesNotMatch(html, /(?:127\.0\.0\.1|localhost):\d+/i, 'renderer must not depend on a manual port');
   assert.match(html, /class=["'][^"']*ui-mode-toggle[^"']*["']/i, 'UI mode toggle is missing');
-  assert.match(html, /download-6\.jfif/i, 'blue UI mode art is missing');
-  assert.match(html, /reblog-jakku-san-22-images-1\.jfif/i, 'red UI mode art is missing');
+  assert.match(html, /ui-mode-art-blue"\s+src="\.\/assets\/reblog-jakku-san-22-images-1\.jfif/i, 'blue UI mode art must use the blue source image');
+  assert.match(html, /ui-mode-art-red"\s+src="\.\/assets\/download-6\.jfif/i, 'red UI mode art must not replace the initial blue image');
+  assert.match(html, /solat-voice-transition-runtime-1080p60\.mp4/i, 'SOLAT transition must use the smooth runtime asset');
+  assert.match(html, /id="solatVoiceLoop"[^>]*\bloop\b[^>]*solat-voice-final-loop-1080p60\.mp4/i, 'final animation must use its dedicated native loop asset');
+  assert.match(html, /#solatVoiceScene\.video-ready #solatVoiceVideo\s*\{\s*opacity:\s*1/i, 'transition video must wait for a decoded playing frame');
+  assert.match(renderer, /video\.onplaying\s*=\s*\(\)\s*=>\s*scene\.classList\.add\('video-ready'\)/, 'transition must reveal only after playback starts');
+  assert.match(renderer, /video\.onended\s*=\s*startFinalLoop/, 'completed transition must enter the final animation loop');
+  assert.match(renderer, /loopVideo\.loop\s*=\s*true/, 'final animation loop must remain active indefinitely');
+  assert.match(html, /object-fit:\s*contain;\s*object-position:\s*center center/i, 'transition must preserve the complete frame and the right-side voice UI safe area');
+  assert.doesNotMatch(html, /#solatVoiceVideo[^}]*background:\s*#050505/i, 'transition video must not add black letterbox bars');
+  assert.match(html, /solat-voice-stage-backdrop\.jpg/i, 'full-bleed stage backdrop must replace visible top and bottom bars without cropping the main video');
+  assert.match(html, /id="solatVoiceOrb"[^>]*makoto-yuki-cd-persona3-inspired\.png/i, 'voice mode must use the owner-provided CD as its voice orb');
+  assert.match(html, /@keyframes\s+solatVoiceOrbSpin[\s\S]*?rotate\(360deg\)/i, 'voice orb must rotate continuously');
+  assert.match(html, /id="solatVoiceExitButton"[\s\S]*?download-6\.jfif/i, 'voice mode return control must use the red owner-selected art');
+  assert.match(renderer, /#solatVoiceExitButton'\)\?\.addEventListener\('click',\s*exitSolatVoiceMode\)/, 'red voice control must return to the classic red interface');
+  assert.match(renderer, /function\s+exitSolatVoiceMode\([\s\S]*?classList\.remove\('solat-voice-active'\)[\s\S]*?setUiMode\('classic',\s*false\)/, 'voice exit must stop playback and restore the red UI');
+  assert.match(html, /solat-voice-status-thinking\.png/i, 'voice mode must show the owner-selected HOLD UP graphic while AI is thinking');
+  assert.match(html, /solat-voice-status-answer\.png/i, 'voice mode must show the borderless owner-selected graphic while AI is answering');
+  assert.match(renderer, /setSolatVoiceActivity\('thinking'\)/, 'busy provider work must drive the voice thinking state');
+  assert.match(renderer, /setSolatVoiceActivity\('answer',\s*2600\)/, 'completed provider output must drive the voice answer state');
+  assert.match(renderer, /addEventListener\('solat:voice-activity'[\s\S]*?setSolatVoiceActivity\(detail\.state/, 'future speech playback must be able to keep the voice answer state synchronized');
+  assert.match(html, /data-voice-activity="thinking"[\s\S]*?solat-voice-status-thinking/i, 'thinking art must be selected by the explicit voice activity state');
+  assert.match(html, /data-voice-activity="answer"[\s\S]*?solat-voice-status-answer/i, 'answer art must be selected by the explicit voice activity state');
+  assert.match(html, /#solatCursor\s*\{[\s\S]*?z-index:\s*13000/i, 'special SOLAT cursor must render above the transition video');
+  assert.doesNotMatch(html, /data-motion="off"\]\s+#solatCursor/i, 'motion preference must not remove the special cursor');
+  assert.match(html, /:root\.solat-voice-active body > :not\(#solatVoiceScene\):not\(#solatCursor\)/i, 'background UI must stop painting while the transition is active');
+  assert.match(renderer, /document\.documentElement\.classList\.add\('solat-voice-active'\)/, 'transition must suspend the background UI before playback');
+  assert.match(main, /backgroundThrottling:\s*false/, 'Electron must not throttle active transition frames');
+  assert.deepEqual(packageJson.build.asarUnpack, [
+    'renderer/assets/solat-voice-transition-runtime-1080p60.mp4',
+    'renderer/assets/solat-voice-final-loop-1080p60.mp4',
+  ], 'runtime videos must be unpacked for direct playback');
+  assert.ok(packageJson.build.files.includes('!renderer/assets/solat-voice-transition-master-4k60.mp4'), '4K master must stay outside the packaged runtime');
+  assert.ok(packageJson.build.files.includes('!renderer/assets/solat-voice-transition-master-ai-4k30.mp4'), 'AI 4K master must stay outside the packaged runtime');
   assert.match(renderer, /classList\.contains\('ui-mode-toggle'\)/, 'settings must not replace UI mode art');
   assert.match(renderer, /localStorage\.setItem\('solat\.ui\.mode'/, 'UI mode must persist locally');
   assert.doesNotMatch(html, /\bfetch\s*\(/i, 'provider calls belong behind Electron IPC');
   assert.match(html, /\.msg:focus,\s*\.msg:focus-visible\s*\{\s*outline:\s*none;\s*\}/, 'programmatic message focus must not draw a blue frame');
   assert.match(renderer, /sessionId\s*=\s*createSessionId\(\)/, 'new conversation must isolate its session');
+  assert.match(renderer, /window\.solat\.setModelMode/, 'model selector must cross secure IPC');
+  assert.match(renderer, /chooseModelMode/, 'model selector menu is missing');
+  assert.match(preload, /setModelMode:\s*async mode/, 'preload must expose bounded model selection');
 });
 
 test('new conversations open directly in the interior workspace', () => {
@@ -249,11 +285,16 @@ test('music deck action crosses the secure IPC boundary without a renderer provi
   assert.doesNotMatch(renderer, /\bfetch\s*\(/i);
 });
 
-test('chat-integrated @ Agent commands and approval flow use the narrow IPC bridge', () => {
-  for (const id of ['agentCommandBtn', 'agentCommandMenu', 'agentDialog', 'agentApproveBtn', 'agentCancelBtn', 'agentStatus', 'agentProgress', 'agentProgressLabel']) {
+test('opening SOLAT has no external application startup side effect', () => {
+  assert.doesNotMatch(main, /(?:calc|calculator|notepad|chrome)\.exe/iu);
+  assert.doesNotMatch(main, /(?:spawn|exec|execFile|launchApp)\s*\(/u);
+});
+
+test('always-on chat-integrated Agent commands and approval flow use the narrow IPC bridge', () => {
+  for (const id of ['agentCommandMenu', 'agentDialog', 'agentApproveBtn', 'agentCancelBtn', 'agentStatus', 'agentProgress', 'agentProgressLabel']) {
     assert.match(html, new RegExp(`id=["']${id}["']`), `missing agent control #${id}`);
   }
-  assert.match(html, /id="agentCommandBtn"[^>]*aria-label="Enable Agent mode"[^>]*aria-pressed="false"[\s\S]*?<use href="#i-cpu"><\/use>[\s\S]*?<\/button>/);
+  assert.doesNotMatch(html, /id="agentCommandBtn"/, 'Agent is always available and must not require a mode toggle');
   assert.match(html, /data-agent-command="create-file"/);
   assert.match(html, /data-agent-command="computer-use"/);
   assert.match(html, /role="menuitemradio" aria-checked="false" data-agent-command="create-file"/);
@@ -265,7 +306,13 @@ test('chat-integrated @ Agent commands and approval flow use the narrow IPC brid
   assert.match(html, /\.agent-file-card\s*\{/);
   assert.doesNotMatch(html, /id="agentCreateBtn"|id="agentRunBtn"/);
   assert.match(renderer, /const AgentUI\s*=\s*\{/);
-  assert.match(renderer, /agentMode:\s*AgentUI\.isEnabled\(\)/);
+  assert.match(renderer, /enabled:\s*true/);
+  assert.match(renderer, /isEnabled\(\)\s*\{\s*return true;\s*\}/);
+  assert.doesNotMatch(renderer, /agentCommandBtn/);
+  assert.match(renderer, /agentMode:\s*true/);
+  assert.doesNotMatch(html, /class="live-dots"/);
+  assert.doesNotMatch(html, /:root\.not\(\.home-mode\) #composer \.row \{[^}]*box-shadow:\s*7px\s+7px\s+0/);
+  assert.doesNotMatch(html, /@keyframes composer(?:Breath|Focus)[^}]*box-shadow:\s*(?:7px|10px)/);
   assert.match(renderer, /Previous Computer Use action was replaced by your newer instruction/);
   assert.match(renderer, /computerTaskId\s*&&\s*action\.sessionId === context\.sessionId/);
   assert.match(renderer, /Array\.isArray\(result\.agentActions\)/);
@@ -283,8 +330,22 @@ test('chat-integrated @ Agent commands and approval flow use the narrow IPC brid
   assert.match(renderer, /window\.solat\.agentCancel/);
   assert.doesNotMatch(renderer, /form\.addEventListener\('submit',[^\n]*if \(busy\) return Chat\.stop/, 'form submission must reach the owner-steering gate while a computer task is active');
   assert.match(renderer, /latestRevisionByTask/, 'late task events must be rejected by revision');
+  assert.match(renderer, /latestRequestBySession/, 'late task events must also be rejected by request id');
+  assert.match(renderer, /terminalTaskTombstones/, 'a terminal task must retain a bounded revision tombstone');
+  assert.match(renderer, /AgentUI\.beginRequest\(/, 'a newer chat request must clear stale pending UI for its session');
+  assert.match(renderer, /if \(terminal\) \{[\s\S]*activeTaskBySession\.delete/u, 'a terminal event must never reactivate a finished task');
+  assert.match(renderer, /while \(this\.terminalTaskTombstones\.size > 512\)/u, 'terminal task tombstones must remain bounded');
+  assert.match(renderer, /if \(!activeTask && !terminal && event\.type !== 'started'\) return/u, 'a delayed nonterminal event must not resurrect a retired task');
+  assert.match(renderer, /if \(terminal && activeTask === event\.task_id\)[\s\S]*activeTaskBySession\.delete/u, 'a stale terminal event may safely retire only its matching active task');
+  assert.match(renderer, /computerTaskRequestId:\s*event\.request_id/u, 'progress messages must retain request identity for reconciliation');
+  assert.match(renderer, /reconcileComputerTaskResponse\([\s\S]*State\.removeMessage\(threadId, message\.id\)/u, 'the final response must merge with and remove its duplicate progress message');
+  assert.match(renderer, /State\.updateMessage\(threadId, this\.pending\.messageId[\s\S]*State\.removeMessage\(threadId, progressMessageId/u, 'verified Computer Use output must replace its request message and remove the progress duplicate');
+  assert.match(renderer, /const terminalTask = \['COMPLETED',[\s\S]*if \(terminalTask\)[\s\S]*rememberTerminalTask/u, 'only a genuinely terminal task result may create a terminal tombstone');
+  assert.match(renderer, /addChatResult\(message, taskFailed, this\.artifactFromPlan\(this\.plan\), null, taskStatus\)/u, 'the approval flow must pass the actual task status into result reconciliation');
   assert.match(renderer, /computerTaskSessionId/, 'task cancellation must use the message-bound session');
-  assert.match(renderer, /const continuation = window\.solat\.computerTaskApproveAndContinue[\s\S]*?Overlay\.close\(\);[\s\S]*?await continuation/, 'approval modal must close before the bounded continuation is awaited');
+  assert.match(renderer, /const continuation = window\.solat\.computerTaskApproveAndContinue[\s\S]*?Overlay\.close\(\);[\s\S]*?await this\.awaitComputerTaskContinuation\(continuation, pending\)/, 'approval modal must close before the bounded continuation is reconciled');
+  assert.match(renderer, /awaitComputerTaskContinuation\(continuation, pending\)/, 'computer task approval must reconcile against the durable terminal task state');
+  assert.match(preload, /computerTaskInspect:[\s\S]*?solat:computer-task-inspect/, 'renderer must expose read-only computer task inspection for terminal reconciliation');
   assert.match(renderer, /window\.solat\.agentReadArtifact/);
   assert.match(renderer, /agentFile:/);
   assert.match(renderer, /Creating .*\u2026|Creating .*…/);
@@ -303,8 +364,8 @@ test('chat-integrated @ Agent commands and approval flow use the narrow IPC brid
   assert.doesNotMatch(renderer, /result\.textContent = value \? JSON\.stringify\(value, null, 2\)/);
   assert.match(renderer, /AgentUI\.handleInput\(input\.value\)/);
   assert.match(renderer, /if \(\/\(\?:\^\|\\s\)@\[a-z-\]\*\$\/iu\.test\(current\)\) this\.openMenu\(\)/);
-  assert.match(renderer, /Agent mode is on/);
-  assert.match(renderer, /#agentCommandBtn'\)\?\.addEventListener\('click', \(\) => this\.toggle\(\)\)/);
+  assert.match(renderer, /#composer'\)\?\.classList\.add\('agent-on'\)/);
+  assert.doesNotMatch(renderer, /toggle\(\)\s*\{[\s\S]*?this\.enabled\s*=\s*!this\.enabled/);
   assert.match(renderer, /agentCommand:\s*AgentUI\.commandFromText\(visible\)/);
   assert.match(renderer, /commandFromText\(value\)/);
   assert.match(renderer, /@\$\{command\} inserted\./);

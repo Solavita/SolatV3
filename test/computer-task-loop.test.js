@@ -1,15 +1,260 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { ComputerTaskLoop, ComputerTaskLoopError } = require('../src/core/computer-task-loop');
+const { ComputerTaskLoop, ComputerTaskLoopError, compactObservationForModel, uiaNeedsVision } = require('../src/core/computer-task-loop');
+
+test('vision fallback is needed only when UI Automation has no meaningful content', () => {
+  assert.equal(uiaNeedsVision({ selector: 'root', type: 'Pane', children: [{ type: 'Canvas' }] }), true);
+  assert.equal(uiaNeedsVision({ selector: 'display', name: 'Display is 0', type: 'Text' }), false);
+  assert.equal(uiaNeedsVision({ selector: 'password', name: 'Password', type: 'Edit' }), false);
+});
+
+test('computer observations sent to the planner omit geometry but preserve semantic state', () => {
+  const compact = compactObservationForModel({
+    source: 'verified_read_result',
+    tool: 'computer_inspect',
+    data: { tree: { windows: [{ hwnd: 42, title: 'Calculator', x: 10, y: 20, className: 'ApplicationFrame', elements: [{ name: 'Display is 0', selector: 'CalculatorResults', value: '0', width: 300, toggleState: 'off' }] }] } },
+  });
+  const serialized = JSON.stringify(compact);
+  assert.match(serialized, /Display is 0/u);
+  assert.match(serialized, /CalculatorResults/u);
+  assert.doesNotMatch(serialized, /className|width|"x"|"y"/u);
+});
 
 function registry() {
   return {
     computer_list_windows: { side_effect_level: 'read', validate_arguments: value => Object.keys(value).length === 0, validate_output: value => value?.status === 'ready' },
-    computer_inspect: { side_effect_level: 'read', validate_arguments: value => Number.isInteger(value.hwnd), validate_output: value => value?.status === 'ready' && Boolean(value.tree) },
+    computer_inspect: { side_effect_level: 'read', validate_arguments: value => Number.isInteger(value.hwnd) && (value.interactive_only === undefined || typeof value.interactive_only === 'boolean'), validate_output: value => value?.status === 'ready' && Boolean(value.tree) },
     computer_invoke: { side_effect_level: 'write', validate_arguments: value => Number.isInteger(value.hwnd) && typeof value.selector === 'string', validate_output: value => value?.status === 'ready' && value.verified === true },
-    computer_open_website: { side_effect_level: 'write', validate_arguments: value => value?.site === 'google', validate_output: value => value?.status === 'ready' && value.verified === true },
+    computer_set_value: { side_effect_level: 'write', validate_arguments: value => Number.isInteger(value.hwnd) && typeof value.selector === 'string' && typeof value.value === 'string', validate_output: value => value?.status === 'ready' && value.verified === true },
+    computer_open_website: { side_effect_level: 'write', validate_arguments: value => ['google', 'roblox'].includes(value?.site), validate_output: value => value?.status === 'ready' && value.verified === true },
   };
 }
+
+test('computer planner receives the full registered capability catalog', async () => {
+  let plannerMessages;
+  let providerCalls = 0;
+  const loop = new ComputerTaskLoop({
+    provider: {
+      async completeStructured(messages) {
+        plannerMessages = messages;
+        providerCalls += 1;
+        return { data: {
+          schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Open Roblox.',
+          tool: 'computer_open_website', arguments: { site: 'roblox' },
+        } };
+      },
+    },
+    bridge: {
+      owns: () => true,
+      async execute() {
+        return { model_result: { status: 'confirmation_required' }, action: { status: 'confirmation_required', idempotency_key: 'catalog-1', approval_token: 'once', arguments: { site: 'roblox' } } };
+      },
+    },
+    toolRegistry: registry(),
+    toolDefinitions: [
+      { type: 'function', function: { name: 'computer_list_windows', description: 'List visible windows.', parameters: { type: 'object', properties: {}, additionalProperties: false } } },
+      { type: 'function', function: { name: 'computer_open_website', description: 'Open an allowlisted site.', parameters: { type: 'object', properties: { site: { type: 'string', enum: ['roblox'] } }, required: ['site'], additionalProperties: false } } },
+    ],
+    idFactory: () => 'catalog-task',
+  });
+  const result = await loop.start({ ownerId: 'owner', sessionId: 'session', requestId: 'catalog', goal: 'Open Roblox' });
+  assert.equal(result.status, 'AWAITING_APPROVAL', result.summary);
+  const systemPrompt = plannerMessages.find(message => message.role === 'system')?.content || '';
+  assert.match(systemPrompt, /computer_list_windows/u);
+  assert.match(systemPrompt, /List visible windows/u);
+  assert.match(systemPrompt, /"roblox"/u);
+});
+
+test('deterministic Chrome search fast path uses no model round-trip', async () => {
+  let providerCalls = 0;
+  const fastRegistry = registry();
+  fastRegistry.computer_search_web = {
+    side_effect_level: 'write', task_grant_origin: true,
+    validate_arguments: value => value?.query === 'Diana King',
+    validate_output: value => value?.status === 'ready' && value?.operation === 'search_web' && value?.verified === true,
+  };
+  const bridge = {
+    owns: name => name === 'computer_search_web',
+    async execute({ call }) {
+      return { model_result: { status: 'confirmation_required' }, action: { status: 'confirmation_required', idempotency_key: 'fast-search-1', approval_token: 'once', arguments: call.arguments } };
+    },
+  };
+  const loop = new ComputerTaskLoop({
+    provider: { async completeStructured() { providerCalls += 1; throw new Error('model must not run'); } },
+    bridge, toolRegistry: fastRegistry, idFactory: () => 'fast-search',
+  });
+  const waiting = await loop.start({ ownerId: 'owner', sessionId: 'session', requestId: 'fast', goal: 'Open Chrome and search Diana King', workflowHint: { workflow: 'web_search', query: 'Diana King' } });
+  assert.equal(waiting.status, 'AWAITING_APPROVAL');
+  assert.equal(waiting.pending_action.tool, 'computer_search_web');
+  assert.equal(providerCalls, 0);
+  const completed = await loop.continue({
+    ownerId: 'owner', sessionId: 'session', taskId: waiting.task_id, actionIdempotencyKey: 'fast-search-1',
+    verifiedObservation: { status: 'ready', operation: 'search_web', query: 'Diana King', verified: true, hwnd: 42 },
+  });
+  assert.equal(completed.status, 'COMPLETED');
+  assert.equal(providerCalls, 0);
+});
+
+test('a failed read observation emits a terminal failed event with its real cause', async () => {
+  const events = [];
+  const loop = new ComputerTaskLoop({
+    provider: {
+      async completeStructured() {
+        return { data: {
+          schema_version: 'solat.computer-task-step.v1',
+          status: 'action', summary: 'Read visible windows.',
+          tool: 'computer_list_windows', arguments: {},
+        } };
+      },
+    },
+    bridge: {
+      owns: () => true,
+      async execute() {
+        return { model_result: { status: 'failed', error: { code: 'window_stale', message: 'The target disappeared.' } }, action: null };
+      },
+    },
+    toolRegistry: registry(), idFactory: () => 'read-failure',
+  });
+  const result = await loop.start({
+    ownerId: 'owner', sessionId: 'session', requestId: 'read-failure', goal: 'Inspect the visible app.',
+    eventSink: event => events.push(event),
+  });
+  assert.equal(result.status, 'FAILED');
+  assert.match(result.summary, /window_stale.*target disappeared/iu);
+  assert.equal(events.at(-1)?.type, 'failed');
+  assert.equal(events.at(-1)?.status, 'FAILED');
+});
+
+test('deterministic Notepad text workflow launches, inspects, writes and verifies with no model round-trip', async () => {
+  let providerCalls = 0;
+  const calls = [];
+  const auth = { id: 'notepad-grant', task_id: 'computer_notepad-fast', instruction_revision: 1 };
+  const fastRegistry = registry();
+  fastRegistry.computer_launch_app = {
+    side_effect_level: 'write', task_grant_origin: true,
+    validate_arguments: value => value?.app_id === 'notepad',
+    validate_output: value => value?.status === 'ready' && value?.operation === 'launch_app' && value?.verified === true,
+  };
+  fastRegistry.computer_set_value.task_grant_eligible = true;
+  const bridge = {
+    owns: () => true,
+    issueTaskAuthorization() { return auth; },
+    refreshTaskAuthorizationTargets() {},
+    extendTaskAuthorization() {},
+    async revokeTaskAuthorization() { return true; },
+    async execute({ call, taskAuthorization }) {
+      calls.push(call);
+      if (call.name === 'computer_launch_app') {
+        return { action: { status: 'confirmation_required', idempotency_key: 'notepad-open', approval_token: 'once', arguments: call.arguments } };
+      }
+      if (call.name === 'computer_list_windows') {
+        return { model_result: { status: 'ready', operation: 'list_windows', windows: [{ hwnd: 42, title: 'Untitled - Notepad', process_id: 8, process_name: 'notepad' }] } };
+      }
+      if (call.name === 'computer_inspect') {
+        assert.equal(call.arguments.interactive_only, false);
+        return { model_result: { status: 'ready', operation: 'inspect', hwnd: 42, target: { hwnd: 42 }, tree: { windows: [{ elements: [{ type: 'Window', children: [{ type: 'Pane', children: [{ type: 'Document', name: 'Text editor', selector: 'doc-texteditor-real', value: 'EXISTING' }] }] }] }] } } };
+      }
+      assert.equal(taskAuthorization, auth);
+      assert.equal(call.name, 'computer_set_value');
+      assert.equal(call.arguments.value, 'EXISTING\nSOLAT COMPUTER TEST');
+      return { model_result: { status: 'ready', operation: 'set_value', hwnd: 42, verified: true }, action: null };
+    },
+  };
+  const loop = new ComputerTaskLoop({
+    provider: { async completeStructured() { providerCalls += 1; throw new Error('model must not run'); } },
+    bridge, toolRegistry: fastRegistry, idFactory: () => 'notepad-fast',
+  });
+  const waiting = await loop.start({
+    ownerId: 'owner', sessionId: 'session', requestId: 'notepad-fast', goal: 'Open Notepad and append SOLAT COMPUTER TEST.',
+    workflowHint: { workflow: 'notepad_text', text: 'SOLAT COMPUTER TEST', mode: 'append' },
+  });
+  assert.equal(waiting.status, 'AWAITING_APPROVAL');
+  assert.equal(waiting.pending_action.tool, 'computer_launch_app');
+  const completed = await loop.continue({
+    ownerId: 'owner', sessionId: 'session', taskId: waiting.task_id, actionIdempotencyKey: 'notepad-open',
+    verifiedObservation: { status: 'ready', operation: 'launch_app', hwnd: 42, launched: true, verified: true, target: { hwnd: 42, process_id: 8, process_name: 'notepad', window_title: 'Untitled - Notepad' } },
+  });
+  assert.equal(completed.status, 'COMPLETED');
+  assert.equal(completed.provider_calls, 0);
+  assert.equal(providerCalls, 0);
+  assert.deepEqual(calls.map(call => call.name), ['computer_launch_app', 'computer_list_windows', 'computer_inspect', 'computer_set_value']);
+});
+
+test('cross-app search uses one model step then deterministically returns to Notepad', async () => {
+  let providerCalls = 0;
+  const calls = [];
+  const fastRegistry = registry();
+  fastRegistry.computer_search_web = {
+    side_effect_level: 'write', task_grant_origin: true,
+    validate_arguments: value => value?.query === 'TypeScript',
+    validate_output: value => value?.status === 'ready' && value?.operation === 'search_web' && value?.verified === true,
+  };
+  const auth = { id: 'cross-app-grant', task_id: 'computer_cross-app', instruction_revision: 1 };
+  const bridge = {
+    owns: () => true,
+    issueTaskAuthorization() { return auth; },
+    refreshTaskAuthorizationTargets() {},
+    async revokeTaskAuthorization() { return true; },
+    async execute({ call }) {
+      calls.push(call);
+      if (call.name === 'computer_search_web') {
+        return { action: { status: 'confirmation_required', idempotency_key: 'cross-search', approval_token: 'once', arguments: call.arguments } };
+      }
+      if (call.name === 'computer_list_windows') {
+        return { model_result: { status: 'ready', operation: 'list_windows', windows: [{ hwnd: 42, title: 'Notes - Notepad', process_id: 8, process_name: 'notepad' }] } };
+      }
+      if (call.name === 'computer_inspect') {
+        assert.equal(call.arguments.interactive_only, false);
+        return { model_result: { status: 'ready', operation: 'inspect', hwnd: 42, target: { hwnd: 42 }, tree: { elements: [{ type: 'Document', selector: 'editor', value: 'unchanged' }] } } };
+      }
+      throw new Error(`unexpected tool ${call.name}`);
+    },
+  };
+  const loop = new ComputerTaskLoop({
+    provider: {
+      async completeStructured() {
+        providerCalls += 1;
+        return { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'List windows first.', tool: 'computer_list_windows', arguments: {} } };
+      },
+    },
+    bridge, toolRegistry: fastRegistry, idFactory: () => 'cross-app',
+  });
+  const waiting = await loop.start({
+    ownerId: 'owner', sessionId: 'session', requestId: 'cross-app',
+    goal: 'เปิด Chrome ค้นหา TypeScript แล้วกลับไปที่ Notepad โดยไม่แก้ข้อความเดิม',
+    workflowHint: { workflow: 'web_search_return_notepad', query: 'TypeScript' },
+  });
+  assert.equal(waiting.status, 'AWAITING_APPROVAL');
+  assert.equal(waiting.pending_action.tool, 'computer_search_web');
+  const completed = await loop.continue({
+    ownerId: 'owner', sessionId: 'session', taskId: waiting.task_id, actionIdempotencyKey: 'cross-search',
+    verifiedObservation: { status: 'ready', operation: 'search_web', query: 'TypeScript', verified: true, hwnd: 91, process_id: 9, process_name: 'chrome', window_title: 'TypeScript - Google Search' },
+  });
+  assert.equal(completed.status, 'COMPLETED');
+  assert.equal(providerCalls, 1);
+  assert.deepEqual(calls.map(call => call.name), ['computer_list_windows', 'computer_search_web', 'computer_list_windows', 'computer_inspect']);
+});
+
+test('ambiguous Chrome versus Notepad comparison asks for the missing work instead of exposing a schema error', async () => {
+  let providerCalls = 0;
+  const loop = new ComputerTaskLoop({
+    provider: {
+      async completeStructured() {
+        providerCalls += 1;
+        return { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'List windows.', tool: 'computer_list_windows', arguments: { visible_only: true } } };
+      },
+    },
+    bridge: { owns: () => true, async execute() { throw new Error('no tool should run for invalid model arguments'); } },
+    toolRegistry: registry(), idFactory: () => 'ambiguous-window',
+  });
+  const result = await loop.start({
+    ownerId: 'owner', sessionId: 'session', requestId: 'ambiguous-window',
+    goal: 'ดูหน้าต่างทั้งหมด เปรียบเทียบว่า Chrome หรือ Notepad เหมาะกับงานที่ค้างอยู่มากกว่า',
+  });
+  assert.equal(result.status, 'NEEDS_CLARIFICATION');
+  assert.match(result.summary, /Chrome|Notepad/u);
+  assert.equal(providerCalls, 1);
+});
 
 test('computer task loop lets the model inspect first then pauses a write for approval', async () => {
   const outputs = [
@@ -310,6 +555,117 @@ test('computer task loop makes one bounded schema repair retry for a malformed m
   assert.equal(calls, 2);
 });
 
+test('computer task loop repairs contradictory stale tool fields instead of silently normalizing them', async () => {
+  let calls = 0;
+  const loop = new ComputerTaskLoop({
+    provider: {
+      async completeStructured() {
+        calls += 1;
+        return {
+          data: calls === 1 ? {
+            schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification',
+            summary: 'Choose a visible target first.', tool: 'computer_inspect', arguments: { hwnd: 99 },
+          } : {
+            schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification',
+            summary: 'Choose a visible target first.', tool: 'none', arguments: {},
+          },
+        };
+      },
+    },
+    bridge: { owns: () => true, async execute() { throw new Error('must not execute stale non-action fields'); } },
+    toolRegistry: registry(), idFactory: () => 'task-normalize-non-action',
+  });
+  const result = await loop.start({ ownerId: 'owner', requestId: 'r-normalize', goal: 'Choose a target.' });
+  assert.equal(result.status, 'NEEDS_CLARIFICATION');
+  assert.equal(result.actions_started, 0);
+  assert.equal(calls, 2);
+});
+
+test('read-only unknown-app goal lists and inspects the uniquely matched observed window before planning', async () => {
+  const calls = [];
+  let plannerCalls = 0;
+  const loop = new ComputerTaskLoop({
+    provider: {
+      async completeStructured() {
+        plannerCalls += 1;
+        return {
+          data: {
+            schema_version: 'solat.computer-task-step.v1', status: 'completed',
+            summary: 'The Calculator display reads 42.', tool: 'none', arguments: {}, evidence_sequences: [2],
+          },
+        };
+      },
+    },
+    bridge: {
+      owns: () => true,
+      async execute({ call }) {
+        calls.push(call);
+        if (call.name === 'computer_list_windows') {
+          return { model_result: { status: 'ready', operation: 'list_windows', windows: [
+            { hwnd: 7, title: 'Calculator', process_id: 17, process_name: 'CalculatorApp', is_foreground: true },
+            { hwnd: 9, title: 'Clock', process_id: 19, process_name: 'ClockApp', is_foreground: false },
+            { hwnd: 8, title: 'Untitled - Notepad', process_id: 18, process_name: 'Notepad' },
+          ] } };
+        }
+        return { model_result: {
+          status: 'ready', operation: 'inspect', hwnd: 7,
+          target: { hwnd: 7, process_id: 17, process_name: 'CalculatorApp', window_title: 'Calculator' },
+          tree: { elements: [{ type: 'Text', name: 'Display is 42', value: '42', selector: 'display' }] },
+        } };
+      },
+    },
+    toolRegistry: registry(), idFactory: () => 'task-read-only-evidence-ladder',
+  });
+  const result = await loop.start({
+    ownerId: 'owner', requestId: 'r-read-only',
+    goal: 'ช่วยดูหน้าต่าง Calculator ที่เปิดอยู่ แล้วบอกตัวเลขที่แสดงตอนนี้ โดยไม่ต้องกดอะไร',
+  });
+  assert.equal(result.status, 'COMPLETED');
+  assert.match(result.summary, /42/u);
+  assert.equal(plannerCalls, 0);
+  assert.deepEqual(calls.map(call => call.name), ['computer_list_windows', 'computer_inspect']);
+  assert.equal(calls[1].arguments.hwnd, 7);
+});
+
+test('read-only unknown-app ignores a duplicate shell tree with no semantic value', async () => {
+  const calls = [];
+  const loop = new ComputerTaskLoop({
+    provider: { async completeStructured() { throw new Error('deterministic read evidence should complete without a model'); } },
+    bridge: {
+      owns: () => true,
+      async execute({ call }) {
+        calls.push(call);
+        if (call.name === 'computer_list_windows') {
+          return { model_result: { status: 'ready', operation: 'list_windows', windows: [
+            { hwnd: 7, title: 'Calculator', process_id: 17, process_name: 'ApplicationFrameHost', is_foreground: true },
+            { hwnd: 9, title: 'Calculator', process_id: 19, process_name: 'CalculatorApp', is_foreground: false },
+          ] } };
+        }
+        if (call.arguments.hwnd === 7) {
+          return { model_result: {
+            status: 'ready', operation: 'inspect', hwnd: 7,
+            target: { hwnd: 7, process_id: 17, process_name: 'ApplicationFrameHost', window_title: 'Calculator' },
+            tree: { elements: [{ type: 'Window', name: 'Calculator', selector: 'shell' }] },
+          } };
+        }
+        return { model_result: {
+          status: 'ready', operation: 'inspect', hwnd: 9,
+          target: { hwnd: 9, process_id: 19, process_name: 'CalculatorApp', window_title: 'Calculator' },
+          tree: { elements: [{ type: 'Text', name: 'Display is 0', selector: 'CalculatorResults' }] },
+        } };
+      },
+    },
+    toolRegistry: registry(), idFactory: () => 'task-read-only-shell-duplicate',
+  });
+  const result = await loop.start({
+    ownerId: 'owner', requestId: 'r-read-only-shell',
+    goal: 'ช่วยดูหน้าต่าง Calculator ที่เปิดอยู่ แล้วบอกตัวเลขที่แสดงตอนนี้ โดยไม่ต้องกดอะไร',
+  });
+  assert.equal(result.status, 'COMPLETED');
+  assert.match(result.summary, /Display is 0/u);
+  assert.deepEqual(calls.map(call => call.name), ['computer_list_windows', 'computer_inspect', 'computer_inspect']);
+});
+
 test('computer task loop repairs invalid tool arguments before failing delivery', async () => {
   let calls = 0;
   const loop = new ComputerTaskLoop({
@@ -326,6 +682,34 @@ test('computer task loop repairs invalid tool arguments before failing delivery'
   const result = await loop.start({ ownerId: 'owner', requestId: 'r-argument-repair', goal: 'Open the requested page.' });
   assert.equal(result.status, 'NEEDS_CLARIFICATION');
   assert.equal(calls, 2);
+});
+
+test('computer task loop converts value-verifying invoke on an editor into set_value', async () => {
+  const outputs = [
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'List windows.', tool: 'computer_list_windows', arguments: {} } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Inspect Notepad.', tool: 'computer_inspect', arguments: { hwnd: 42 } } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Type the text.', tool: 'computer_invoke', arguments: { hwnd: 42, selector: 'editor', verify_selector: 'editor', verify_state: 'value', verify_value: 'PACKAGED NORMAL' } } },
+  ];
+  const calls = [];
+  const loop = new ComputerTaskLoop({
+    provider: { async completeStructured() { return outputs.shift(); } },
+    bridge: {
+      owns: () => true,
+      async execute({ call }) {
+        calls.push(call);
+        if (call.name === 'computer_list_windows') return { model_result: { status: 'ready', windows: [{ hwnd: 42, title: 'Untitled - Notepad' }] } };
+        if (call.name === 'computer_inspect') return { model_result: { status: 'ready', target: { hwnd: 42 }, tree: { elements: [{ type: 'Document', name: 'Text editor', selector: 'editor' }] } } };
+        return { model_result: { status: 'confirmation_required' }, action: { status: 'confirmation_required', idempotency_key: 'set-editor', approval_token: 'once' } };
+      },
+    },
+    toolRegistry: registry(), idFactory: () => 'task-editor-repair',
+  });
+
+  const waiting = await loop.start({ ownerId: 'owner', sessionId: 'session', requestId: 'editor-repair', goal: 'Open Notepad and type PACKAGED NORMAL.' });
+  assert.equal(waiting.status, 'AWAITING_APPROVAL');
+  assert.equal(waiting.pending_action.tool, 'computer_set_value');
+  assert.deepEqual(calls[2].arguments, { hwnd: 42, selector: 'editor', value: 'PACKAGED NORMAL' });
+  assert.deepEqual(calls.map(call => call.name), ['computer_list_windows', 'computer_inspect', 'computer_set_value']);
 });
 
 test('computer task loop replaces an invented window with a trusted read prerequisite', async () => {
@@ -386,8 +770,7 @@ test('computer task loop keeps an explicit YouTube workflow on the specialized v
     provider: {
       async completeStructured() {
         plannerCalls += 1;
-        if (plannerCalls > 1) return { data: { schema_version: 'solat.computer-task-step.v1', status: 'completed', summary: 'Lllies is playing and verified.', tool: 'none', arguments: {}, evidence_sequences: [1] } };
-        return { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Open Chrome only.', tool: 'computer_open_website', arguments: { site: 'google' } } };
+        return { data: { schema_version: 'solat.computer-task-step.v1', status: 'completed', summary: 'Lllies is playing and verified.', tool: 'none', arguments: {}, evidence_sequences: [1] } };
       },
     },
     bridge: {
@@ -421,6 +804,95 @@ test('computer task loop keeps an explicit YouTube workflow on the specialized v
   });
   assert.equal(completed.status, 'COMPLETED');
   assert.equal(calls.length, 1);
+  assert.equal(plannerCalls, 0, 'verified specialized playback is terminal proof and must not trigger another model call');
+});
+
+test('computer task loop opens Instagram before model-guided own-profile navigation', async () => {
+  const calls = [];
+  const loop = new ComputerTaskLoop({
+    provider: { async completeStructured() { throw new Error('model must not run before the bounded Instagram opener'); } },
+    bridge: {
+      owns: () => true,
+      async execute({ call }) {
+        calls.push(call);
+        return { action: { status: 'confirmation_required', idempotency_key: 'instagram-open', approval_token: 'once' } };
+      },
+    },
+    toolRegistry: {
+      ...registry(),
+      computer_open_website: {
+        side_effect_level: 'write', task_grant_origin: true,
+        validate_arguments: value => value?.site === 'instagram',
+        validate_output: value => value?.status === 'ready' && value?.verified === true,
+      },
+    },
+    idFactory: () => 'task-instagram-profile',
+  });
+  const result = await loop.start({
+    ownerId: 'owner', requestId: 'instagram-request',
+    goal: 'Open Chrome, open Instagram, and go to my profile.',
+    workflowHint: { workflow: 'instagram_profile' },
+  });
+  assert.equal(result.status, 'AWAITING_APPROVAL');
+  assert.equal(result.pending_action.tool, 'computer_open_website');
+  assert.deepEqual(calls[0].arguments, { site: 'instagram' });
+});
+
+test('Instagram profile workflow stops at the real login screen without calling the model', async () => {
+  let providerCalls = 0;
+  let visionCalls = 0;
+  let screenCaptures = 0;
+  const calls = [];
+  const instagramRegistry = {
+    ...registry(),
+    computer_open_website: {
+      side_effect_level: 'write', task_grant_origin: true,
+      validate_arguments: value => value?.site === 'instagram',
+      validate_output: value => value?.status === 'ready' && value?.verified === true,
+    },
+  };
+  const loop = new ComputerTaskLoop({
+    provider: {
+      async completeStructured() { providerCalls += 1; throw new Error('login pages must not reach the model'); },
+      async completeStructuredVision() { visionCalls += 1; throw new Error('login pages must not reach vision'); },
+    },
+    bridge: {
+      owns: name => Boolean(instagramRegistry[name]),
+      async execute({ call }) {
+        calls.push(call);
+        if (call.name === 'computer_open_website') {
+          return { action: { status: 'confirmation_required', idempotency_key: 'instagram-login-open', approval_token: 'once' } };
+        }
+        if (call.name === 'computer_list_windows') {
+          return { model_result: { status: 'ready', operation: 'list_windows', windows: [{ hwnd: 77, process_name: 'chrome', title: 'Instagram - Google Chrome' }] } };
+        }
+        if (call.name === 'computer_inspect') {
+          return { model_result: { status: 'ready', operation: 'inspect', target: { hwnd: 77 }, tree: { name: 'Log into Instagram', children: [{ name: 'Password', selector: 'password' }] } } };
+        }
+        throw new Error(`unexpected tool ${call.name}`);
+      },
+    },
+    toolRegistry: instagramRegistry,
+    screenCapture: {
+      async capture() { screenCaptures += 1; throw new Error('login pages must not capture the screen'); },
+    },
+    idFactory: () => 'task-instagram-login',
+  });
+  const waiting = await loop.start({
+    ownerId: 'owner', sessionId: 'session', requestId: 'instagram-login',
+    goal: 'Open Instagram and go to my profile.', workflowHint: { workflow: 'instagram_profile' },
+  });
+  const result = await loop.continue({
+    ownerId: 'owner', sessionId: 'session', taskId: waiting.task_id,
+    actionIdempotencyKey: 'instagram-login-open',
+    verifiedObservation: { status: 'ready', operation: 'open_website', site: 'instagram', verified: true, hwnd: 77 },
+  });
+  assert.equal(result.status, 'NEEDS_CLARIFICATION');
+  assert.match(result.summary, /sign in manually/iu);
+  assert.equal(providerCalls, 0);
+  assert.equal(visionCalls, 0);
+  assert.equal(screenCaptures, 0);
+  assert.deepEqual(calls.map(call => call.name), ['computer_open_website', 'computer_list_windows', 'computer_inspect']);
 });
 
 test('computer task loop stops a repeated read action instead of spinning', async () => {
@@ -456,7 +928,7 @@ test('computer task loop emits bounded progress and replans an awaiting task fro
       async completeStructured(messages) {
         calls += 1;
         goals.push(messages.at(-1).content);
-        if (/Latest owner instruction/iu.test(messages.at(-1).content)) return { data: { schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification', summary: 'The newer instruction needs a target.', tool: 'none', arguments: {} } };
+        if (/Goal: Instead, ask me which page to open\./iu.test(messages.at(-1).content)) return { data: { schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification', summary: 'The newer instruction needs a target.', tool: 'none', arguments: {} } };
         return { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Open Google.', tool: 'computer_open_website', arguments: { site: 'google' } } };
       },
     },
@@ -474,8 +946,45 @@ test('computer task loop emits bounded progress and replans an awaiting task fro
   assert.equal(revised.status, 'NEEDS_CLARIFICATION');
   assert.equal(revised.revision, 2);
   assert.equal(cancelled.length, 1);
-  assert.match(goals.at(-1), /Latest owner instruction.*which page/isu);
+  assert.match(goals.at(-1), /Goal: Instead, ask me which page to open\./iu);
+  assert.doesNotMatch(goals.at(-1), /Goal: Open Google\./iu);
   assert.ok(events.some(event => event.type === 'replanned' && event.schema_version === 'solat.computer-task-event.v1'));
   assert.ok(events.some(event => event.type === 'approval_required'));
   assert.equal(events.every(event => event.owner_id === 'owner' && event.session_id === 'session'), true);
+});
+
+test('revising a computer task replaces the old goal and workflow instead of carrying stale YouTube state', async () => {
+  const prompts = [];
+  const loop = new ComputerTaskLoop({
+    provider: {
+      async completeStructured(messages) {
+        prompts.push(messages.at(-1).content);
+        return { data: { schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification', summary: 'Need a visible result.', tool: 'none', arguments: {} } };
+      },
+    },
+    bridge: {
+      owns: () => true,
+      async execute({ call }) { return { action: { status: 'confirmation_required', idempotency_key: 'old-song', approval_token: 'once', arguments: call.arguments } }; },
+      async cancelAction() {},
+    },
+    toolRegistry: {
+      ...registry(),
+      computer_play_youtube_music: {
+        side_effect_level: 'write',
+        validate_arguments: value => typeof value?.query === 'string' && Boolean(value.query.trim()),
+        validate_output: value => value?.status === 'ready' && value?.verified === true,
+      },
+    }, idFactory: () => 'replace-workflow',
+  });
+  loop.provider.completeStructured = async messages => {
+    prompts.push(messages.at(-1).content);
+    if (prompts.length === 1) return { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Play Lllies.', tool: 'computer_play_youtube_music', arguments: { query: 'Lllies' } } };
+    return { data: { schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification', summary: 'Need a visible result.', tool: 'none', arguments: {} } };
+  };
+  const waiting = await loop.start({ ownerId: 'owner', sessionId: 'session', requestId: 'old', goal: 'Play Lllies on YouTube.' });
+  assert.equal(waiting.status, 'AWAITING_APPROVAL');
+  const revised = await loop.revise({ ownerId: 'owner', sessionId: 'session', requestId: 'new', instruction: 'Play New Song on YouTube.', workflowHint: { workflow: 'youtube_music', query: 'New Song' } });
+  assert.equal(revised.status, 'AWAITING_APPROVAL');
+  assert.equal(revised.pending_action.action.arguments.query, 'New Song');
+  assert.doesNotMatch(JSON.stringify(revised), /Lllies/);
 });

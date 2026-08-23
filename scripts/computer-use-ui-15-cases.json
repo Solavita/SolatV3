@@ -1,0 +1,98 @@
+{
+  "schema_version": "solat.computer-use-ui-suite.v1",
+  "cases": [
+    {
+      "id": "CU-UI-01",
+      "category": "fast_path",
+      "command": "ช่วยเปิด Chrome ให้หน่อย",
+      "expected": { "approval_contains": ["Open chrome"], "final_contains": ["verified", "launched"], "approval_within_ms": 6000, "no_model_route_before_approval": true }
+    },
+    {
+      "id": "CU-UI-02",
+      "category": "exact_query_retention",
+      "command": "เปิด Chrome แล้วค้นหา Diana King ให้หน่อย",
+      "expected": { "approval_contains": ["Diana King"], "final_contains": ["Diana King", "verified"], "exact_query": "Diana King" }
+    },
+    {
+      "id": "CU-UI-03",
+      "category": "exact_query_retention",
+      "command": "เปลี่ยนไปค้นหา Persona 5 UI ใน Chrome",
+      "expected": { "approval_contains": ["Persona 5 UI"], "final_contains": ["Persona 5 UI", "verified"], "exact_query": "Persona 5 UI", "forbid_substitution": ["music"] }
+    },
+    {
+      "id": "CU-UI-04",
+      "category": "multi_step",
+      "command": "เปิด Notepad แล้วพิมพ์ว่า SOLAT ทดสอบการทำงาน",
+      "expected": { "approval_contains": ["Notepad", "SOLAT ทดสอบการทำงาน"], "final_contains": ["verified"], "no_model_route_before_approval": true }
+    },
+    {
+      "id": "CU-UI-05",
+      "category": "window_focus",
+      "command": "กลับไปที่หน้าต่าง Chrome แล้วค้นหา Qwen local model ให้หน่อย",
+      "expected": { "approval_contains": ["Qwen local model"], "final_contains": ["Qwen local model", "verified"], "exact_query": "Qwen local model" }
+    },
+    {
+      "id": "CU-UI-06",
+      "category": "multi_step",
+      "command": "เปิด Chrome เข้า YouTube แล้วเปิดเพลง Lllies",
+      "expected": { "approval_contains": ["Lllies"], "final_contains": ["Lllies", "verified"], "exact_query": "Lllies" }
+    },
+    {
+      "id": "CU-UI-07",
+      "category": "unknown_app",
+      "command": "ช่วยดูหน้าต่าง Calculator ที่เปิดอยู่ แล้วบอกตัวเลขที่แสดงตอนนี้ โดยไม่ต้องกดอะไร",
+      "precondition": "calculator",
+      "expected": { "final_contains": ["Calculator"], "read_only": true, "no_model_route": true }
+    },
+    {
+      "id": "CU-UI-08",
+      "category": "state_isolation",
+      "command": "หยุดเรื่อง YouTube ก่อน แล้วเปิด Notepad ให้ฉันแทน",
+      "expected": { "approval_contains": ["Notepad"], "final_contains": ["Notepad", "verified"], "forbid_substitution": ["L-L-Lies"] }
+    },
+    {
+      "id": "CU-UI-09",
+      "category": "cancellation",
+      "command": "เปิด Chrome แล้วค้นหา cancellation check ให้หน่อย",
+      "policy": "cancel_at_approval",
+      "expected": { "approval_contains": ["cancellation check"], "final_contains": ["cancelled"], "exact_query": "cancellation check" }
+    },
+    {
+      "id": "CU-UI-10",
+      "category": "state_isolation",
+      "command": "หลังจากยกเลิกเมื่อกี้ เปิด Chrome แล้วค้นหา SOLAT after cancellation",
+      "expected": { "approval_contains": ["SOLAT after cancellation"], "final_contains": ["SOLAT after cancellation", "verified"], "exact_query": "SOLAT after cancellation", "forbid_substitution": ["cancellation check"] }
+    },
+    {
+      "id": "CU-UI-11",
+      "category": "window_focus",
+      "command": "กลับไปที่ Notepad แล้วพิมพ์ต่อท้ายว่า งานรอบสอง",
+      "expected": { "approval_contains": ["Notepad", "งานรอบสอง"], "final_contains": ["verified"], "no_model_route_before_approval": true }
+    },
+    {
+      "id": "CU-UI-12",
+      "category": "multi_step_window_focus",
+      "command": "เปิด Chrome ค้นหา TypeScript แล้วกลับไปที่ Notepad โดยไม่แก้ข้อความเดิม",
+      "expected": { "approval_contains": ["TypeScript"], "final_contains": ["verified"], "exact_query": "TypeScript", "requires_model_route": true }
+    },
+    {
+      "id": "CU-UI-13",
+      "category": "state_isolation_ambiguity",
+      "command": "เปิดโปรแกรมนั้นแล้วทำต่อให้หน่อย",
+      "policy": "no_approval_expected",
+      "expected": { "final_contains_any": ["โปรแกรม", "ระบุ", "which", "clarif"], "no_approval": true, "requires_deepseek": true }
+    },
+    {
+      "id": "CU-UI-14",
+      "category": "deterministic_ambiguity",
+      "command": "ดูหน้าต่างที่เปิดอยู่ทั้งหมด เปรียบเทียบว่า Chrome หรือ Notepad เหมาะกับงานที่ค้างอยู่มากกว่า แล้วเลือกหน้าต่างที่เหมาะสมโดยห้ามแก้ข้อมูล",
+      "expected": { "final_contains_any": ["Chrome", "Notepad", "clarif", "ไม่สามารถ"], "no_model_route": true, "read_only": true }
+    },
+    {
+      "id": "CU-UI-15",
+      "category": "recovery_exact_query",
+      "command": "เปิด Chrome แล้วค้นหา computer use regression 15 เป็นงานสุดท้าย",
+      "expected": { "approval_contains": ["computer use regression 15"], "final_contains": ["computer use regression 15", "verified"], "exact_query": "computer use regression 15", "forbid_substitution": ["music", "cancellation check"] }
+    }
+  ]
+}

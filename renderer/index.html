@@ -2243,9 +2243,9 @@ html.booting #chat { opacity: 0; }
   .ui-mode-toggle { position: relative; overflow: hidden; width: 52px; height: 40px; padding: 3px; background: #10110f; border: 1px solid rgba(255,245,223,.28); clip-path: polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px); transition: background var(--d-2) var(--e-out), box-shadow var(--d-2) var(--e-out), transform var(--d-2) var(--e-spring); }
   .ui-mode-art { position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; background: var(--solat-paper); border: 1px solid rgba(255,245,223,.55); transition: opacity var(--d-2) var(--e-out), transform var(--d-3) var(--e-spring), filter var(--d-2) var(--e-out); }
   .ui-mode-art-blue { opacity: 1; transform: rotate(-3deg) scale(1); animation: uiModeBlueIdle 3.4s ease-in-out infinite; }
-  .ui-mode-art-red { opacity: 0; transform: rotate(5deg) scale(.72); animation: uiModeRedIdle 3.4s ease-in-out infinite; }
-  .ui-mode-toggle[aria-pressed="true"] .ui-mode-art-blue { opacity: 0; transform: rotate(-12deg) scale(.72); }
-  .ui-mode-toggle[aria-pressed="true"] .ui-mode-art-red { opacity: 1; transform: rotate(3deg) scale(1); }
+  .ui-mode-art-red { display: none; opacity: 0; transform: rotate(5deg) scale(.72); animation: none; }
+  .ui-mode-toggle[aria-pressed="true"] .ui-mode-art-blue { opacity: 1; transform: rotate(-3deg) scale(1); }
+  .ui-mode-toggle[aria-pressed="true"] .ui-mode-art-red { display: none; opacity: 0; }
   .ui-mode-toggle:hover { transform: translateY(-2px) rotate(-1deg); box-shadow: 3px 3px 0 var(--solat-cyan); }
   .ui-mode-toggle:hover .ui-mode-art { filter: contrast(1.35) saturate(1.3) brightness(1.08); }
   .ui-mode-toggle:active { transform: translate(1px,1px); }
@@ -2811,7 +2811,7 @@ html.booting #chat { opacity: 0; }
   .solat-walker { display: none !important; }
 
   #solatCursor {
-    position: fixed; left: 0; top: 0; z-index: 12000;
+    position: fixed; left: 0; top: 0; z-index: 13000;
     width: 28px; height: 34px; pointer-events: none; opacity: 0;
     transform: translate3d(var(--cursor-x, -80px), var(--cursor-y, -80px), 0) rotate(-14deg);
     transform-origin: 4px 4px;
@@ -2920,6 +2920,104 @@ html.booting #chat { opacity: 0; }
   @keyframes newChatStamp { 0%,28%,100% { opacity: 0; } 40%,74% { opacity: 1; transform: translate(-50%,-50%) rotate(-3deg) scale(1); } }
   :root:has(#newChatTransition.reset) #shell { animation: newChatImpact .86s steps(3,end) both; }
   @keyframes newChatImpact { 0%,100% { transform: none; } 40% { transform: translateX(10px) rotate(.3deg); } 58% { transform: translateX(-7px) rotate(-.2deg); } }
+
+  #solatVoiceScene {
+    position: fixed; inset: 0; z-index: 12000; display: none; overflow: hidden;
+    background: #032aa8;
+    pointer-events: none; contain: strict; isolation: isolate;
+  }
+  #solatVoiceScene::before {
+    content: ""; position: absolute; z-index: 0; inset: -8%;
+    background: url("./assets/solat-voice-stage-backdrop.jpg") center center / cover no-repeat;
+    filter: blur(24px) saturate(1.18) contrast(1.04) brightness(.82);
+    transform: scale(1.08) translateZ(0); opacity: .96;
+  }
+  #solatVoiceScene::after {
+    content: ""; position: absolute; z-index: 2; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(circle at 77% 49%, rgba(42,222,255,.12), transparent 31%),
+      linear-gradient(90deg, rgba(0,15,76,.08), transparent 44%, rgba(0,10,58,.16));
+  }
+  #solatVoiceScene.active { display: block; }
+  :root.solat-voice-active body > :not(#solatVoiceScene):not(#solatCursor) {
+    visibility: hidden !important;
+  }
+  #solatVoiceVideo, #solatVoiceLoop {
+    position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; display: block;
+    object-fit: contain; object-position: center center; background: transparent;
+    opacity: 0; transform: translateZ(0); backface-visibility: hidden; will-change: transform;
+    image-rendering: auto;
+  }
+  #solatVoiceScene.video-ready #solatVoiceVideo { opacity: 1; }
+  #solatVoiceScene.loop-ready #solatVoiceVideo { opacity: 0; }
+  #solatVoiceScene.loop-ready #solatVoiceLoop { opacity: 1; }
+  .solat-voice-orb-shell {
+    position: absolute; z-index: 4; right: clamp(70px, 8vw, 156px); top: 55%;
+    width: clamp(210px, 23vw, 360px); aspect-ratio: 1; padding: 7px; border-radius: 50%;
+    border: 1px solid rgba(112,233,255,.46);
+    background: radial-gradient(circle, rgba(0,30,106,.28) 58%, rgba(10,197,240,.22) 74%, rgba(0,12,66,.58) 100%);
+    box-shadow: inset 0 0 28px rgba(62,223,255,.2), 0 24px 40px rgba(0,8,48,.4), 0 0 32px rgba(0,206,255,.18);
+    opacity: 0; transform: translateY(-50%) scale(.9); transition: opacity .55s ease, transform .7s cubic-bezier(.2,.8,.2,1);
+    will-change: transform; pointer-events: none;
+  }
+  .solat-voice-orb-shell::before {
+    content: ""; position: absolute; inset: -11px; border-radius: 50%; pointer-events: none;
+    border: 1px solid rgba(85,231,255,.25); box-shadow: 0 0 0 5px rgba(4,92,193,.08), 0 0 24px rgba(51,225,255,.16);
+  }
+  #solatVoiceScene.loop-ready .solat-voice-orb-shell { opacity: 1; transform: translateY(-50%) scale(1); }
+  .solat-voice-orb {
+    display: block; width: 100%; height: 100%; border-radius: 50%; clip-path: circle(49.55% at 50% 50%);
+    object-fit: cover; animation: solatVoiceOrbSpin 20s linear infinite; will-change: transform;
+    filter: saturate(.9) contrast(1.08) brightness(.94);
+  }
+  #solatVoiceScene.voice-speaking .solat-voice-orb-shell { animation: solatVoiceOrbTalk .9s ease-in-out infinite; }
+  .solat-voice-status {
+    position: absolute; z-index: 5; right: clamp(56px, 7vw, 136px); top: clamp(76px, 10vh, 122px);
+    width: clamp(230px, 28vw, 430px); height: clamp(96px, 15vh, 150px);
+    pointer-events: none; display: grid; place-items: center;
+  }
+  .solat-voice-status img {
+    grid-area: 1 / 1; display: block; max-width: 100%; max-height: 100%; object-fit: contain;
+    opacity: 0; transform: translateY(12px) scale(.94); transition: opacity .24s ease, transform .34s cubic-bezier(.2,.8,.2,1);
+    filter: drop-shadow(0 12px 18px rgba(0,5,44,.44));
+  }
+  #solatVoiceScene[data-voice-activity="thinking"] .solat-voice-status-thinking,
+  #solatVoiceScene[data-voice-activity="answer"] .solat-voice-status-answer {
+    opacity: 1; transform: translateY(0) scale(1);
+  }
+  #solatVoiceScene[data-voice-activity="thinking"] .solat-voice-status-thinking { animation: solatVoiceThinkingBeat 1.15s ease-in-out infinite; }
+  #solatVoiceScene[data-voice-activity="answer"] .solat-voice-status-answer { animation: solatVoiceAnswerHit .48s cubic-bezier(.18,.82,.24,1) both; }
+  .solat-voice-exit {
+    position: absolute; z-index: 6; right: clamp(20px, 2.6vw, 52px); bottom: clamp(20px, 3vw, 48px);
+    width: 74px; height: 58px; padding: 4px; pointer-events: auto; cursor: none;
+    border: 1px solid rgba(255,255,255,.7); background: #ed1c24;
+    box-shadow: 0 8px 0 rgba(104,0,12,.75), 0 15px 28px rgba(0,0,40,.38);
+    clip-path: polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);
+    transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+  }
+  .solat-voice-exit img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; }
+  .solat-voice-exit:hover { transform: translateY(-3px); filter: saturate(1.16) brightness(1.08); box-shadow: 0 11px 0 rgba(104,0,12,.75), 0 18px 34px rgba(0,0,40,.44); }
+  .solat-voice-exit:active { transform: translateY(4px); box-shadow: 0 3px 0 rgba(104,0,12,.75), 0 8px 18px rgba(0,0,40,.34); }
+  .solat-voice-exit:focus-visible { outline: 3px solid #33edff; outline-offset: 5px; }
+  @keyframes solatVoiceOrbSpin { to { transform: rotate(360deg); } }
+  @keyframes solatVoiceOrbTalk {
+    0%,100% { transform: translateY(-50%) scale(1); filter: drop-shadow(0 26px 34px rgba(0,8,48,.42)) drop-shadow(0 0 26px rgba(0,206,255,.22)); }
+    50% { transform: translateY(-50%) scale(1.045); filter: drop-shadow(0 30px 42px rgba(0,8,48,.48)) drop-shadow(0 0 38px rgba(0,232,255,.42)); }
+  }
+  @keyframes solatVoiceThinkingBeat {
+    0%,100% { transform: translateY(0) rotate(-1.5deg) scale(1); }
+    50% { transform: translateY(-5px) rotate(1deg) scale(1.025); }
+  }
+  @keyframes solatVoiceAnswerHit {
+    0% { opacity: 0; transform: translateX(34px) scale(.88); }
+    65% { opacity: 1; transform: translateX(-5px) scale(1.025); }
+    100% { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @media (max-width: 760px) {
+    .solat-voice-orb-shell { right: 34px; width: clamp(170px, 38vw, 250px); }
+    .solat-voice-status { right: 18px; top: 72px; width: min(48vw, 330px); height: 100px; }
+    .solat-voice-exit { right: 16px; bottom: 18px; width: 64px; height: 50px; }
+  }
 
   @keyframes masterPulse {
     from { filter: contrast(1) saturate(1); }
@@ -3194,10 +3292,9 @@ html.booting #chat { opacity: 0; }
   }
 
   @media (pointer: fine) {
-    :root[data-motion="on"] body, :root[data-motion="on"] button, :root[data-motion="on"] textarea,
-    :root[data-motion="on"] input, :root[data-motion="on"] a, :root[data-motion="on"] summary { cursor: none !important; }
+    body, button, textarea, input, a, summary, #solatVoiceScene { cursor: none !important; }
   }
-  :root[data-motion="off"] #solatCursor, :root[data-motion="off"] .welcome::after { display: none !important; }
+  :root[data-motion="off"] .welcome::after { display: none !important; }
   :root[data-motion="off"].home-mode .welcome, :root[data-motion="off"] .starter { animation: none !important; }
 
   :root.home-mode .master-nav {
@@ -3964,13 +4061,13 @@ html.booting #chat { opacity: 0; }
   :root:not(.home-mode) .composer-head { min-height: 22px; padding: 0 4px 6px; color: rgba(39,237,238,.78); font-size: .58rem; }
   :root:not(.home-mode) #composer .row {
     min-height: 64px; padding: 8px 9px 8px 12px; gap: 7px; border: 1px solid rgba(255,245,223,.45);
-    background: linear-gradient(105deg,rgba(39,237,238,.06),transparent 34%),#0d0e0d; box-shadow: 7px 7px 0 rgba(255,33,24,.75);
+    background: linear-gradient(105deg,rgba(39,237,238,.06),transparent 34%),#0d0e0d; box-shadow: 0 0 18px rgba(39,237,238,.06);
     clip-path: polygon(0 9px,9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%);
     animation: composerBreath 6.5s ease-in-out infinite;
   }
-  @keyframes composerBreath { 0%,100% { border-color: rgba(255,245,223,.38); box-shadow: 7px 7px 0 rgba(255,33,24,.62); } 50% { border-color: rgba(39,237,238,.65); box-shadow: 7px 7px 0 rgba(255,33,24,.78), 0 0 22px rgba(39,237,238,.08); } }
+  @keyframes composerBreath { 0%,100% { border-color: rgba(255,245,223,.38); box-shadow: 0 0 14px rgba(39,237,238,.04); } 50% { border-color: rgba(39,237,238,.65); box-shadow: 0 0 22px rgba(39,237,238,.1); } }
   :root:not(.home-mode) #composer .row::after { top: 19%; bottom: 19%; width: 3px; }
-  :root:not(.home-mode) #composer.focused .row { border-color: var(--solat-cyan); box-shadow: 7px 7px 0 var(--solat-red),0 0 25px rgba(39,237,238,.1); }
+  :root:not(.home-mode) #composer.focused .row { border-color: var(--solat-cyan); box-shadow: 0 0 25px rgba(39,237,238,.1); }
   :root:not(.home-mode) #composer .iconbtn { width: 36px; height: 36px; flex-basis: 36px; border-color: rgba(255,245,223,.16); clip-path: none; }
   :root:not(.home-mode) #input { min-height: 42px; padding: 9px 11px; font-family: var(--f-ui); font-size: .98rem; font-weight: 520; font-style: normal; }
   :root:not(.home-mode) .send { width: 96px; height: 42px; clip-path: polygon(8px 0,100% 0,92% 50%,100% 100%,8px 100%,0 50%); font-size: .72rem; }
@@ -4087,7 +4184,6 @@ html.booting #chat { opacity: 0; }
   :root[data-motion="off"] .inner-art,
   :root[data-motion="off"] .inner-art::after { animation: none !important; }
   @media (prefers-reduced-motion: reduce) {
-    #solatCursor { display: none !important; }
     :root.home-mode .welcome, :root.home-mode .welcome::after, :root.home-mode .starter,
     #homeCharacter, #homeCharacter *, #energyField, #energyField *, .scene-transition::before, .scene-transition::after,
     :root:not(.home-mode) #chat, :root:not(.home-mode) #chat::after, :root:not(.home-mode) #chatHeader::before,
@@ -4116,9 +4212,9 @@ html.booting #chat { opacity: 0; }
   .inner-starter:hover .inner-starter-art { transform: rotate(-7deg) scale(1.12); filter: contrast(1.35) saturate(1.45) drop-shadow(0 0 7px rgba(255,33,24,.42)); }
   .inner-starter-art { transition: transform var(--d-2) var(--e-spring), filter var(--d-2) var(--e-out); }
   :root:not([data-motion="off"]) #composer { animation: composerBreath 7s ease-in-out infinite; }
-  @keyframes composerBreath { 0%,100% { box-shadow: 7px 7px 0 rgba(255,33,24,.42); } 50% { box-shadow: 7px 7px 0 rgba(255,33,24,.6), 0 0 23px rgba(39,237,238,.08); } }
+  @keyframes composerBreath { 0%,100% { box-shadow: 0 0 12px rgba(39,237,238,.04); } 50% { box-shadow: 0 0 23px rgba(39,237,238,.1); } }
   :root:not([data-motion="off"]) #composer.focused { animation: composerFocus 2.8s ease-in-out infinite; }
-  @keyframes composerFocus { 0%,100% { box-shadow: 7px 7px 0 var(--solat-red), 0 0 12px rgba(39,237,238,.1); } 50% { box-shadow: 10px 10px 0 var(--solat-red), 0 0 30px rgba(39,237,238,.24); } }
+  @keyframes composerFocus { 0%,100% { box-shadow: 0 0 12px rgba(39,237,238,.1); } 50% { box-shadow: 0 0 30px rgba(39,237,238,.24); } }
   .send:focus-visible, .newchat:focus-visible, .ui-mode-toggle:focus-visible { outline: 2px solid var(--solat-cyan); outline-offset: 4px; }
   .send:hover:not(:disabled) .send-label { animation: labelNudge .45s var(--e-spring); }
   @keyframes labelNudge { 0% { transform: translateX(0); } 55% { transform: translateX(3px); } 100% { transform: translateX(0); } }
@@ -4195,7 +4291,6 @@ html.booting #chat { opacity: 0; }
   .live-bracket-b { right: 5%; top: 29%; transform: rotate(18deg) scale(.8); animation-delay: -2.5s; border-color: rgba(255,33,24,.44); }
   .live-ticker { position: absolute; left: 26%; bottom: 7%; width: 31vw; height: 1px; overflow: hidden; background: rgba(39,237,238,.2); }
   .live-ticker::after { content: "SOLAT / SIGNAL LOCKED / INPUT READY / LIVE CONTEXT"; position: absolute; left: 0; top: -7px; color: rgba(39,237,238,.45); font: 700 8px/1 var(--f-mono); letter-spacing: .2em; white-space: nowrap; animation: tickerSlide 15s linear infinite; }
-  .live-dots { position: absolute; width: 84px; height: 48px; right: 13%; top: 13%; opacity: .4; background-image: radial-gradient(circle, var(--solat-red) 0 1px, transparent 1.5px); background-size: 12px 12px; transform: skewX(-18deg); animation: dotShift 8s linear infinite; }
   .live-pixel { position: absolute; width: 7px; height: 7px; background: var(--solat-cyan); box-shadow: 0 0 12px var(--solat-cyan); opacity: .65; transform: rotate(45deg); animation: pixelHop 4.8s ease-in-out infinite; }
   .live-pixel-a { left: 29%; top: 21%; animation-delay: -1s; }
   .live-pixel-b { right: 31%; bottom: 25%; background: var(--solat-red); box-shadow: 0 0 12px var(--solat-red); animation-delay: -3s; }
@@ -4206,11 +4301,10 @@ html.booting #chat { opacity: 0; }
   @keyframes crossSpin { to { transform: rotate(360deg); } }
   @keyframes bracketPulse { 0%,100% { opacity: .22; filter: brightness(.8); } 50% { opacity: .8; filter: brightness(1.5); } }
   @keyframes tickerSlide { from { transform: translateX(31vw); } to { transform: translateX(-100%); } }
-  @keyframes dotShift { from { background-position: 0 0; opacity: .25; } 50% { opacity: .62; } to { background-position: 24px 12px; opacity: .25; } }
   @keyframes pixelHop { 0%,100% { transform: translate3d(0,0,0) rotate(45deg); opacity: .25; } 50% { transform: translate3d(13px,-9px,0) rotate(135deg); opacity: .9; } }
   :root[data-motion="off"] #liveDecor *, :root[data-motion="off"] #liveDecor::before,
   :root[data-motion="off"] #liveDecor::after { animation: none !important; }
-  @media (max-width: 760px) { .live-signal, .live-dots { display: none; } .live-ticker { left: 18%; width: 55vw; } .live-bracket-b { right: -12px; } }
+  @media (max-width: 760px) { .live-signal { display: none; } .live-ticker { left: 18%; width: 55vw; } .live-bracket-b { right: -12px; } }
 
   /* Final motion pass: tactile cursor and slow ambient atmosphere. */
   #liveDecor::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at calc(50% + (var(--pointer-x, 0) * 1px)) calc(48% + (var(--pointer-y, 0) * 1px)), rgba(39,237,238,.08), transparent 24%); mix-blend-mode: screen; animation: atmosphereBreathe 8s ease-in-out infinite; }
@@ -4230,6 +4324,20 @@ html.booting #chat { opacity: 0; }
 <div id="solatCursor" aria-hidden="true" class="on" style="--cursor-x: 229.8000030517578px; --cursor-y: 470.38751220703125px;"></div>
 <div id="sendTransition" class="scene-transition" aria-hidden="true"><span>SOLAT // ENGAGE</span></div>
 <div id="newChatTransition" class="scene-transition" aria-hidden="true"><span>NEW // SIGNAL</span></div>
+<div id="solatVoiceScene" aria-hidden="true">
+  <video id="solatVoiceVideo" preload="auto" playsinline muted src="./assets/solat-voice-transition-runtime-1080p60.mp4"></video>
+  <video id="solatVoiceLoop" preload="auto" playsinline muted loop src="./assets/solat-voice-final-loop-1080p60.mp4"></video>
+  <div id="solatVoiceOrbShell" class="solat-voice-orb-shell" role="img" aria-label="SOLAT voice orb">
+    <img id="solatVoiceOrb" class="solat-voice-orb" src="./assets/makoto-yuki-cd-persona3-inspired.png" alt="">
+  </div>
+  <div class="solat-voice-status" aria-live="polite" aria-atomic="true">
+    <img class="solat-voice-status-thinking" src="./assets/solat-voice-status-thinking.png" alt="AI is thinking: Hold up!">
+    <img class="solat-voice-status-answer" src="./assets/solat-voice-status-answer.png" alt="AI is answering">
+  </div>
+  <button id="solatVoiceExitButton" class="solat-voice-exit" type="button" aria-label="Return to the red SOLAT interface" title="Return to SOLAT">
+    <img src="./assets/download-6.jfif" alt="" aria-hidden="true">
+  </button>
+</div>
 <div id="pinterestDecor" aria-hidden="true">
   <img class="pinterest-plate pinterest-plate-one" src="./assets/pinterest-persona-graphic-01.jpg" alt="">
   <img class="pinterest-plate pinterest-plate-two" src="./assets/pinterest-persona-graphic-02.jpg" alt="">
@@ -4239,7 +4347,6 @@ html.booting #chat { opacity: 0; }
   <span class="live-signal live-signal-b">SYNC // READY</span>
   <i class="live-cross live-cross-a"></i><i class="live-cross live-cross-b"></i>
   <i class="live-bracket live-bracket-a"></i><i class="live-bracket live-bracket-b"></i>
-  <i class="live-dots"></i>
   <i class="live-pixel live-pixel-a"></i><i class="live-pixel live-pixel-b"></i>
   <i class="live-ticker"></i>
 </div>
@@ -4496,8 +4603,8 @@ html.booting #chat { opacity: 0; }
       <span class="led" aria-hidden="true"></span><span id="statusText">Ready</span>
     </div>
     <button class="iconbtn ui-mode-toggle" id="themeBtn" type="button" aria-label="Switch SOLAT interface" title="Switch SOLAT interface" aria-pressed="false">
-      <img class="ui-mode-art ui-mode-art-blue" src="./assets/download-6.jfif" alt="" aria-hidden="true">
-      <img class="ui-mode-art ui-mode-art-red" src="./assets/reblog-jakku-san-22-images-1.jfif" alt="" aria-hidden="true">
+      <img class="ui-mode-art ui-mode-art-blue" src="./assets/reblog-jakku-san-22-images-1.jfif" alt="" aria-hidden="true">
+      <img class="ui-mode-art ui-mode-art-red" src="./assets/download-6.jfif" alt="" aria-hidden="true">
       <svg class="icon ui-mode-fallback" aria-hidden="true"><use href="#i-monitor"></use></svg>
     </button>
   </div>
@@ -4605,7 +4712,7 @@ html.booting #chat { opacity: 0; }
     <div id="chatHeader">
       <button id="chatTitle" title="Rename this conversation">New conversation</button>
       <button class="model-chip" id="modelBtn" aria-haspopup="menu" aria-expanded="false">
-        <span class="dot" aria-hidden="true"></span><span id="modelName">SOLAT Core</span>
+        <span class="dot" aria-hidden="true"></span><span id="modelName">Auto</span>
         <svg class="icon chev"><use href="#i-chevron"></use></svg>
       </button>
       <button class="iconbtn" id="chatMenuBtn" aria-label="Conversation options" aria-haspopup="menu">
@@ -4640,9 +4747,6 @@ html.booting #chat { opacity: 0; }
           <div class="row">
             <button type="button" class="iconbtn" id="attachBtn" aria-label="Attach files" title="Attach files">
               <svg class="icon"><use href="#i-clip"></use></svg>
-            </button>
-            <button type="button" class="iconbtn agent-command-trigger" id="agentCommandBtn" aria-label="Enable Agent mode" title="Agent mode is off" aria-pressed="false">
-              <svg class="icon"><use href="#i-cpu"></use></svg>
             </button>
             <div id="agentCommandMenu" class="agent-command-menu" role="menu" aria-label="Agent commands" hidden>
               <button type="button" role="menuitemradio" aria-checked="false" data-agent-command="create-file"><code>@create-file</code><small>Create or edit a workspace file</small></button>

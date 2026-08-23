@@ -49,15 +49,24 @@ function register(overrides = {}) {
 test('ipc router registers every solat channel exactly once', () => {
   const ipc = register();
   for (const channel of [
-    'solat:status', 'solat:send', 'solat:agent-create', 'solat:agent-inspect', 'solat:agent-approve',
+    'solat:status', 'solat:set-model-mode', 'solat:send', 'solat:agent-create', 'solat:agent-inspect', 'solat:agent-approve',
     'solat:agent-cancel', 'solat:agent-run', 'solat:agent-interrupted-plans',
-    'solat:computer-task-continue', 'solat:computer-task-approve-and-continue', 'solat:computer-task-cancel',
+    'solat:computer-task-continue', 'solat:computer-task-inspect', 'solat:computer-task-approve-and-continue', 'solat:computer-task-cancel',
     'solat:agent-read-artifact', 'solat:agent-export-artifact', 'solat:save-conversation', 'solat:load-conversation',
     'solat:create-deck', 'solat:load-creative-history', 'solat:store-original-asset', 'solat:export-html',
     'solat:open-export', 'solat:inspect-export',
   ]) {
     assert.ok(ipc.handlers.has(channel), `missing channel ${channel}`);
   }
+});
+
+test('model mode IPC validates through the main-process router', async () => {
+  let selected = null;
+  const ipc = register({ services: { core: { status: () => ({}), provider: { setMode(mode) { selected = mode; return { modelMode: mode }; } } } } });
+  const result = await ipc.handlers.get('solat:set-model-mode')(null, 'local');
+  assert.equal(result.ok, true);
+  assert.equal(result.value.modelMode, 'local');
+  assert.equal(selected, 'local');
 });
 
 test('agent channels require a session id and map service errors into the ok envelope', async () => {
@@ -100,6 +109,22 @@ test('computer-task-continue only feeds verified persisted evidence into the loo
   assert.equal(surfaced.ok, false);
   assert.equal(surfaced.error.code, 'unverified_observation');
   assert.match(surfaced.error.message, /missing_selector/, 'the owner-visible error must keep the real adapter failure');
+});
+
+test('computer-task-inspect reads the owner-scoped durable task without mutating it', async () => {
+  let inspected = null;
+  const terminal = { status: 'NEEDS_CLARIFICATION', summary: 'Sign in manually.' };
+  const ipc = register({
+    services: {
+      computerTaskLoop: {
+        inspect(input) { inspected = input; return terminal; },
+      },
+    },
+  });
+  const result = await ipc.handlers.get('solat:computer-task-inspect')(null, { sessionId: 's1', taskId: 't1' });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.value, terminal);
+  assert.deepEqual(inspected, { ownerId: 's1', sessionId: 's1', taskId: 't1' });
 });
 
 test('computer-task-approve-and-continue refuses approvals that do not match the pending action', async () => {

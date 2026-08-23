@@ -13,7 +13,7 @@ const PLAN_SCHEMA = Object.freeze({
         path: { type: 'string', minLength: 1, maxLength: 240 },
         content: { type: 'string', maxLength: 1048576 },
         app_id: { type: 'string', enum: ['chrome', 'notepad'] },
-        site: { type: 'string', enum: ['google', 'google_classroom', 'youtube'] },
+        site: { type: 'string', enum: ['google', 'google_classroom', 'instagram', 'youtube', 'roblox'] },
         query: { type: 'string', minLength: 1, maxLength: 160 },
       },
       additionalProperties: false,
@@ -36,18 +36,25 @@ function invalidPlan(message) {
 function requestedYoutubeMusicQuery(requestText) {
   const request = String(requestText || '').trim();
   if (!/(?:\byoutube\b|\byoutu\.be\b|ยูทูบ)/iu.test(request)) return null;
+  const searchOnYoutube = request.match(/(?:ค้นหา|ค้น|เสิร์ช)\s*(?:คำว่า\s*)?(?:เพลง\s*)?([^,.;!?]+?)\s*(?:บน|ใน)\s*(?:youtube|ยูทูบ)\b/iu);
+  const changeOnYoutube = request.match(/(?:เปลี่ยน(?:เป็น|ไปเป็น)|เอาเป็น)\s*(?:เพลง\s*)?([^,.;!?]+?)\s*(?:บน|ใน)\s*(?:youtube|ยูทูบ)\b/iu);
   const thai = request.match(/(?:แล้ว|เเล้ว)\s*(?:เปิด|เล่น)\s*(?:เพลง\s*)?([^,.;!?]+?)\s*$/iu);
   const english = request.match(/\byoutube\b[\s\S]*?\b(?:then\s+)?(?:play|open)\s+(?:the\s+)?(?:song\s+|music\s+)?([^,.;!?]+?)\s*$/iu);
   const explicit = request.match(/(?:\b(?:play|song|music)\b|(?:เปิด|เล่น)\s*เพลง)\s*[:=]?\s*([^,.;!?]+?)\s*$/iu);
-  const candidate = thai?.[1] || english?.[1] || explicit?.[1] || '';
-  const query = String(candidate).trim();
-  return query && !/^(?:youtube|ยูทูบ)$/iu.test(query) ? query : null;
+  const candidate = searchOnYoutube?.[1] || changeOnYoutube?.[1] || thai?.[1] || english?.[1] || explicit?.[1] || '';
+  const query = String(candidate)
+    .split(/(?:แล้ว|เเล้ว)\s*(?:เปิด|เล่น)\s*(?:เพลง\s*)?/iu).at(-1)
+    .replace(/\s+(?:ดูจน|จนแน่ใจ|แล้วจบ|แล้วหยุด|และตรวจ)[\s\S]*$/iu, '')
+    .trim();
+  return query && !/^(?:youtube|ยูทูบ|music|song|เพลง)$/iu.test(query) ? query : null;
 }
 
 function requestedWebsite(requestText) {
   const request = String(requestText || '').trim().toLocaleLowerCase();
   if (!request || requestedYoutubeMusicQuery(request) || /(?:\b(?:play|music|song)\b|เปิด\s*เพลง|เล่น\s*เพลง|เพลง)/iu.test(request)) return null;
   if (/\bgoogle\s+classroom\b|classroom|กูเกิล\s*คลาสรูม/iu.test(request)) return 'google_classroom';
+  if (/\binstagram\b|อินสตาแกรม/iu.test(request)) return 'instagram';
+  if (/\broblox\b/iu.test(request)) return 'roblox';
   if (/\bgoogle\b|กูเกิล/iu.test(request)) return 'google';
   if (/\byoutube\b|ยูทูบ/iu.test(request)) return 'youtube';
   return null;
@@ -68,7 +75,7 @@ function validatePlannedCommand(plan, command, requestText = '') {
   } else if (command === 'computer-use') {
     if (plan.tool === 'computer_launch_app' && !['chrome', 'notepad'].includes(args.app_id)) throw new Error('The model selected an unsupported application.');
     if (plan.tool === 'computer_play_youtube_music' && (typeof args.query !== 'string' || !args.query.trim())) throw new Error('The model omitted the requested YouTube search query.');
-    if (plan.tool === 'computer_open_website' && !['google', 'google_classroom', 'youtube'].includes(args.site)) throw new Error('The model selected an unsupported website.');
+    if (plan.tool === 'computer_open_website' && !['google', 'google_classroom', 'instagram', 'youtube', 'roblox'].includes(args.site)) throw new Error('The model selected an unsupported website.');
     if (!['computer_launch_app', 'computer_open_website', 'computer_play_youtube_music'].includes(plan.tool)) throw new Error('The model selected an unsupported computer action.');
     if (requiredYoutubeQuery && plan.tool !== 'computer_play_youtube_music') {
       throw invalidPlan('The plan is incomplete: this request requires the YouTube music workflow, not only launching an app.');
@@ -89,7 +96,7 @@ function validatePlannedCommand(plan, command, requestText = '') {
     if (plan.tool === 'computer_launch_app' && !['chrome', 'notepad'].includes(args.app_id)) {
       throw invalidPlan('The model selected an unsupported application.');
     }
-    if (plan.tool === 'computer_open_website' && !['google', 'google_classroom', 'youtube'].includes(args.site)) {
+    if (plan.tool === 'computer_open_website' && !['google', 'google_classroom', 'instagram', 'youtube', 'roblox'].includes(args.site)) {
       throw invalidPlan('The model selected an unsupported website.');
     }
     if (plan.tool === 'computer_play_youtube_music' && (typeof args.query !== 'string' || !args.query.trim())) {
@@ -114,11 +121,11 @@ async function planAgentCommand({ provider, messages, command }) {
   const allowed = command === 'create-file'
     ? 'filesystem_create(path, content)'
     : command === 'computer-use'
-      ? 'computer_launch_app(app_id=chrome|notepad), computer_open_website(site=google|google_classroom|youtube), computer_play_youtube_music(query)'
-      : 'filesystem_create(path, content), computer_launch_app(app_id=chrome|notepad), computer_open_website(site=google|google_classroom|youtube), computer_play_youtube_music(query)';
+      ? 'computer_launch_app(app_id=chrome|notepad), computer_open_website(site=google|google_classroom|instagram|youtube|roblox), computer_play_youtube_music(query)'
+      : 'filesystem_create(path, content), computer_launch_app(app_id=chrome|notepad), computer_open_website(site=google|google_classroom|instagram|youtube|roblox), computer_play_youtube_music(query)';
   const instruction = {
     role: 'system',
-    content: `You are the SOLAT Agent command planner (${AGENT_COMMAND_PLAN_VERSION}). Interpret the user's actual request before any tool runs. Allowed capability for this request: ${command}. Allowed tools: ${allowed}. Preserve requested filenames, content, application names, song names, spelling, and typos exactly; never replace a requested song with a default such as lofi. A request such as "open YouTube then open Lllies" or "เปิด YouTube แล้วเปิด Lllies" is a music-playback workflow: choose computer_play_youtube_music and put Lllies in arguments.query. Do not reduce it to computer_open_website. For a Google Classroom request, choose computer_open_website with site google_classroom as the first bounded action; inspecting classes and choosing a subject happens only after verified on-screen evidence in a later step. If this is only a question about a capability, or required information is missing, use status needs_clarification, tool none, empty arguments, and ask one concise question in summary. Do not claim execution or success. Return exactly one JSON object with these keys and no Markdown: {"schema_version":"${AGENT_COMMAND_PLAN_VERSION}","status":"planned|needs_clarification|unsupported","summary":"...","tool":"none|filesystem_create|computer_launch_app|computer_open_website|computer_play_youtube_music","arguments":{}}. Permission, ownership, approval, and final verification are enforced by code, not by you.`,
+    content: `You are the SOLAT Agent command planner (${AGENT_COMMAND_PLAN_VERSION}). Interpret the user's actual request before any tool runs. Allowed capability for this request: ${command}. Allowed tools: ${allowed}. Preserve requested filenames, content, application names, song names, spelling, and typos exactly; never replace a requested song with a default such as lofi. A request such as "open YouTube then open Lllies" or "เปิด YouTube แล้วเปิด Lllies" is a music-playback workflow: choose computer_play_youtube_music and put Lllies in arguments.query. Do not reduce it to computer_open_website. For Google Classroom or Instagram, choose computer_open_website with the matching fixed site as the first bounded action; later navigation happens only after verified on-screen evidence. Never enter login credentials, bypass a challenge, or guess an account name. If this is only a question about a capability, or required information is missing, use status needs_clarification, tool none, empty arguments, and ask one concise question in summary. Do not claim execution or success. Return exactly one JSON object with these keys and no Markdown: {"schema_version":"${AGENT_COMMAND_PLAN_VERSION}","status":"planned|needs_clarification|unsupported","summary":"...","tool":"none|filesystem_create|computer_launch_app|computer_open_website|computer_play_youtube_music","arguments":{}}. Permission, ownership, approval, and final verification are enforced by code, not by you.`,
   };
   const recentUserMessage = [...(Array.isArray(messages) ? messages : [])].reverse().find(message => message?.role === 'user');
   const plannerMessages = [instruction, ...(recentUserMessage ? [{ role: 'user', content: recentUserMessage.content }] : [])];
@@ -128,6 +135,7 @@ async function planAgentCommand({ provider, messages, command }) {
       const response = await provider.completeStructured(
         attempt === 0 ? plannerMessages : [...plannerMessages, { role: 'system', content: `Your previous planner response was invalid: ${String(lastError?.message || 'invalid output').slice(0, 300)} Return only the corrected strict JSON object now, without a code fence, commentary, or tool-call markup.` }],
         PLAN_SCHEMA,
+        { routeHint: command === 'computer-use' ? 'computer_controller' : 'local_controller' },
       );
       const plan = response?.data && typeof response.data === 'object' ? response.data : response;
       return validatePlannedCommand(plan, command, recentUserMessage?.content || '');

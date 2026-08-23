@@ -19,6 +19,14 @@ function resolveOwnedExportPath(requestedPath, exportRoot) {
 function registerSolatIpc({ ipcMain, services, exportRoot, shellOpenPath, fsImpl = fs.promises }) {
   const { core, computerTaskLoop, agentService, filesystemWorkspace, conversationPersistence, creativePersistence, creativeWorkflow, assetStore, fileIntake } = services;
   ipcMain.handle('solat:status', () => core.status());
+  ipcMain.handle('solat:set-model-mode', (_event, mode) => {
+    try {
+      if (!core.provider || typeof core.provider.setMode !== 'function') throw Object.assign(new Error('Model selection is unavailable.'), { code: 'model_mode_unavailable' });
+      return { ok: true, value: core.provider.setMode(mode) };
+    } catch (error) {
+      return { ok: false, error: { code: error?.code || 'invalid_model_mode', message: error?.message || 'Model mode could not be changed.' } };
+    }
+  });
   const emitComputerTaskEvent = (event, payload) => {
     if (!event?.sender || event.sender.isDestroyed() || !payload || typeof payload !== 'object') return;
     event.sender.send('solat:computer-task-event', {
@@ -30,9 +38,12 @@ function registerSolatIpc({ ipcMain, services, exportRoot, shellOpenPath, fsImpl
       status: payload.status,
       planner_turns: payload.planner_turns,
       observation_count: payload.observation_count,
+      provider_calls: payload.provider_calls,
+      actions_started: payload.actions_started,
       revision: payload.revision,
       summary: payload.summary,
       tool: payload.tool,
+      elapsed_ms: payload.elapsed_ms,
     });
   };
   ipcMain.handle('solat:send', async (event, request) => {
@@ -85,6 +96,11 @@ function registerSolatIpc({ ipcMain, services, exportRoot, shellOpenPath, fsImpl
       verifiedObservation: output,
       eventSink: payload => emitComputerTaskEvent(event, payload),
     });
+  }, request));
+  ipcMain.handle('solat:computer-task-inspect', (_event, request) => agentCall(value => {
+    const taskId = String(value?.taskId || '').trim();
+    if (!taskId) throw Object.assign(new Error('A computer task is required.'), { code: 'invalid_request' });
+    return computerTaskLoop.inspect({ ownerId: value.ownerId, sessionId: value.sessionId, taskId });
   }, request));
   ipcMain.handle('solat:computer-task-approve-and-continue', (event, request) => agentCall(async value => {
     const taskId = String(value?.taskId || '').trim();

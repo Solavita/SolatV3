@@ -2,6 +2,15 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('solat', Object.freeze({
   status: () => ipcRenderer.invoke('solat:status'),
+  setModelMode: async mode => {
+    const result = await ipcRenderer.invoke('solat:set-model-mode', mode);
+    if (result?.ok === false) {
+      const error = new Error(result.error?.message || 'Model mode could not be changed.');
+      error.code = result.error?.code || 'invalid_model_mode';
+      throw error;
+    }
+    return result?.value;
+  },
   send: async request => {
     const result = await ipcRenderer.invoke('solat:send', request);
     if (result?.ok === false) {
@@ -44,6 +53,11 @@ contextBridge.exposeInMainWorld('solat', Object.freeze({
   computerTaskContinue: async request => {
     const result = await ipcRenderer.invoke('solat:computer-task-continue', request);
     if (result?.ok === false) { const error = new Error(result.error?.message || 'Computer task could not continue.'); error.code = result.error?.code || 'agent_error'; throw error; }
+    return result?.value;
+  },
+  computerTaskInspect: async request => {
+    const result = await ipcRenderer.invoke('solat:computer-task-inspect', request);
+    if (result?.ok === false) { const error = new Error(result.error?.message || 'Computer task could not be inspected.'); error.code = result.error?.code || 'agent_error'; throw error; }
     return result?.value;
   },
   computerTaskApproveAndContinue: async request => {

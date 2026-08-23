@@ -4,6 +4,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { readConfig } = require('../src/core/config');
 const { ConversationCore } = require('../src/core/conversation-core');
+const { createProvider } = require('../src/core/provider');
+const { ModelRouter } = require('../src/core/model-router');
 const { captureSolat } = require('../src/core/three-way-evaluator');
 const { WebSearchService } = require('../src/core/web-search');
 
@@ -33,7 +35,10 @@ async function main() {
   const cases = requestedIds.size ? allCases.filter(testCase => requestedIds.has(String(testCase.id))) : allCases;
   if (requestedIds.size && cases.length !== requestedIds.size) throw new Error('One or more --case-ids were not found in the corpus.');
   const config = readConfig();
-  if (!config.apiKey) throw new Error('Model provider is not configured.');
+  if (!config.apiKey && !config.localModel?.apiKey) throw new Error('No model provider is configured.');
+  const provider = new ModelRouter({
+    localProvider: createProvider(config.localModel), deepseekProvider: createProvider(config), mode: config.modelMode,
+  });
   const searchService = new WebSearchService({
     provider: config.searchProvider,
     baseUrl: config.searchBaseUrl,
@@ -43,7 +48,7 @@ async function main() {
     wikipediaFallback: config.searchWikipediaFallback,
     engines: config.searchEngines,
   });
-  const core = new ConversationCore({ config, searchService });
+  const core = new ConversationCore({ config, provider, searchService });
   const startedAt = new Date().toISOString();
   const rows = new Array(cases.length);
   let nextIndex = 0;
@@ -70,7 +75,7 @@ async function main() {
     return out;
   }, { PASS: 0, FAIL: 0, 'NOT VERIFIED': 0 });
   const report = {
-    schema_version: 'solat.provider-suite-capture.v1', provider: config.provider, model: config.model,
+    schema_version: 'solat.provider-suite-capture.v1', provider: 'solat_model_router', model: config.modelMode,
     mode, concurrency, corpus_path: path.resolve(process.cwd(), input), started_at: startedAt,
     finished_at: new Date().toISOString(), run_id: crypto.randomUUID(), case_count: rows.length, counts, rows,
   };

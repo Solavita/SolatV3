@@ -34,6 +34,7 @@ test('YouTube playback detector recognises Thai requests that omit the word song
   assert.equal(requestedYoutubeMusicQuery('เปิด YouTube แล้วเปิด Lllies'), 'Lllies');
   assert.equal(requestedYoutubeMusicQuery('เปิด YouTube เเล้วเล่นเพลง Lllies'), 'Lllies');
   assert.equal(requestedYoutubeMusicQuery('Open YouTube then play Lllies'), 'Lllies');
+  assert.equal(requestedYoutubeMusicQuery('Open YouTube then play Starboy by The Weeknd'), 'Starboy by The Weeknd');
   assert.equal(requestedYoutubeMusicQuery('เปิด YouTube'), null);
 });
 
@@ -165,4 +166,19 @@ test('Computer planner permits Google Classroom only through the fixed website c
     () => validatePlannedCommand({ status: 'planned', tool: 'computer_open_website', arguments: { site: 'any-site' } }, 'computer-use'),
     /unsupported website/,
   );
+});
+
+test('Computer planner preserves an explicit Roblox website request', async () => {
+  assert.equal(requestedWebsite('เปิด Chrome ไปหน้า Roblox'), 'roblox');
+  const provider = {
+    async completeStructured() {
+      return { data: {
+        schema_version: 'solat.agent-command-plan.v1', status: 'planned', summary: 'Open Roblox.',
+        tool: 'computer_open_website', arguments: { site: 'roblox' },
+      } };
+    },
+  };
+  const plan = await planAgentCommand({ provider, command: 'computer-use', messages: [{ role: 'user', content: 'เปิด Chrome ไปหน้า Roblox' }] });
+  assert.equal(plan.tool, 'computer_open_website');
+  assert.equal(plan.arguments.site, 'roblox');
 });

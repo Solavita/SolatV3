@@ -123,12 +123,34 @@ test('readConfig prefers explicit environment values and never exposes a key in 
     },
   });
   assert.deepEqual(config, {
+    modelMode: 'auto',
     provider: 'deepseek_api',
     baseUrl: 'https://example.test/v1',
     apiKey: 'secret-value',
     model: 'test-model',
     thinkingMode: 'disabled',
     timeoutMs: 8000,
+    localModel: {
+      provider: 'ollama_local',
+      baseUrl: 'http://127.0.0.1:11434/v1',
+      apiKey: 'ollama',
+      model: 'hf.co/empero-ai/Qwen3.8-2B-GGUF:Q4_K_M',
+      thinkingMode: 'disabled',
+      maxTokens: 256,
+      keepAlive: '2m',
+      timeoutMs: 120000,
+    },
+    visionModel: {
+      enabled: false,
+      provider: 'qwencloud_vision',
+      baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+      apiKey: '',
+      model: 'qwen3-vl-flash',
+      thinkingMode: 'disabled',
+      maxTokens: 128,
+      keepAlive: '0s',
+      timeoutMs: 60000,
+    },
     searchProvider: 'ddg',
     searchBaseUrl: '',
     searchApiKey: '',
@@ -145,6 +167,31 @@ test('readConfig prefers explicit environment values and never exposes a key in 
   assert.equal(status.configured, true);
   assert.equal('apiKey' in status, false);
   assert.equal(status.baseHost, 'example.test');
+});
+
+test('readConfig enables the vision sidecar only through explicit environment configuration', () => {
+  const config = readConfig({
+    cwd: 'C:\\path-that-does-not-exist',
+    env: {
+      SOLAT_VISION_ENABLED: 'true',
+      SOLAT_VISION_MODEL_BASE_URL: 'http://127.0.0.1:11434/v1/',
+      SOLAT_VISION_MODEL_API_KEY: 'ollama',
+      SOLAT_VISION_MODEL_NAME: 'verified-vision-model',
+      SOLAT_VISION_MODEL_PROVIDER: 'ollama_vision',
+      SOLAT_VISION_MODEL_TIMEOUT_MS: '45000',
+    },
+  });
+  assert.deepEqual(config.visionModel, {
+    enabled: true,
+    provider: 'ollama_vision',
+    baseUrl: 'http://127.0.0.1:11434/v1',
+    apiKey: 'ollama',
+    model: 'verified-vision-model',
+    thinkingMode: 'disabled',
+    maxTokens: 128,
+    keepAlive: '0s',
+    timeoutMs: 45000,
+  });
 });
 
 test('commerce client exposes owner-scoped tools and fails writes closed without confirmation', async () => {
@@ -222,6 +269,30 @@ test('conversation core recovers a clear business read when the model skips comm
   assert.equal(calls.length, 1);
   assert.equal(calls[0].arguments.action, 'business_profile_get');
   assert.match(result.assistant, /โปรไฟล์ธุรกิจ/u);
+});
+
+test('configured commerce does not force ordinary chat into the tool path', async () => {
+  let plainCalls = 0;
+  let toolCalls = 0;
+  const provider = {
+    async complete() {
+      plainCalls += 1;
+      return { content: 'พร้อม', provider: 'local', model: 'qwen-local' };
+    },
+    async completeWithTools() {
+      toolCalls += 1;
+      throw new Error('ordinary chat must not expose commerce tools');
+    },
+  };
+  const commerceService = {
+    status: () => ({ enabled: true, configured: true }),
+    toolDefinition: () => ({ type: 'function', function: { name: 'commerce' } }),
+  };
+  const result = await new ConversationCore({ config: {}, provider, commerceService })
+    .send({ sessionId: 'ordinary-chat-commerce-configured', content: 'สวัสดี', requestId: 'ordinary-chat-1' });
+  assert.equal(result.assistant, 'พร้อม');
+  assert.equal(plainCalls, 1);
+  assert.equal(toolCalls, 0);
 });
 
 test('readConfig can load a packaged-app env file without requiring a writable app directory', () => {
@@ -750,6 +821,11 @@ test('intent router keeps ambiguous/general chat model-first and exposes non-aut
   assert.equal(namedLookup.top_intent, 'web_search');
   assert.equal(namedLookup.task.goals.includes('named_lookup'), true);
   assert.deepEqual(namedLookup.task.source_scope_priority, ['encyclopedic', 'auto']);
+  for (const content of ['ทักทายฉันเป็นภาษาไทยหนึ่งประโยค', 'ตอบฉันสั้นๆ', 'สรุปข้อความนี้']) {
+    const conversationalThai = analyzeIntent({ content });
+    assert.notEqual(conversationalThai.top_intent, 'web_search', content);
+    assert.equal(conversationalThai.allowed_tools.includes('web_search'), false, content);
+  }
   const lowercaseFollowUp = analyzeIntent({
     content: 'find a source about it',
     history: [{ role: 'user', content: 'park dayoung' }, { role: 'assistant', content: 'Which one do you mean?' }],

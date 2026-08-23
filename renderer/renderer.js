@@ -401,6 +401,11 @@
       const message = thread.messages.find(item => item.id === messageId); if (!message) return null;
       Object.assign(message, patch, { ts: now() }); thread.updatedAt = message.ts; this.emit('messages'); return message;
     },
+    removeMessage(id, messageId) {
+      const thread = this.threads.find(item => item.id === id); if (!thread) return null;
+      const index = thread.messages.findIndex(message => message.id === messageId); if (index < 0) return null;
+      const [message] = thread.messages.splice(index, 1); thread.updatedAt = now(); this.emit('messages'); return message;
+    },
     truncateAfter(id, messageId) {
       const thread = this.threads.find(item => item.id === id); if (!thread) return;
       const index = thread.messages.findIndex(message => message.id === messageId);
@@ -865,15 +870,20 @@
           assetIds.push(stored.assetId);
         }
         user.assetIds = assetIds; State.emit('messages');
-        result = await window.solat.send({ requestId: uid('request'), sessionId: threadSessionId, content: visible, musicContext: Music.song() || null, attachments: attachments.map(file => file.name), assetIds, agentMode: AgentUI.isEnabled(), agentCommand: AgentUI.commandFromText(visible) });
+        const requestId = uid('request');
+        AgentUI.beginRequest({ threadId: thread.id, sessionId: threadSessionId, requestId });
+        if (this.controller?.sequence === sequence) this.controller.solatRequestId = requestId;
+        result = await window.solat.send({ requestId, sessionId: threadSessionId, content: visible, musicContext: Music.song() || null, attachments: attachments.map(file => file.name), assetIds, agentMode: true, agentCommand: AgentUI.commandFromText(visible) });
         if (this.controller?.stopped || sequence !== this.requestId) return;
-        const assistant = State.add(thread.id, {
+        let assistant = State.add(thread.id, {
           role: 'assistant',
           content: text(result.assistant),
           responseMeta: {
             provider: result.provider,
             model: result.model,
             mode: result.mode || result.responseMeta?.mode || 'model',
+            routing: result.routing && typeof result.routing === 'object' ? result.routing : null,
+            timing: result.timing && typeof result.timing === 'object' ? result.timing : null,
             webSearchStatus: result.webSearchStatus || result.responseMeta?.webSearchStatus || 'not_requested',
             searchRecoveryUsed: Boolean(result.searchRecoveryUsed || result.responseMeta?.searchRecoveryUsed),
             sources: Array.isArray(result.sources) ? result.sources : [],
@@ -883,10 +893,14 @@
             agentActionPending: Array.isArray(result.agentActions) && result.agentActions.length > 0,
           },
         });
+        assistant = AgentUI.reconcileComputerTaskResponse({
+          threadId: thread.id, sessionId: threadSessionId, requestId, message: assistant,
+        }) || assistant;
         if (Array.isArray(result.agentActions) && result.agentActions.length) {
-          await AgentUI.receive(result.agentActions, { threadId: thread.id, sessionId: threadSessionId, messageId: assistant.id });
+          await AgentUI.receive(result.agentActions, { threadId: thread.id, sessionId: threadSessionId, messageId: assistant.id, requestId });
         }
         shouldRender = true;
+        setSolatVoiceActivity('answer', 2600);
         setStatus('ready', 'Ready', `${result.provider || 'provider'} / ${result.model || 'model'}`);
         return assistant;
       } catch (error) {
@@ -1022,7 +1036,7 @@
       this.syncMode();
     },
     setBusy(on) {
-      busy = on; const button = $('#sendBtn'); button.disabled = false; button.classList.toggle('stop', on); button.setAttribute('aria-label', on ? 'Stop responding' : 'Send message'); button.replaceChildren(icon(on ? 'stop' : 'send'), make('span', { class: 'send-label', text: on ? 'Stop' : 'Send' })); $('#composer').classList.toggle('live', on); this.syncMode(); if (!on) this.sync();
+      busy = on; const button = $('#sendBtn'); button.disabled = false; button.classList.toggle('stop', on); button.setAttribute('aria-label', on ? 'Stop responding' : 'Send message'); button.replaceChildren(icon(on ? 'stop' : 'send'), make('span', { class: 'send-label', text: on ? 'Stop' : 'Send' })); $('#composer').classList.toggle('live', on); this.syncMode(); if (on) setSolatVoiceActivity('thinking'); else if ($('#solatVoiceScene')?.dataset.voiceActivity === 'thinking') setSolatVoiceActivity('idle'); if (!on) this.sync();
     },
     attach(files) {
       const room = 6 - this.attachments.length; if (room <= 0) return Toast.show('Up to 6 files per message', { icon: 'alert' });
@@ -1070,10 +1084,10 @@
   };
 
   const AgentUI = {
-    enabled: false, pending: null, queue: [], plan: null, busy: false, workingMessageId: null, lastCommandSelectionAt: 0,
+    enabled: true, pending: null, queue: [], plan: null, busy: false, workingMessageId: null, lastCommandSelectionAt: 0,
     interruptedSessions: new Set(),
-    progressMessages: new Map(), activeTaskBySession: new Map(), latestRevisionByTask: new Map(), unsubscribeComputerEvents: null,
-    isEnabled() { return this.enabled; },
+    progressMessages: new Map(), activeTaskBySession: new Map(), latestRevisionByTask: new Map(), latestRequestBySession: new Map(), terminalTaskTombstones: new Map(), unsubscribeComputerEvents: null,
+    isEnabled() { return true; },
     canInterruptCurrent() {
       const thread = State.active;
       // The toggle controls starting new tasks, not control of a task that is
@@ -1086,12 +1100,7 @@
     commands: Object.freeze(['@create-file', '@computer-use']),
     available() { return Boolean(window.solat?.agentInspect && window.solat?.agentApprove && window.solat?.agentRun && window.solat?.agentCancel); },
     syncCommandMenu() {
-      const button = $('#agentCommandBtn'); if (!button) return;
-      button.setAttribute('aria-pressed', String(this.enabled));
-      button.setAttribute('aria-label', this.enabled ? 'Disable Agent mode' : 'Enable Agent mode');
-      button.title = this.enabled ? 'Agent mode is on' : 'Agent mode is off';
-      button.classList.toggle('active', this.enabled);
-      $('#composer')?.classList.toggle('agent-on', this.isEnabled());
+      $('#composer')?.classList.add('agent-on');
       const selected = this.commandFromText($('#input')?.value || '');
       $$('[data-agent-command]').forEach(item => {
         const active = item.dataset.agentCommand === selected;
@@ -1130,11 +1139,6 @@
       menu.removeAttribute('hidden'); menu.hidden = false; menu.style.visibility = 'visible'; this.syncCommandMenu();
     },
     closeMenu() { const menu = $('#agentCommandMenu'); if (menu && !menu.hidden) { menu.hidden = true; menu.style.left = ''; menu.style.top = ''; menu.style.visibility = ''; this.syncCommandMenu(); } },
-    toggle() {
-      if (!this.available()) return Toast.show('Agent controls are unavailable in this desktop build.', { icon: 'alert' });
-      this.enabled = !this.enabled; this.syncCommandMenu(); Composer.syncMode();
-      Toast.show(this.enabled ? 'Agent mode is on.' : 'Agent mode is off.', { icon: this.enabled ? 'cpu' : 'shield', timeout: 2400 });
-    },
     select(command) {
       if (!['create-file', 'computer-use'].includes(command)) return;
       const now = Date.now();
@@ -1158,17 +1162,92 @@
       Toast.show(`@${command} inserted.`, { icon: 'cpu', timeout: 1800 });
     },
     status(message) { const node = $('#agentStatus'); if (node) node.textContent = message; },
+    progressMessageKey(taskId, requestId = null) {
+      return `${String(taskId || '')}:${String(requestId || '')}`;
+    },
+    beginRequest({ sessionId, requestId }) {
+      if (!sessionId || !requestId) return;
+      this.latestRequestBySession.set(sessionId, requestId);
+      const belongsToSession = action => action?.sessionId === sessionId;
+      if (belongsToSession(this.pending)) {
+        this.finalizeRequestMessage('replaced');
+        this.pending = null; this.plan = null; this.busy = false; this.workingMessageId = null; Overlay.close();
+      }
+      this.queue = this.queue.filter(action => !belongsToSession(action));
+      this.render();
+    },
+    rememberTerminalTask(taskId, { revision = 0, requestId = null } = {}) {
+      if (!taskId) return;
+      const previous = this.terminalTaskTombstones.get(taskId);
+      this.terminalTaskTombstones.delete(taskId);
+      this.terminalTaskTombstones.set(taskId, {
+        revision: Math.max(Number(previous?.revision || 0), Number(revision || 0)),
+        requestId: requestId || previous?.requestId || null,
+      });
+      while (this.terminalTaskTombstones.size > 512) this.terminalTaskTombstones.delete(this.terminalTaskTombstones.keys().next().value);
+    },
+    reconcileComputerTaskResponse({ threadId, sessionId, requestId, message }) {
+      if (!threadId || !sessionId || !requestId || !message) return message;
+      const thread = State.threads.find(item => item.id === threadId);
+      const progress = thread?.messages?.find(item => item.responseMeta?.mode === 'agent_progress'
+        && item.responseMeta?.computerTaskSessionId === sessionId
+        && item.responseMeta?.computerTaskRequestId === requestId);
+      if (!progress || progress.id === message.id) return message;
+      const computerMeta = {
+        computerTaskId: progress.responseMeta?.computerTaskId,
+        computerTaskSessionId: sessionId,
+        computerTaskRequestId: requestId,
+        computerTaskRevision: progress.responseMeta?.computerTaskRevision,
+      };
+      const merged = State.updateMessage(threadId, progress.id, {
+        content: message.content,
+        error: message.error,
+        responseMeta: { ...message.responseMeta, ...computerMeta },
+      });
+      State.removeMessage(threadId, message.id);
+      return merged || message;
+    },
     receiveComputerTaskEvent(event) {
       if (!event || event.schema_version !== 'solat.computer-task-event.v1' || !event.task_id || !event.session_id) return;
+      const terminal = ['completed', 'failed', 'cancelled', 'unsupported', 'needs_clarification'].includes(event.type);
       const revision = Number(event.revision || 0);
+      if (this.terminalTaskTombstones.has(event.task_id)) return;
+      const latestRequest = this.latestRequestBySession.get(event.session_id);
+      const activeTask = this.activeTaskBySession.get(event.session_id);
+      if (latestRequest && event.request_id && event.request_id !== latestRequest) {
+        // A stale terminal event may retire only its own active task. It must
+        // never create/update chat content belonging to the newer request.
+        if (terminal && activeTask === event.task_id) {
+          this.activeTaskBySession.delete(event.session_id);
+          this.latestRevisionByTask.set(event.task_id, Math.max(this.latestRevisionByTask.get(event.task_id) || 0, revision));
+          this.rememberTerminalTask(event.task_id, { revision, requestId: event.request_id });
+        }
+        return;
+      }
+      if (activeTask && activeTask !== event.task_id && event.type !== 'started') return;
+      // Only a started event may establish a task. This prevents an evicted,
+      // delayed progress event from resurrecting a terminal task.
+      if (!activeTask && !terminal && event.type !== 'started') return;
       const latestRevision = this.latestRevisionByTask.get(event.task_id) || 0;
       if (revision < latestRevision) return;
       this.latestRevisionByTask.set(event.task_id, revision);
       const thread = State.threads.find(item => sessionFor(item.id) === event.session_id);
       if (!thread) return;
-      const terminal = ['completed', 'failed', 'cancelled', 'unsupported', 'needs_clarification'].includes(event.type);
-      if (terminal) this.activeTaskBySession.delete(event.session_id);
-      else this.activeTaskBySession.set(event.session_id, event.task_id);
+      if (event.type === 'cancelled' && Chat.controller?.solatRequestId === event.request_id) {
+        // The durable computer task is already cancelled, so do not keep the
+        // composer and thinking bubble blocked on a late model response. The
+        // matching in-flight send is retired and its eventual result ignored.
+        Chat.controller.stopped = true;
+        Chat.requestId += 1;
+        Chat.controller = null;
+        Composer.setBusy(false);
+        setStatus('ready', 'Ready');
+      }
+      if (terminal) {
+        if (this.activeTaskBySession.get(event.session_id) === event.task_id) this.activeTaskBySession.delete(event.session_id);
+      } else {
+        this.activeTaskBySession.set(event.session_id, event.task_id);
+      }
       const label = event.summary || ({
         started: 'SOLAT is planning the computer task.', planning: 'SOLAT is choosing the next step.',
         step_selected: 'SOLAT selected the next computer step.', observation_ready: 'SOLAT received a verified screen observation.',
@@ -1177,21 +1256,25 @@
         failed: 'Computer task failed.', cancelled: 'Computer task cancelled.',
       }[event.type] || 'Computer task updated.');
       const content = event.tool ? `${label}\n\nStep: \`${event.tool}\`` : label;
-      const existingId = this.progressMessages.get(event.task_id);
+      const progressKey = this.progressMessageKey(event.task_id, event.request_id);
+      const existingId = this.progressMessages.get(progressKey);
       const responseMeta = {
         provider: 'SOLAT Agent', model: 'continuous computer task', mode: 'agent_progress',
         agentMode: true, agentStatus: event.status, computerTaskId: event.task_id,
-        computerTaskSessionId: event.session_id, computerTaskRevision: event.revision,
+        computerTaskSessionId: event.session_id, computerTaskRequestId: event.request_id, computerTaskRevision: event.revision,
         webSearchStatus: 'not_requested', sources: [], searchEvidence: [],
       };
       if (existingId && State.updateMessage(thread.id, existingId, { content, responseMeta })) {
         // Keep one live progress item per task instead of flooding the chat.
       } else {
         const message = State.add(thread.id, { role: 'assistant', content, responseMeta });
-        if (message?.id) this.progressMessages.set(event.task_id, message.id);
+        if (message?.id) this.progressMessages.set(progressKey, message.id);
       }
       this.status(label);
       if (State.activeId === thread.id) Chat.render();
+      if (terminal) {
+        this.rememberTerminalTask(event.task_id, { revision, requestId: event.request_id });
+      }
     },
     finalizeRequestMessage(status) {
       const pending = this.pending;
@@ -1300,9 +1383,38 @@
       });
       this.workingMessageId = message?.id || null;
     },
-    addChatResult(content, error = false, artifact = null, statusOverride = null) {
+    addChatResult(content, error = false, artifact = null, statusOverride = null, taskStatus = null) {
       const threadId = this.pending?.threadId; if (!threadId) return;
-      const responseMeta = { provider: 'SOLAT Agent', model: 'verified tool result', mode: error ? 'agent_failure' : 'agent_verified', agentStatus: statusOverride || (error ? 'failed' : 'verified'), webSearchStatus: 'not_requested', sources: [], searchEvidence: [], agentMode: true, ...(artifact ? { agentFile: artifact } : {}) };
+      const computerTaskId = this.pending?.computerTaskId;
+      const responseMeta = {
+        provider: 'SOLAT Agent', model: 'verified tool result', mode: error ? 'agent_failure' : 'agent_verified',
+        agentStatus: statusOverride || (error ? 'failed' : 'verified'), webSearchStatus: 'not_requested',
+        sources: [], searchEvidence: [], agentMode: true,
+        ...(computerTaskId ? {
+          computerTaskId,
+          computerTaskSessionId: this.pending?.sessionId,
+          computerTaskRequestId: this.pending?.requestId,
+          computerTaskRevision: this.latestRevisionByTask.get(computerTaskId) || 0,
+        } : {}),
+        ...(artifact ? { agentFile: artifact } : {}),
+      };
+      const progressKey = computerTaskId
+        ? this.progressMessageKey(computerTaskId, this.pending?.requestId)
+        : null;
+      const progressMessageId = progressKey ? this.progressMessages.get(progressKey) : null;
+      const terminalTask = ['COMPLETED', 'FAILED', 'CANCELLED', 'UNSUPPORTED', 'NEEDS_CLARIFICATION'].includes(String(taskStatus || '').toUpperCase());
+      if (computerTaskId && this.pending?.messageId && State.updateMessage(threadId, this.pending.messageId, { content, error, responseMeta })) {
+        if (progressMessageId && progressMessageId !== this.pending.messageId) State.removeMessage(threadId, progressMessageId);
+        this.progressMessages.delete(progressKey);
+        if (terminalTask) {
+          if (this.activeTaskBySession.get(this.pending.sessionId) === computerTaskId) this.activeTaskBySession.delete(this.pending.sessionId);
+          this.rememberTerminalTask(computerTaskId, {
+            revision: this.latestRevisionByTask.get(computerTaskId) || 0,
+            requestId: this.pending.requestId,
+          });
+        }
+        return;
+      }
       if (this.workingMessageId && State.updateMessage(threadId, this.workingMessageId, { content, error, responseMeta })) return;
       State.add(threadId, { role: 'assistant', content, error, responseMeta });
     },
@@ -1362,6 +1474,7 @@
       } catch (error) { meta.textContent = `File preview failed: ${errorText(error)}`; content.textContent = ''; }
     },
     async receive(actions, context) {
+      if (context?.requestId && this.latestRequestBySession.get(context.sessionId) !== context.requestId) return;
       const accepted = actions.filter(action => action?.status === 'confirmation_required' && action.idempotency_key && action.approval_token);
       // A ComputerTaskLoop start is a newer owner instruction. The backend has
       // already cancelled its old durable plan; remove its stale dialog here
@@ -1401,6 +1514,43 @@
       this.render(); Overlay.open($('#agentDialog'), { focus: $('#agentApproveBtn') });
     },
     close() { Overlay.close(); },
+    async awaitComputerTaskContinuation(continuation, pending) {
+      const settled = continuation.then(
+        value => ({ kind: 'settled', value }),
+        error => ({ kind: 'failed', error }),
+      );
+      if (!window.solat?.computerTaskInspect) {
+        const outcome = await settled;
+        if (outcome.kind === 'failed') throw outcome.error;
+        return outcome.value;
+      }
+      const terminal = new Set(['COMPLETED', 'FAILED', 'CANCELLED', 'UNSUPPORTED', 'NEEDS_CLARIFICATION']);
+      const observedTerminal = (async () => {
+        for (let attempt = 0; attempt < 80; attempt += 1) {
+          await new Promise(resolve => setTimeout(resolve, 250));
+          try {
+            const nextTask = await window.solat.computerTaskInspect({
+              sessionId: pending.sessionId,
+              taskId: pending.computerTaskId,
+            });
+            if (terminal.has(String(nextTask?.status || '').toUpperCase())) {
+              const plan = await window.solat.agentInspect({
+                sessionId: pending.sessionId,
+                idempotencyKey: pending.idempotency_key,
+              });
+              return { kind: 'observed_terminal', value: { plan, next_task: nextTask } };
+            }
+          } catch {
+            // The original atomic IPC remains authoritative while a read-only
+            // status sample is briefly unavailable during task creation.
+          }
+        }
+        return settled;
+      })();
+      const outcome = await Promise.race([settled, observedTerminal]);
+      if (outcome.kind === 'failed') throw outcome.error;
+      return outcome.value;
+    },
     async approve() {
       if (!this.pending || this.busy) return;
       const pending = this.pending;
@@ -1418,7 +1568,7 @@
           });
           this.status('Task authorized · continuing with verified in-scope steps');
           Overlay.close();
-          const approved = await continuation;
+          const approved = await this.awaitComputerTaskContinuation(continuation, pending);
           result = { plan: approved.plan };
           nextTask = approved.next_task;
         } else {
@@ -1445,6 +1595,7 @@
               computerTaskId: nextTask.task_id,
               threadId: pending.threadId,
               sessionId: pending.sessionId,
+              requestId: pending.requestId,
               messageId: pending.messageId,
             });
             message = `${message}\n\n${nextTask.summary || 'SOLAT checked the result and prepared the next step.'}`;
@@ -1454,7 +1605,7 @@
         }
         const taskStatus = pending.computerTaskId ? String(nextTask?.status || 'RUNNING').toUpperCase() : (this.plan?.status === 'SUCCEEDED' ? 'COMPLETED' : 'FAILED');
         const taskFailed = taskStatus === 'FAILED' || this.plan?.status !== 'SUCCEEDED';
-        this.addChatResult(message, taskFailed, this.artifactFromPlan(this.plan));
+        this.addChatResult(message, taskFailed, this.artifactFromPlan(this.plan), null, taskStatus);
         const statusLabel = {
           COMPLETED: 'Completed · verified', FAILED: 'Computer task failed', CANCELLED: 'Computer task cancelled',
           NEEDS_CLARIFICATION: 'Computer task needs clarification', AWAITING_APPROVAL: 'Additional approval required',
@@ -1465,7 +1616,7 @@
         else if (taskStatus === 'AWAITING_APPROVAL') Toast.show('Additional approval is required because the task scope changed.', { icon: 'alert' });
       } catch (error) {
         if (this.pending !== pending) return;
-        const message = `Agent action failed: ${errorText(error)}`; this.status(message); this.addChatResult(message, true);
+        const message = `Agent action failed: ${errorText(error)}`; this.status(message); this.addChatResult(message, true, null, 'failed', 'FAILED');
       } finally {
         if (this.pending !== pending) { this.busy = false; this.workingMessageId = null; this.render(); return; }
         const hasNextPending = Boolean(nextTask?.pending_action?.action);
@@ -1481,7 +1632,7 @@
         if (this.pending.computerTaskId && window.solat?.computerTaskCancel) {
           await window.solat.computerTaskCancel({ sessionId: this.pending.sessionId, taskId: this.pending.computerTaskId });
         }
-        this.addChatResult('Agent action cancelled. No pending file or computer change was completed.', false, null, 'cancelled');
+        this.addChatResult('Agent action cancelled. No pending file or computer change was completed.', false, null, 'cancelled', 'CANCELLED');
         Toast.show('Agent action cancelled.', { icon: 'check' });
       } catch (error) { this.status(`Cancellation failed: ${errorText(error)}`); return; }
       finally {
@@ -1538,7 +1689,6 @@
     init() {
       const commandMenu = $('#agentCommandMenu');
       if (commandMenu && commandMenu.parentElement !== document.body) document.body.append(commandMenu);
-      $('#agentCommandBtn')?.addEventListener('click', () => this.toggle());
       const chooseCommand = event => {
         const command = event.target.closest('[data-agent-command]')?.dataset.agentCommand;
         if (!command) return;
@@ -1977,9 +2127,159 @@
     }, 860));
   }
 
+  let solatVoiceActivityTimer = null;
+  function setSolatVoiceActivity(next, timeout = 0) {
+    const scene = $('#solatVoiceScene');
+    if (!scene) return;
+    if (solatVoiceActivityTimer !== null) window.clearTimeout(solatVoiceActivityTimer);
+    solatVoiceActivityTimer = null;
+    const activity = ['thinking', 'answer'].includes(next) ? next : 'idle';
+    scene.dataset.voiceActivity = activity;
+    scene.classList.toggle('voice-speaking', activity === 'answer');
+    if (timeout > 0) {
+      solatVoiceActivityTimer = window.setTimeout(() => setSolatVoiceActivity('idle'), timeout);
+    }
+  }
+
+  function enterSolatVoiceMode() {
+    const scene = $('#solatVoiceScene');
+    const video = $('#solatVoiceVideo');
+    const loopVideo = $('#solatVoiceLoop');
+    if (!scene || !video || !loopVideo) return;
+    if (video.dataset.playing === 'true') return;
+    video.dataset.playing = 'true';
+    setSolatVoiceActivity(busy ? 'thinking' : 'idle');
+    document.documentElement.classList.add('solat-voice-active');
+    scene.classList.remove('video-ready', 'loop-ready');
+    scene.classList.add('active');
+    scene.setAttribute('aria-hidden', 'false');
+    let watchdog = null;
+    const clearPlaybackGuards = () => {
+      if (watchdog !== null) window.clearTimeout(watchdog);
+      if (scene._voiceWatchdog) window.clearTimeout(scene._voiceWatchdog);
+      watchdog = null;
+      scene._voiceWatchdog = null;
+    };
+    const holdIntroFinalFrame = () => {
+      if (video.dataset.playing !== 'true') return;
+      video.dataset.playing = 'false';
+      clearPlaybackGuards();
+      loopVideo.pause();
+      video.pause();
+      video.onplaying = null;
+      if (Number.isFinite(video.duration) && video.currentTime < video.duration - 0.1) {
+        video.currentTime = Math.max(0, video.duration - 0.05);
+      }
+      scene.classList.remove('loop-ready');
+      scene.classList.add('active', 'video-ready');
+      scene.setAttribute('aria-hidden', 'false');
+    };
+    const startFinalLoop = () => {
+      if (video.dataset.playing !== 'true') return;
+      clearPlaybackGuards();
+      video.pause();
+      video.onplaying = null;
+      loopVideo.pause();
+      loopVideo.currentTime = 0;
+      loopVideo.loop = true;
+      loopVideo.onplaying = () => {
+        video.dataset.playing = 'false';
+        scene.classList.add('active', 'video-ready', 'loop-ready');
+        scene.setAttribute('aria-hidden', 'false');
+        loopVideo.onplaying = null;
+      };
+      loopVideo.onerror = holdIntroFinalFrame;
+      loopVideo.play().catch(holdIntroFinalFrame);
+    };
+    const failAndRestore = () => {
+      if (video.dataset.playing !== 'true') return;
+      video.dataset.playing = 'false';
+      clearPlaybackGuards();
+      loopVideo.pause();
+      video.pause();
+      video.onplaying = null;
+      scene.classList.remove('video-ready', 'loop-ready');
+      scene.classList.remove('active');
+      scene.setAttribute('aria-hidden', 'true');
+      document.documentElement.classList.remove('solat-voice-active');
+    };
+    watchdog = window.setTimeout(startFinalLoop, 45000);
+    scene._voiceWatchdog = watchdog;
+    video.onended = startFinalLoop;
+    video.onerror = failAndRestore;
+    video.onplaying = () => scene.classList.add('video-ready');
+    loopVideo.pause();
+    loopVideo.currentTime = 0;
+    video.pause();
+    video.currentTime = 0;
+    video.play().catch(() => {
+      failAndRestore();
+      Toast.show('The SOLAT transition could not start.', { icon: 'alert' });
+    });
+  }
+
+  function exitSolatVoiceMode() {
+    const scene = $('#solatVoiceScene');
+    const video = $('#solatVoiceVideo');
+    const loopVideo = $('#solatVoiceLoop');
+    if (!scene || !video || !loopVideo) return;
+    if (scene._voiceWatchdog) window.clearTimeout(scene._voiceWatchdog);
+    if (solatVoiceActivityTimer !== null) window.clearTimeout(solatVoiceActivityTimer);
+    solatVoiceActivityTimer = null;
+    scene._voiceWatchdog = null;
+    video.dataset.playing = 'false';
+    video.pause();
+    loopVideo.pause();
+    video.onplaying = null;
+    video.onended = null;
+    video.onerror = null;
+    loopVideo.onplaying = null;
+    loopVideo.onerror = null;
+    video.currentTime = 0;
+    loopVideo.currentTime = 0;
+    scene.classList.remove('active', 'video-ready', 'loop-ready', 'voice-speaking');
+    scene.dataset.voiceActivity = 'idle';
+    scene.setAttribute('aria-hidden', 'true');
+    document.documentElement.classList.remove('solat-voice-active');
+    setUiMode('classic', false);
+  }
+
   async function refreshStatus() {
     if (!window.solat?.status) return setStatus('error', 'Unavailable', 'Secure desktop IPC is unavailable.');
-    try { const state = await window.solat.status(); const detail = `${state.provider || 'provider'} / ${state.model || 'model unavailable'}`; setStatus(state.configured ? 'ready' : 'error', state.configured ? 'Ready' : 'Not configured', detail); $('#modelName').textContent = state.model || 'SOLAT Core'; } catch { setStatus('error', 'Unavailable', 'Provider status could not be read.'); }
+    try {
+      const state = await window.solat.status();
+      const currentMode = state.modelMode || 'auto';
+      const active = (state.modelModes || []).find(item => item.id === currentMode);
+      const detail = currentMode === 'auto' ? 'Auto routes simple work locally and complex work to DeepSeek.' : `${state.provider || 'provider'} / ${state.model || 'model unavailable'}`;
+      // Configuration is not a live provider probe. Do not claim runtime
+      // readiness until an actual request succeeds.
+      setStatus(state.configured ? 'ready' : 'error', state.configured ? 'Configured' : 'Not configured', detail);
+      $('#modelName').textContent = active?.label || state.model || 'Auto';
+      return state;
+    } catch {
+      setStatus('error', 'Unavailable', 'Provider status could not be read.');
+      return null;
+    }
+  }
+
+  async function chooseModelMode() {
+    const state = await refreshStatus();
+    if (!state || !window.solat?.setModelMode) return;
+    const modes = Array.isArray(state.modelModes) ? state.modelModes : [];
+    Menu.open($('#modelBtn'), modes.map(mode => ({
+      label: mode.label,
+      icon: mode.id === 'auto' ? 'spark' : 'cpu',
+      checked: mode.id === state.modelMode,
+      run: async () => {
+        try {
+          await window.solat.setModelMode(mode.id);
+          await refreshStatus();
+          Toast.show(`${mode.label} selected`, { icon: 'check' });
+        } catch (error) {
+          Toast.show(error?.message || 'Model mode could not be changed.', { icon: 'shield' });
+        }
+      },
+    })));
   }
 
   function wire() {
@@ -1993,13 +2293,15 @@
     }, true);
     $('#newChatBtn')?.addEventListener('click', newConversation); $('#brandHomeBtn')?.addEventListener('click', () => newConversation({ animate: true })); $('#navToggle')?.addEventListener('click', () => $('#sidebar').classList.contains('open') ? closeSidebar() : openSidebar()); $('#scrim')?.addEventListener('click', () => { Menu.close(); Overlay.close(); closeSidebar(); });
     $('#omniBtn')?.addEventListener('click', () => Palette.open());
-    $('#themeBtn')?.addEventListener('click', () => {
-      const current = document.documentElement.dataset.uiMode === 'alternate' ? 'alternate' : 'classic';
-      setUiMode(current === 'alternate' ? 'classic' : 'alternate');
+    $('#themeBtn')?.addEventListener('click', enterSolatVoiceMode);
+    $('#solatVoiceExitButton')?.addEventListener('click', exitSolatVoiceMode);
+    document.addEventListener('solat:voice-activity', event => {
+      const detail = event.detail && typeof event.detail === 'object' ? event.detail : {};
+      setSolatVoiceActivity(detail.state, Number.isFinite(detail.timeout) ? detail.timeout : 0);
     });
     $('#chatTitle')?.addEventListener('click', renameActive);
     $('#profileBtn')?.addEventListener('click', () => Menu.open($('#profileBtn'), [{ label: 'Appearance and settings', icon: 'settings', run: () => openSettings('general') }, { label: 'Provider status', icon: 'shield', run: () => openSettings('keys') }, { label: 'Keyboard shortcuts', icon: 'keyboard', run: () => Overlay.open($('#shortcuts')) }, '-', { label: 'Export this conversation', icon: 'download', run: () => State.active && exportThread(State.active) }]));
-    $('#modelBtn')?.addEventListener('click', () => Menu.open($('#modelBtn'), [{ label: 'SOLAT Core', icon: 'cpu', checked: true, run: () => Toast.show('SOLAT Core is the active V2 model boundary.', { icon: 'cpu' }) }]));
+    $('#modelBtn')?.addEventListener('click', chooseModelMode);
     $('#chatMenuBtn')?.addEventListener('click', () => State.active && Menu.open($('#chatMenuBtn'), [{ label: 'Rename', icon: 'pencil', run: renameActive }, { label: 'Export as Markdown', icon: 'download', run: () => exportThread(State.active) }, { label: 'Print', icon: 'file', run: () => window.print() }, '-', { label: 'Delete conversation', icon: 'trash', danger: true, run: () => deleteThread(State.active) }]));
     const search = $('#search'); search?.addEventListener('input', () => { Threads.query = search.value; $('#searchField')?.classList.toggle('has-value', Boolean(search.value)); Threads.render(); }); search?.addEventListener('keydown', event => { if (event.key === 'Escape') { search.value = ''; Threads.query = ''; Threads.render(); } if (event.key === 'ArrowDown') { event.preventDefault(); $('.thread', $('#threadGroups'))?.focus(); } }); $('#searchClear')?.addEventListener('click', () => { search.value = ''; Threads.query = ''; Threads.render(); search.focus(); });
     for (const id of ['projToggle', 'filesToggle']) document.getElementById(id)?.addEventListener('click', event => { const button = event.currentTarget; const body = document.getElementById(button.getAttribute('aria-controls')); const open = button.getAttribute('aria-expanded') !== 'true'; button.setAttribute('aria-expanded', String(open)); if (body) body.hidden = !open; });
@@ -2029,6 +2331,6 @@
   }
 
   Settings.load(); Projects.load(); State.load(); SettingsUI.init(); Palette.init(); Composer.init(); AgentUI.init(); Music.init(); wire(); wireSolatCursor(); Threads.render(); Projects.render(); LibraryFiles.render(); Chat.render(); updateStorageInfo(); refreshStatus(); Music.restoreHistory(); State.restoreDurable();
-  setUiMode(localStorage.getItem('solat.ui.mode') || 'classic', false);
+  setUiMode('classic', false);
   $('#boot')?.classList.add('done'); $('#input')?.focus();
 })();
