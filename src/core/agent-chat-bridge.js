@@ -31,14 +31,15 @@ class AgentChatBridge {
 
   owns(name) { return this.toolNames.has(String(name || '')); }
 
-  issueTaskAuthorization({ sessionId, taskId, instructionRevision, scope = {}, ttlMs = 10 * 60_000, maxWrites = 24 }) {
+  issueTaskAuthorization({ ownerId = null, sessionId, taskId, instructionRevision, scope = {}, ttlMs = 10 * 60_000, maxWrites = 24 }) {
+    const owner = String(ownerId ?? sessionId ?? '').trim();
     const session = String(sessionId || '').trim();
     const task = String(taskId || '').trim();
     const revision = Number(instructionRevision);
-    if (!session || !task || !Number.isSafeInteger(revision) || revision < 1) throw new AgentContractError('invalid_request', 'A task-scoped authorization requires a session, task, and instruction revision.');
+    if (!owner || !session || !task || !Number.isSafeInteger(revision) || revision < 1) throw new AgentContractError('invalid_request', 'A task-scoped authorization requires an owner, session, task, and instruction revision.');
     const id = `task-grant-${crypto.randomUUID()}`;
     const record = {
-      id, session_id: session, task_id: task, instruction_revision: revision,
+      id, owner_id: owner, session_id: session, task_id: task, instruction_revision: revision,
       active: true, expires_at: Date.now() + Math.min(Math.max(Number(ttlMs) || 0, 10_000), 10 * 60_000),
       writes_remaining: Math.min(Math.max(Number(maxWrites) || 0, 1), 32), inflight: new Set(),
       allowed_tools: new Set(Array.isArray(scope.allowed_tools) ? scope.allowed_tools.map(String) : []),
@@ -58,8 +59,8 @@ class AgentChatBridge {
     return Object.freeze({ id, task_id: task, instruction_revision: revision });
   }
 
-  extendTaskAuthorization({ authorization, sessionId, hwnds = [], targets = [] } = {}) {
-    const grant = this.#authorizationStillActive(authorization, sessionId);
+  extendTaskAuthorization({ authorization, ownerId = null, sessionId, hwnds = [], targets = [] } = {}) {
+    const grant = this.#authorizationStillActive(authorization, ownerId, sessionId);
     for (const hwnd of hwnds) if (Number.isSafeInteger(Number(hwnd)) && Number(hwnd) > 0) grant.allowed_hwnds.add(Number(hwnd));
     for (const target of targets) {
       const attestation = createTargetAttestation({ revision: grant.instruction_revision, target });
@@ -70,8 +71,8 @@ class AgentChatBridge {
     return true;
   }
 
-  refreshTaskAuthorizationTargets({ authorization, sessionId, targets = [] } = {}) {
-    const grant = this.#authorizationStillActive(authorization, sessionId);
+  refreshTaskAuthorizationTargets({ authorization, ownerId = null, sessionId, targets = [] } = {}) {
+    const grant = this.#authorizationStillActive(authorization, ownerId, sessionId);
     // Discovery is evidence, not open-ended authority: a listed window joins
     // the existing one-approval grant only when its process already belongs
     // to a verified approved-action target, and sensitive windows never join.
@@ -90,8 +91,8 @@ class AgentChatBridge {
     return true;
   }
 
-  rotateTaskAuthorization({ authorization, sessionId, instructionRevision } = {}) {
-    const grant = this.#authorizationStillActive(authorization, sessionId);
+  rotateTaskAuthorization({ authorization, ownerId = null, sessionId, instructionRevision } = {}) {
+    const grant = this.#authorizationStillActive(authorization, ownerId, sessionId);
     const revision = Number(instructionRevision);
     if (!Number.isSafeInteger(revision) || revision <= grant.instruction_revision) throw new AgentContractError('invalid_request', 'The task authorization revision must move forward.');
     if (grant.writes_remaining < 1 || grant.expires_at <= Date.now()) throw new AgentContractError('task_authorization_exhausted', 'An exhausted or expired task authorization cannot be renewed by steering.');
@@ -102,22 +103,24 @@ class AgentChatBridge {
     return Object.freeze({ id: grant.id, task_id: grant.task_id, instruction_revision: revision });
   }
 
-  async revokeTaskAuthorization({ authorization, sessionId }) {
+  async revokeTaskAuthorization({ authorization, ownerId = null, sessionId }) {
     const id = String(authorization?.id || '');
     const grant = this.taskAuthorizations.get(id);
-    if (!grant || grant.session_id !== String(sessionId || '').trim()) return false;
+    const owner = String(ownerId ?? sessionId ?? '').trim();
+    if (!grant || grant.owner_id !== owner || grant.session_id !== String(sessionId || '').trim()) return false;
     grant.active = false;
     this.taskAuthorizations.delete(id);
-    const cancellations = await Promise.allSettled([...grant.inflight].map(idempotencyKey => this.agentService.cancel({ ownerId: grant.session_id, sessionId: grant.session_id, idempotencyKey })));
+    const cancellations = await Promise.allSettled([...grant.inflight].map(idempotencyKey => this.agentService.cancel({ ownerId: grant.owner_id, sessionId: grant.session_id, idempotencyKey })));
     if (cancellations.some(result => result.status === 'rejected')) {
       throw new AgentContractError('cancellation_unverified', 'One or more in-flight computer actions could not be confirmed cancelled.');
     }
     return true;
   }
 
-  #authorization(authorization, sessionId) {
+  #authorization(authorization, ownerId, sessionId) {
     const grant = this.taskAuthorizations.get(String(authorization?.id || ''));
-    if (!grant || !grant.active || grant.session_id !== String(sessionId || '').trim()
+    const owner = String(ownerId ?? sessionId ?? '').trim();
+    if (!grant || !grant.active || grant.owner_id !== owner || grant.session_id !== String(sessionId || '').trim()
       || grant.task_id !== String(authorization?.task_id || '')
       || grant.instruction_revision !== Number(authorization?.instruction_revision)
       || grant.expires_at <= Date.now()) {
@@ -127,9 +130,10 @@ class AgentChatBridge {
     return grant;
   }
 
-  #authorizationStillActive(authorization, sessionId) {
+  #authorizationStillActive(authorization, ownerId, sessionId) {
     const grant = this.taskAuthorizations.get(String(authorization?.id || ''));
-    if (!grant || !grant.active || grant.session_id !== String(sessionId || '').trim()
+    const owner = String(ownerId ?? sessionId ?? '').trim();
+    if (!grant || !grant.active || grant.owner_id !== owner || grant.session_id !== String(sessionId || '').trim()
       || grant.task_id !== String(authorization?.task_id || '')
       || grant.instruction_revision !== Number(authorization?.instruction_revision)
       || grant.expires_at <= Date.now()) {
@@ -160,14 +164,19 @@ class AgentChatBridge {
 
   // A newer computer task can supersede an unapproved action only through
   // this owner/session-scoped service boundary.
-  async cancelAction({ sessionId, idempotencyKey }) {
-    if (!String(sessionId || '').trim() || !String(idempotencyKey || '').trim()) {
-      throw new AgentContractError('invalid_request', 'A session and pending action are required.');
+  async cancelAction({ ownerId = null, sessionId, idempotencyKey }) {
+    const owner = String(ownerId ?? sessionId ?? '').trim();
+    const session = String(sessionId || '').trim();
+    if (!owner || !session || !String(idempotencyKey || '').trim()) {
+      throw new AgentContractError('invalid_request', 'An owner, session, and pending action are required.');
     }
-    return this.agentService.cancel({ ownerId: sessionId, sessionId, idempotencyKey });
+    return this.agentService.cancel({ ownerId: owner, sessionId: session, idempotencyKey });
   }
 
-  async execute({ sessionId, requestId, call, taskAuthorization = null }) {
+  async execute({ ownerId = null, sessionId, requestId, call, taskAuthorization = null }) {
+    const owner = String(ownerId ?? sessionId ?? '').trim();
+    const session = String(sessionId || '').trim();
+    if (!owner || !session) throw new AgentContractError('invalid_request', 'An owner and session are required.');
     if (!this.owns(call?.name)) throw new AgentContractError('unauthorized_tool', 'Agent tool is not registered.');
     const idempotencyKey = `chat-${toolCallKey({ requestId, call })}`;
     // Browser media startup includes navigation, UIA discovery, one invoke,
@@ -175,33 +184,33 @@ class AgentChatBridge {
     // workflow enough time; ordinary agent actions retain the tighter cap.
     const timeoutMs = call.name === 'computer_play_youtube_music' ? 90_000 : 30_000;
     const created = await this.agentService.createPlan({
-      ownerId: sessionId,
-      sessionId,
+      ownerId: owner,
+      sessionId: session,
       idempotencyKey,
       approvalRequired: false,
       steps: [{ step_id: 'chat-tool-1', tool: call.name, arguments: call.arguments || {}, side_effect_level: 'read' }],
       limits: { maxSteps: 1, maxIterations: 2, timeoutMs, retryLimit: 0 },
     });
-    let run = await this.agentService.run({ ownerId: sessionId, sessionId, idempotencyKey });
+    let run = await this.agentService.run({ ownerId: owner, sessionId: session, idempotencyKey });
     if (run.plan.status === 'PAUSED_APPROVAL') {
       let grant = null;
       if (taskAuthorization) {
-        try { grant = this.#authorization(taskAuthorization, sessionId); }
+        try { grant = this.#authorization(taskAuthorization, owner, session); }
         catch { grant = null; }
       }
       if (grant && this.#scopeAllows(grant, call) && created.approval_token) {
         grant.writes_remaining -= 1;
         grant.inflight.add(idempotencyKey);
         try {
-          this.#authorizationStillActive(taskAuthorization, sessionId);
+          this.#authorizationStillActive(taskAuthorization, owner, session);
           await this.#assertAuthorizedTarget(grant, call);
-          this.#authorizationStillActive(taskAuthorization, sessionId);
-          await this.agentService.approve({ ownerId: sessionId, sessionId, idempotencyKey, approvalToken: created.approval_token });
-          this.#authorizationStillActive(taskAuthorization, sessionId);
-          run = await this.agentService.run({ ownerId: sessionId, sessionId, idempotencyKey });
-          this.#authorizationStillActive(taskAuthorization, sessionId);
+          this.#authorizationStillActive(taskAuthorization, owner, session);
+          await this.agentService.approve({ ownerId: owner, sessionId: session, idempotencyKey, approvalToken: created.approval_token });
+          this.#authorizationStillActive(taskAuthorization, owner, session);
+          run = await this.agentService.run({ ownerId: owner, sessionId: session, idempotencyKey });
+          this.#authorizationStillActive(taskAuthorization, owner, session);
         } catch (error) {
-          await this.agentService.cancel({ ownerId: sessionId, sessionId, idempotencyKey }).catch(() => {});
+          await this.agentService.cancel({ ownerId: owner, sessionId: session, idempotencyKey }).catch(() => {});
           throw error;
         } finally {
           grant.inflight.delete(idempotencyKey);

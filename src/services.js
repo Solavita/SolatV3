@@ -21,20 +21,30 @@ const { AdaptiveScreenSampler } = require('./core/adaptive-screen-sampler');
 const { createProvider } = require('./core/provider');
 const { GroundingProvider } = require('./core/grounding-provider');
 const { ModelRouter } = require('./core/model-router');
+const { OpenAIAgentsRuntime } = require('./core/openai-agents-runtime');
+const { createVoiceService } = require('./core/voice-service');
+const { InteractionMemory } = require('./core/spatial-memory');
+const { SpatialAssetRuntime } = require('./core/spatial-asset');
+const { MultimodalFusion } = require('./core/multimodal-fusion');
+const { MultimodalPersistence } = require('./core/multimodal-persistence');
+const { MultimodalCoordinator } = require('./core/multimodal-coordinator');
+const { HandInputService } = require('./core/hand-input-service');
+const { createBrowserWorkspaceTools } = require('./core/browser-workspace-tools');
 
 // Composition root for the main process. Everything is wired here once; the
 // Electron shell in main.js only supplies paths and lifecycle.
-function createSolatServices({ config, userDataDir, tempDir }) {
+function createSolatServices({ config, userDataDir, tempDir, browserWorkspacePort = null }) {
   const visionProvider = config.visionModel?.enabled === true
     && config.visionModel.baseUrl && config.visionModel.model
     ? new GroundingProvider({ transport: createProvider(config.visionModel) })
     : null;
   const provider = new ModelRouter({
-    localProvider: createProvider(config.localModel),
-    deepseekProvider: createProvider(config),
+    flashProvider: createProvider(config.flashModel),
+    plusProvider: createProvider(config.plusModel),
     visionProvider,
     mode: config.modelMode,
   });
+  const agentsRuntime = new OpenAIAgentsRuntime({ provider });
   const searchService = new WebSearchService({
     provider: config.searchProvider,
     baseUrl: config.searchBaseUrl,
@@ -54,12 +64,14 @@ function createSolatServices({ config, userDataDir, tempDir }) {
   const filesystemTools = createAgentTools({ fileContextProvider, fileWorkspace: filesystemWorkspace });
   const computerAdapter = new WinAppComputerUseAdapter();
   const computerTools = createComputerAgentTools({ adapter: computerAdapter });
+  const browserTools = browserWorkspacePort ? createBrowserWorkspaceTools({ port: browserWorkspacePort }) : null;
   const screenCapture = new WindowScreenCapture({
     assertTarget: input => computerAdapter.assertTarget(input),
     tempRoot: path.join(tempDir, 'solat-screen-capture'),
   });
   const screenSampler = new AdaptiveScreenSampler({ screenCapture });
-  const agentTools = composeAgentTools(filesystemTools, computerTools);
+  const agentTools = composeAgentTools(filesystemTools, computerTools, browserTools);
+  const interactiveTools = composeAgentTools(computerTools, browserTools);
   const agentService = new AgentService({
     rootDir: path.join(userDataDir, 'agent-plans'),
     toolRegistry: agentTools.registry,
@@ -81,16 +93,24 @@ function createSolatServices({ config, userDataDir, tempDir }) {
       return assetStore.readOriginal({ ownerId: normalizedSession, projectId: project.project_id, assetId });
     },
   });
-  const core = new ConversationCore({ config, provider, searchService, commerceService, fileContextProvider, agentBridge });
+  const core = new ConversationCore({ config, provider, searchService, commerceService, fileContextProvider, agentBridge, agentsRuntime });
   const computerTaskLoop = new ComputerTaskLoop({
-    provider: core.provider, bridge: agentBridge, toolRegistry: computerTools.registry,
-    toolDefinitions: computerTools.definitions,
-    screenCapture, screenSampler,
+    provider: core.provider, bridge: agentBridge, toolRegistry: interactiveTools.registry,
+    toolDefinitions: interactiveTools.definitions,
+    screenCapture, screenSampler, browserWorkspacePort,
   });
   core.computerTaskLoop = computerTaskLoop;
   const creativePersistence = new CreativePersistence({ rootDir: path.join(userDataDir, 'creative-history') });
   const conversationPersistence = new ConversationPersistence({ rootDir: path.join(userDataDir, 'conversation-history') });
   const creativeWorkflow = new CreativeWorkflow({ provider: core.provider, workspace: core.workspace });
+  const voiceService = createVoiceService(config);
+  const spatialMemory = new InteractionMemory();
+  const spatialAssetRuntime = new SpatialAssetRuntime();
+  const multimodalCoordinator = new MultimodalCoordinator({
+    fusion: new MultimodalFusion(),
+    persistence: new MultimodalPersistence({ rootDir: path.join(userDataDir, 'multimodal-memory') }),
+  });
+  const handInputService = new HandInputService();
   return {
     core,
     computerTaskLoop,
@@ -101,6 +121,12 @@ function createSolatServices({ config, userDataDir, tempDir }) {
     creativeWorkflow,
     assetStore,
     fileIntake,
+    voiceService,
+    spatialMemory,
+    spatialAssetRuntime,
+    multimodalCoordinator,
+    handInputService,
+    browserWorkspacePort,
   };
 }
 

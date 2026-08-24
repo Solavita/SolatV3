@@ -641,7 +641,7 @@
   function errorText(error) {
     const code = error?.code || '';
     if (code === 'desktop_bridge_unavailable') return 'SOLAT desktop connection is unavailable in this preview. Open the desktop app to send a message.';
-    if (code === 'not_configured') return 'Model provider is not configured. Add the DeepSeek API key to the local environment.';
+    if (code === 'not_configured') return 'Qwen Cloud is not configured. Add SOLAT_QWEN_API_KEY to the local environment.';
     if (code === 'timeout') return 'The model provider timed out. Try again.';
     if (code === 'network_error') return 'Could not connect to the model provider.';
     if (code === 'malformed_response') return 'The model returned an unreadable response.';
@@ -654,6 +654,26 @@
       return errorText({ code: 'desktop_bridge_unavailable' });
     }
     return content;
+  }
+
+  async function ensureStoredAttachment(attachment, sessionId) {
+    const item = attachment?.file ? attachment : { file: attachment };
+    if (item.stored) return item.stored;
+    if (!item.file || typeof item.file.arrayBuffer !== 'function') throw new Error('The attachment is unavailable.');
+    if (!item.storagePromise) item.storagePromise = (async () => window.solat.storeOriginalAsset({
+      requestId: uid('asset'), sessionId, fileName: item.file.name, mimeType: item.file.type,
+      bytes: new Uint8Array(await item.file.arrayBuffer()),
+    }))().then(stored => { item.stored = stored; return stored; }).finally(() => { item.storagePromise = null; });
+    return item.storagePromise;
+  }
+
+  function imagePreviewDimensions(url) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+      image.onerror = () => reject(new Error('The image preview dimensions are unavailable.'));
+      image.src = url;
+    });
   }
 
   const Chat = {
@@ -708,8 +728,8 @@
       if (message.role === 'system') return make('div', { class: 'note', text: message.content });
       const failed = message.role === 'assistant' && message.error;
       const agentStatus = message.responseMeta?.agentStatus;
-      const article = make('article', { class: `msg ${message.role}${failed ? ' error' : ''}${agentStatus ? ` agent-${agentStatus}` : ''}`, 'data-id': message.id, tabindex: '-1' });
-      const label = message.role === 'user' ? 'You' : failed ? 'Delivery failed' : 'SOLAT';
+      const article = make('article', { class: `msg ${message.role}${failed ? ' error' : ''}${message.role === 'user' && message.source === 'voice' ? ' voice' : ''}${agentStatus ? ` agent-${agentStatus}` : ''}`, 'data-id': message.id, tabindex: '-1' });
+      const label = message.role === 'user' ? (message.source === 'voice' ? 'You · voice' : 'You') : failed ? 'Delivery failed' : 'SOLAT';
       article.append(make('div', { class: 'who-line' }, label, make('time', { text: new Date(message.ts).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) })));
       const visibleContent = visibleMessageText(message);
       const sourceBlock = !failed ? splitSourceBlock(visibleContent) : null;
@@ -851,30 +871,99 @@
       if (!user) return;
       thread.messages = thread.messages.slice(0, index); State.emit('messages'); Composer.setValue(user.content); Composer.submit();
     },
-    async send(content, attachments = []) {
+    send(content, attachments = [], options = {}) {
+      return submitUnifiedTurn({ kind: 'text', content, attachments, options });
+    },
+    submitVoiceTurn(transcript, voice = {}) {
+      return submitUnifiedTurn({ kind: 'voice', content: transcript, attachments: [], options: {}, voice });
+    },
+    stop() {
+      if (!this.controller) return;
+      const stoppingRequestId = this.controller.solatRequestId || '';
+      this.controller.stopped = true; this.requestId += 1; this.controller = null; Composer.setBusy(false); setStatus('ready', 'Ready');
+      abandonSpeechStream(stoppingRequestId);
+      void Voice?.stop();
+      this.render();
+      Toast.show('Stop requested. The provider request may finish in the background.', { icon: 'alert' });
+    },
+    updateJump() { const log = $('#log'); const distance = log.scrollHeight - log.scrollTop - log.clientHeight; $('#jump')?.classList.toggle('show', !this.pinned && distance > 120); $('#chatHeader')?.classList.toggle('stuck', log.scrollTop > 6); },
+  };
+
+  // Unified SOLAT input boundary. Typed text and finalized voice turns share
+  // one internal submission path into the core; the composer and chat log are
+  // views of that turn, never the transport. Voice input keeps its own source
+  // label and never pretends to be typed Red-side text.
+  let speechStream = null;
+  function queueSpokenChunk(requestId, rawChunk) {
+    const clean = text(rawChunk).trim();
+    if (!clean || !Voice?.active) return;
+    Voice.queueSpeechChunk(requestId, clean);
+  }
+  function handleAssistantDelta(payload) {
+    if (!payload || payload.schema_version !== 'solat.assistant-delta.v1') return;
+    const stream = speechStream;
+    if (!stream || stream.requestId !== payload.requestId) return;
+    if (!stream.started) {
+      stream.started = true;
+      if (!Voice?.beginSpeechStream(stream.requestId, voiceLanguageFor(payload.delta))) return;
+    }
+    for (const chunk of stream.chunker.push(String(payload.delta || ''))) queueSpokenChunk(stream.requestId, chunk);
+  }
+  function abandonSpeechStream(requestId) {
+    if (speechStream?.requestId === requestId) speechStream = null;
+  }
+  function finalizeSpeechStream(requestId, result) {
+    const stream = speechStream;
+    if (!stream || stream.requestId !== requestId) return;
+    speechStream = null;
+    if (Voice?.active) {
+      if (stream.started) {
+        for (const chunk of stream.chunker.flush()) queueSpokenChunk(requestId, chunk);
+        Voice.endSpeechStream(requestId);
+      } else {
+        void Voice.speak(text(result.assistant), voiceLanguageFor(result.assistant), requestId);
+      }
+    }
+  }
+  async function submitUnifiedTurn({ kind, content, attachments, options = {}, voice = {} }) {
+      const inputKind = kind === 'voice' ? 'voice' : 'text';
       const thread = State.active || State.create();
       const activityStartedAt = performance.now();
-      const visible = attachments.length ? `${content ? `${content}\n\n` : ''}${attachments.map(file => `\`${file.name}\``).join(' · ')}` : content;
-      const user = State.add(thread.id, { role: 'user', content: visible, attachments: attachments.map(file => file.name), assetIds: [] });
-      if (thread.title === 'New conversation') State.rename(thread.id, titleFrom(content || attachments[0]?.name));
-      const sequence = ++this.requestId; this.controller = { stopped: false, sequence, threadId: thread.id };
-      setStatus('busy', 'Responding'); Composer.setBusy(true); this.render();
+      const visible = attachments.length ? `${content ? `${content}\n\n` : ''}${attachments.map(item => `\`${(item?.file || item).name}\``).join(' · ')}` : content;
+      const voiceSource = inputKind === 'voice' ? voice : options;
+      const voiceSessionId = String(voiceSource?.voiceSessionId || '').trim();
+      const voiceUtteranceId = String(voiceSource?.voiceUtteranceId || '').trim();
+      const voiceFinalAtMs = Number(voiceSource?.voiceFinalAtMs);
+      const voiceMetadata = voiceSessionId.length > 0 && voiceSessionId.length <= 160
+        && voiceUtteranceId.length > 0 && voiceUtteranceId.length <= 160
+        ? {
+          voiceSessionId,
+          voiceUtteranceId,
+          ...(Number.isSafeInteger(voiceFinalAtMs) && voiceFinalAtMs >= 0 && voiceFinalAtMs <= 9_999_999_999_999 ? { voiceFinalAtMs } : {}),
+        } : {};
+      const user = State.add(thread.id, { role: 'user', content: visible, source: inputKind, attachments: attachments.map(item => (item?.file || item).name), assetIds: [] });
+      if (thread.title === 'New conversation') State.rename(thread.id, titleFrom(content || (attachments[0]?.file || attachments[0])?.name));
+      const sequence = ++Chat.requestId; Chat.controller = { stopped: false, sequence, threadId: thread.id };
+      setStatus('busy', 'Responding'); Composer.setBusy(true); Chat.render();
       let result; let shouldRender = false;
       try {
         const threadSessionId = sessionFor(thread.id);
         const assetIds = [];
         if (!window.solat?.send) throw Object.assign(new Error('SOLAT desktop connection is unavailable.'), { code: 'desktop_bridge_unavailable' });
         if (attachments.length && !window.solat?.storeOriginalAsset) throw Object.assign(new Error('Original asset storage is unavailable; the file was not sent.'), { code: 'asset_storage_unavailable' });
-        for (const file of attachments) {
-          const stored = await window.solat.storeOriginalAsset({ requestId: uid('asset'), sessionId: threadSessionId, fileName: file.name, mimeType: file.type, bytes: new Uint8Array(await file.arrayBuffer()) });
+        for (const item of attachments) {
+          const stored = await ensureStoredAttachment(item, threadSessionId);
           assetIds.push(stored.assetId);
         }
         user.assetIds = assetIds; State.emit('messages');
         const requestId = uid('request');
         AgentUI.beginRequest({ threadId: thread.id, sessionId: threadSessionId, requestId });
-        if (this.controller?.sequence === sequence) this.controller.solatRequestId = requestId;
-        result = await window.solat.send({ requestId, sessionId: threadSessionId, content: visible, musicContext: Music.song() || null, attachments: attachments.map(file => file.name), assetIds, agentMode: true, agentCommand: AgentUI.commandFromText(visible) });
-        if (this.controller?.stopped || sequence !== this.requestId) return;
+        if (Chat.controller?.sequence === sequence) Chat.controller.solatRequestId = requestId;
+        if (Voice?.active && window.SolatSpeechChunker?.createSpeechChunker) {
+          speechStream = { requestId, chunker: window.SolatSpeechChunker.createSpeechChunker(), started: false };
+        }
+        result = await window.solat.send({ requestId, sessionId: threadSessionId, content: visible, musicContext: Music.song() || null, attachments: attachments.map(item => (item?.file || item).name), assetIds, agentMode: true, agentCommand: AgentUI.commandFromText(visible), inputSource: inputKind, streamResponse: Boolean(Voice?.active), ...voiceMetadata });
+        if (Chat.controller?.stopped || sequence !== Chat.requestId) return;
         let assistant = State.add(thread.id, {
           role: 'assistant',
           content: text(result.assistant),
@@ -900,33 +989,33 @@
           await AgentUI.receive(result.agentActions, { threadId: thread.id, sessionId: threadSessionId, messageId: assistant.id, requestId });
         }
         shouldRender = true;
-        setSolatVoiceActivity('answer', 2600);
+        if (Voice?.active || isSolatVoiceSceneActive()) {
+          setSolatVoicePreview(result.assistant);
+        }
+        finalizeSpeechStream(requestId, result);
         setStatus('ready', 'Ready', `${result.provider || 'provider'} / ${result.model || 'model'}`);
         return assistant;
       } catch (error) {
-        if (this.controller?.stopped || sequence !== this.requestId) return;
+        if (Chat.controller?.stopped || sequence !== Chat.requestId) return;
+        abandonSpeechStream(requestId);
         State.add(thread.id, { role: 'assistant', content: errorText(error), error: true });
+        if (Voice?.active || isSolatVoiceSceneActive()) {
+          setSolatVoicePreview(`SOLAT ERROR\n${errorText(error)}`);
+        }
+        if (Voice?.active) Voice.setState('error', { code: error?.code || 'provider_error' });
         shouldRender = true; setStatus('error', 'Error'); await refreshStatus();
       } finally {
-        if (sequence === this.requestId) {
+        if (sequence === Chat.requestId) {
           const minimumActivityMs = Settings.get('motion') ? 620 : 0;
           const remainingActivityMs = minimumActivityMs - (performance.now() - activityStartedAt);
           if (shouldRender && remainingActivityMs > 0) await new Promise(resolve => setTimeout(resolve, remainingActivityMs));
-          this.controller = null; Composer.setBusy(false);
+          Chat.controller = null; Composer.setBusy(false);
           // Clear the busy state before rendering the completed turn. Otherwise
           // the just-finished request leaves an orphaned thinking bubble behind.
-          if (shouldRender && State.activeId === thread.id) this.render();
+          if (shouldRender && State.activeId === thread.id) Chat.render();
         }
       }
-    },
-    stop() {
-      if (!this.controller) return;
-      this.controller.stopped = true; this.requestId += 1; this.controller = null; Composer.setBusy(false); setStatus('ready', 'Ready');
-      this.render();
-      Toast.show('Stop requested. The provider request may finish in the background.', { icon: 'alert' });
-    },
-    updateJump() { const log = $('#log'); const distance = log.scrollHeight - log.scrollTop - log.clientHeight; $('#jump')?.classList.toggle('show', !this.pinned && distance > 120); $('#chatHeader')?.classList.toggle('stuck', log.scrollTop > 6); },
-  };
+  }
 
   const sessionIds = new Map();
   function sessionFor(threadId) {
@@ -939,6 +1028,22 @@
     return id;
   }
   let busy = false;
+  const chatIdleWaiters = new Set();
+  function waitForChatIdle() {
+    if (!busy) return Promise.resolve();
+    return new Promise(resolve => chatIdleWaiters.add(resolve));
+  }
+  let Voice = null;
+  async function toggleVoiceInput() {
+    const starting = !(Voice?.active && ['listening', 'user_speaking', 'transcribing'].includes(Voice.state));
+    try {
+      await Voice.toggle(sessionFor((State.active || State.create()).id));
+      setSolatVoicePreview(starting ? SOLAT_VOICE_READY : SOLAT_VOICE_INTRO);
+    } catch (error) {
+      Toast.show(error?.message || 'Voice input could not start.', { icon: 'alert', timeout: 5200 });
+      setStatus('error', 'Voice unavailable');
+    }
+  }
 
   const Threads = {
     query: '',
@@ -1016,8 +1121,50 @@
       $('#attachBtn')?.addEventListener('click', () => $('#fileInput')?.click()); $('#fileInput')?.addEventListener('change', event => { this.attach([...event.target.files]); event.target.value = ''; });
       let depth = 0; const wrap = $('#composerWrap');
       wrap.addEventListener('dragenter', event => { event.preventDefault(); if (++depth === 1) form.classList.add('dropping'); }); wrap.addEventListener('dragover', event => event.preventDefault()); wrap.addEventListener('dragleave', () => { if (--depth <= 0) { depth = 0; form.classList.remove('dropping'); } });
-      wrap.addEventListener('drop', event => { event.preventDefault(); depth = 0; form.classList.remove('dropping'); this.attach([...(event.dataTransfer?.files || [])]); });
+      wrap.addEventListener('drop', event => {
+        event.preventDefault(); depth = 0; form.classList.remove('dropping');
+        const files = [...(event.dataTransfer?.files || [])];
+        const hasWebSource = [...(event.dataTransfer?.types || [])].some(type => type === 'text/html' || type === 'text/uri-list');
+        const image = hasWebSource ? files.find(file => file.type?.startsWith?.('image/')) : null;
+        if (image) void this.importChromeImage(image, event.dataTransfer);
+        else {
+          this.attach(files);
+          if (!files.length && hasWebSource) Toast.show('Chrome did not provide image bytes. Right-click Copy image, then press Ctrl+V in SOLAT.', { icon: 'alert', timeout: 6000 });
+        }
+      });
+      document.addEventListener('paste', event => {
+        const image = [...(event.clipboardData?.files || [])].find(file => file.type?.startsWith?.('image/'));
+        if (!image) return;
+        event.preventDefault();
+        void this.importChromeImage(image, event.clipboardData);
+      });
       this.initMic(); this.sync();
+    },
+    chromeSource(transfer) {
+      const html = String(transfer?.getData?.('text/html') || '');
+      if (html) {
+        try {
+          const imageSource = new DOMParser().parseFromString(html, 'text/html').querySelector('img[src]')?.src;
+          if (imageSource) return imageSource;
+        } catch {}
+      }
+      return String(transfer?.getData?.('text/uri-list') || '').split(/\r?\n/u).map(line => line.trim()).find(line => line && !line.startsWith('#')) || '';
+    },
+    async importChromeImage(file, transfer) {
+      if (!file || !State.activeId || !window.solat?.chromeAssetImport) return Toast.show('Chrome image transfer is unavailable.', { icon: 'alert' });
+      if (file.size > 8 * 1024 * 1024) return Toast.show('Chrome image is over the 8 MB SpatialAsset limit.', { icon: 'alert' });
+      try {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        await window.solat.chromeAssetImport({
+          sessionId: this.sessionId?.() || sessionFor(State.activeId),
+          bytes,
+          mimeType: file.type,
+          label: String(file.name || 'Chrome image').slice(0, 240),
+          sourceUrl: this.chromeSource(transfer) || undefined,
+        });
+      } catch (error) {
+        Toast.show(error?.message || 'Chrome image could not enter SpatialAsset mode.', { icon: 'alert', timeout: 6000 });
+      }
     },
     setValue(value) { $('#input').value = text(value); AgentUI.syncInputAppearance($('#input').value); this.sync(); this.focus(); },
     getAttachments() { return this.attachments.slice(); },
@@ -1036,7 +1183,7 @@
       this.syncMode();
     },
     setBusy(on) {
-      busy = on; const button = $('#sendBtn'); button.disabled = false; button.classList.toggle('stop', on); button.setAttribute('aria-label', on ? 'Stop responding' : 'Send message'); button.replaceChildren(icon(on ? 'stop' : 'send'), make('span', { class: 'send-label', text: on ? 'Stop' : 'Send' })); $('#composer').classList.toggle('live', on); this.syncMode(); if (on) setSolatVoiceActivity('thinking'); else if ($('#solatVoiceScene')?.dataset.voiceActivity === 'thinking') setSolatVoiceActivity('idle'); if (!on) this.sync();
+      busy = on; const button = $('#sendBtn'); button.disabled = false; button.classList.toggle('stop', on); button.setAttribute('aria-label', on ? 'Stop responding' : 'Send message'); button.replaceChildren(icon(on ? 'stop' : 'send'), make('span', { class: 'send-label', text: on ? 'Stop' : 'Send' })); $('#composer').classList.toggle('live', on); this.syncMode(); if (on) Voice?.markThinking(); if (!on) { this.sync(); const waiters = [...chatIdleWaiters]; chatIdleWaiters.clear(); waiters.forEach(resolve => resolve()); }
     },
     attach(files) {
       const room = 6 - this.attachments.length; if (room <= 0) return Toast.show('Up to 6 files per message', { icon: 'alert' });
@@ -1058,7 +1205,10 @@
       const host = $('#attachments'); host.textContent = ''; host.hidden = !this.attachments.length;
       this.attachments.forEach((item, index) => {
         const remove = make('button', { type: 'button', class: 'iconbtn sm', 'aria-label': `Remove ${item.file.name}` }, icon('x')); remove.addEventListener('click', () => { if (item.previewUrl) URL.revokeObjectURL(item.previewUrl); this.attachments.splice(index, 1); this.renderAttachments(); this.sync(); });
-        host.append(make('span', { class: 'chip' }, item.previewUrl ? make('img', { class: 'thumb', src: item.previewUrl, alt: '' }) : icon('file'), make('span', { class: 'nm', text: item.file.name, title: item.file.name }), make('span', { class: 'sz', text: fileSize(item.file.size) }), make('span', { class: 'upload-state selected', text: 'selected' }), remove));
+        const preview = item.previewUrl ? make('img', { class: 'thumb', src: item.previewUrl, alt: '', title: 'Hold and move to use this image as a SpatialAsset' }) : icon('file');
+        if (item.previewUrl) preview._solatSpatialAttachment = item;
+        if (item.previewUrl) preview.addEventListener('pointerdown', event => { event.preventDefault(); event.stopPropagation(); void SpatialAssets.beginFromAttachment(item, event); });
+        host.append(make('span', { class: 'chip' }, preview, make('span', { class: 'nm', text: item.file.name, title: item.file.name }), make('span', { class: 'sz', text: fileSize(item.file.size) }), make('span', { class: 'upload-state selected', text: 'selected' }), remove));
       });
     },
     async submit() {
@@ -1072,14 +1222,8 @@
       const files = [...this.attachments]; input.value = ''; this.attachments = []; this.renderAttachments(); this.sync(); Music.schedule(); Chat.send(content, files);
     },
     initMic() {
-      const button = $('#micBtn'); const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!Recognition) { button.addEventListener('click', () => Toast.show('This desktop build has no dictation support.', { icon: 'alert' })); return; }
-      const recognition = new Recognition(); recognition.continuous = false; recognition.interimResults = true; recognition.lang = navigator.language || 'en-US'; let listening = false; let base = '';
-      button.addEventListener('click', () => { if (listening) recognition.stop(); else { base = $('#input').value; recognition.start(); } });
-      recognition.onstart = () => { listening = true; button.setAttribute('aria-pressed', 'true'); setStatus('busy', 'Listening'); };
-      recognition.onend = () => { listening = false; button.setAttribute('aria-pressed', 'false'); if (!busy) setStatus('ready', 'Ready'); this.sync(); };
-      recognition.onerror = event => { if (event.error !== 'aborted') Toast.show(`Dictation stopped: ${event.error}`, { icon: 'alert' }); };
-      recognition.onresult = event => { let value = ''; for (let index = event.resultIndex; index < event.results.length; index += 1) value += event.results[index][0].transcript; $('#input').value = `${base.replace(/\s*$/, ' ')}${value}`; AgentUI.syncInputAppearance($('#input').value); this.sync(); };
+      const button = $('#micBtn');
+      button.addEventListener('click', () => { void toggleVoiceInput(); });
     },
   };
 
@@ -1210,6 +1354,7 @@
     receiveComputerTaskEvent(event) {
       if (!event || event.schema_version !== 'solat.computer-task-event.v1' || !event.task_id || !event.session_id) return;
       const terminal = ['completed', 'failed', 'cancelled', 'unsupported', 'needs_clarification'].includes(event.type);
+      if (!terminal) globalThis.window?.solatVoiceController?.markActing();
       const revision = Number(event.revision || 0);
       if (this.terminalTaskTombstones.has(event.task_id)) return;
       const latestRequest = this.latestRequestBySession.get(event.session_id);
@@ -1983,10 +2128,22 @@
         { label: 'Toggle light and dark', icon: 'moon', run: () => cycleTheme(true) },
         { label: 'Open settings', icon: 'settings', run: () => openSettings('general') },
         { label: 'Provider status', icon: 'shield', run: () => openSettings('keys') },
+        { label: 'Chrome Control setup', icon: 'monitor', run: () => setTimeout(() => ChromeControlSetup.open(), 0) },
         { label: 'Keyboard shortcuts', icon: 'keyboard', run: () => Overlay.open($('#shortcuts')) },
+        // Defer the replacement overlay until the palette click has fully
+        // finished; otherwise Electron can deliver the release to the newly
+        // opened sheet and close it in the same pointer gesture.
+        { label: 'V3–V6 tutorial', icon: 'help', run: () => setTimeout(() => Overlay.open($('#tutorialV3V6')), 0) },
         { label: 'Export this conversation', icon: 'download', run: () => State.active && exportThread(State.active) },
         { label: 'Rename this conversation', icon: 'pencil', run: renameActive },
         { label: 'Copy the last response', icon: 'copy', run: async () => { const response = [...(State.active?.messages || [])].reverse().find(message => message.role === 'assistant'); if (!response) return Toast.show('Nothing to copy yet', { icon: 'alert' }); Toast.show(await copyText(response.content) ? 'Response copied' : 'Copy failed', { icon: 'copy' }); } },
+        { label: 'Undo last interaction reference', icon: 'undo', run: async () => {
+          if (!State.activeId || !window.solat?.multimodalUndo) return Toast.show('No interaction memory is available.', { icon: 'alert' });
+          try {
+            await window.solat.multimodalUndo({ sessionId: sessionFor(State.activeId) });
+            Toast.show('The last voice, pointer, hand, screen, or asset reference was removed from interaction memory.', { icon: 'check', timeout: 4400 });
+          } catch (error) { Toast.show(error?.message || 'The last interaction reference could not be undone.', { icon: 'alert', timeout: 5200 }); }
+        } },
         { label: 'Delete this conversation', icon: 'trash', run: () => State.active && deleteThread(State.active), danger: true },
       ];
     },
@@ -2003,8 +2160,89 @@
     init() { const input = $('#palInput'); input.addEventListener('input', () => this.build(input.value)); input.addEventListener('keydown', event => { if (event.key === 'ArrowDown') { event.preventDefault(); this.highlight(this.index + 1); } else if (event.key === 'ArrowUp') { event.preventDefault(); this.highlight(this.index - 1); } else if (event.key === 'Enter') { event.preventDefault(); const item = this.items[this.index]; if (item) { Overlay.close(); item.run(); } } }); },
   };
 
+  const ChromeControlSetup = {
+    busy: false,
+    statusText(status) {
+      if (status?.connected === true || status?.status === 'connected') return status?.full_control === true
+        ? 'Connected — Full Chrome Control is ready across normal tabs.'
+        : 'Connected — Chrome Control is ready.';
+      if (status?.paired === true || status?.status === 'paired') return 'Paired — waiting for the Chrome extension to connect.';
+      return 'Not connected — install the extension, then pair it from here.';
+    },
+    renderTabs(list) {
+      const host = $('#chromeControlTabs');
+      if (!host) return;
+      host.replaceChildren();
+      const tabs = Array.isArray(list?.tabs) ? list.tabs : [];
+      if (!tabs.length) {
+        host.append(make('p', { class: 'set-note', text: 'No controllable Chrome tabs are visible yet.' }));
+        return;
+      }
+      for (const tab of tabs) {
+        const privateTab = tab?.controllable !== true;
+        const copy = make('span', { class: 'chrome-tab-copy' },
+          make('b', { text: privateTab ? 'Private or unsupported tab' : (tab.title || 'Untitled Chrome tab') }),
+          make('span', { text: privateTab ? 'Human-only · content and URL hidden' : (tab.url || '') }));
+        const button = make('button', { class: 'btn', type: 'button', text: tab.active ? 'Active' : 'Switch', disabled: privateTab ? '' : null });
+        if (!privateTab) button.addEventListener('click', event => this.run(event.currentTarget, async () => {
+          if (!State.activeId) throw new Error('Open or create a conversation first.');
+          const surface = await window.solat.chromeControlSwitchTab({ sessionId: sessionFor(State.activeId), tabRef: tab.tab_ref });
+          BrowserWorkspace.surface = surface || BrowserWorkspace.surface;
+        }, 'Chrome tab switched and attached to this conversation.'));
+        host.append(make('div', { class: 'chrome-tab-row' }, copy, button));
+      }
+    },
+    async refresh() {
+      const label = $('#chromeControlStatus');
+      try {
+        const status = await window.solat.chromeControlStatus({});
+        label.textContent = this.statusText(status);
+        label.dataset.state = status?.connected === true || status?.status === 'connected' ? 'connected' : 'offline';
+        $('#chromeControlAdopt').disabled = label.dataset.state !== 'connected' || !State.activeId;
+        if (label.dataset.state === 'connected' && State.activeId && window.solat?.chromeControlTabs) {
+          this.renderTabs(await window.solat.chromeControlTabs({ sessionId: sessionFor(State.activeId) }));
+        } else this.renderTabs({ tabs: [] });
+      } catch (error) {
+        label.textContent = error?.message || 'Chrome Control status is unavailable.';
+        label.dataset.state = 'error';
+        $('#chromeControlAdopt').disabled = true;
+        this.renderTabs({ tabs: [] });
+      }
+    },
+    open() {
+      if (!window.solat?.chromeControlStatus) return Toast.show('Chrome Control is unavailable in this build.', { icon: 'alert' });
+      Overlay.open($('#chromeControlSetup'));
+      void this.refresh();
+    },
+    async run(button, action, success) {
+      if (this.busy) return;
+      this.busy = true;
+      button.disabled = true;
+      try {
+        await action();
+        Toast.show(success, { icon: 'check', timeout: 4800 });
+      } catch (error) {
+        Toast.show(error?.message || 'Chrome Control action failed.', { icon: 'alert', timeout: 6000 });
+      } finally {
+        this.busy = false;
+        button.disabled = false;
+        await this.refresh();
+      }
+    },
+    init() {
+      $('#chromeControlReveal')?.addEventListener('click', event => this.run(event.currentTarget, () => window.solat.chromeControlRevealExtension({}), 'Extension folder opened. In Chrome, use Extensions → Developer mode → Load unpacked.'));
+      $('#chromeControlPair')?.addEventListener('click', event => this.run(event.currentTarget, () => window.solat.chromeControlPair({}), 'Pairing page opened in Chrome.'));
+      $('#chromeControlAdopt')?.addEventListener('click', event => this.run(event.currentTarget, async () => {
+        if (!State.activeId) throw new Error('Open or create a conversation first.');
+        const surface = await window.solat.chromeControlAdoptActive({ sessionId: sessionFor(State.activeId) });
+        BrowserWorkspace.surface = surface || BrowserWorkspace.surface;
+      }, 'The current Chrome tab is now attached to this conversation.'));
+      $('#chromeControlRefresh')?.addEventListener('click', () => this.refresh());
+    },
+  };
+
   const providerCatalog = [
-    ['deepseek', 'DeepSeek', 'Used by the V2 core through the local environment.'],
+    ['qwen', 'Alibaba Cloud Model Studio', 'Qwen 3.7 Flash runs the agent; Qwen 3.7 Plus advises only when stronger reasoning is needed.'],
     ['openai', 'OpenAI', 'Available as a future adapter; no browser key is stored.'],
     ['anthropic', 'Anthropic', 'Available as a future adapter; no browser key is stored.'],
     ['google', 'Google Gemini', 'Available as a future adapter; no browser key is stored.'],
@@ -2015,8 +2253,8 @@
   function renderProviders() {
     const host = $('#provList'); if (!host) return; host.textContent = '';
     for (const [id, name, description] of providerCatalog) {
-      const button = make('button', { type: 'button', class: 'btn', text: id === 'deepseek' ? 'Configured in .env' : 'Future adapter' });
-      button.addEventListener('click', () => Toast.show(id === 'deepseek' ? 'DeepSeek is configured outside the UI; the key is never echoed here.' : `${name} is not enabled in this V2 milestone.`, { icon: id === 'deepseek' ? 'shield' : 'help', timeout: 4200 }));
+      const button = make('button', { type: 'button', class: 'btn', text: id === 'qwen' ? 'Configured in .env' : 'Future adapter' });
+      button.addEventListener('click', () => Toast.show(id === 'qwen' ? 'Qwen Cloud is configured outside the UI; the key is never echoed here.' : `${name} is not enabled in this milestone.`, { icon: id === 'qwen' ? 'shield' : 'help', timeout: 4200 }));
       host.append(make('div', { class: 'setting' }, make('span', { class: 'label' }, make('b', { text: name }), make('span', { text: description })), button));
     }
     const count = $('#keyCount'); if (count) { count.hidden = false; count.textContent = '1'; }
@@ -2128,17 +2366,40 @@
   }
 
   let solatVoiceActivityTimer = null;
+  const SOLAT_VOICE_INTRO = 'VOICE IDLE\nAI–HUMAN WORKSPACE\nPlease press the Memento icon to interact with SOLAT.';
+  const SOLAT_VOICE_READY = 'SOLAT READY\nVoice link active. Speak naturally to SOLAT.';
+  function setSolatVoicePreview(value) {
+    const preview = $('#solatVoicePreviewText');
+    if (preview) preview.textContent = text(value || '');
+  }
+
+  function isSolatVoiceSceneActive() {
+    return Boolean($('#solatVoiceScene')?.classList.contains('active'));
+  }
   function setSolatVoiceActivity(next, timeout = 0) {
     const scene = $('#solatVoiceScene');
     if (!scene) return;
     if (solatVoiceActivityTimer !== null) window.clearTimeout(solatVoiceActivityTimer);
     solatVoiceActivityTimer = null;
-    const activity = ['thinking', 'answer'].includes(next) ? next : 'idle';
+    const state = ['idle', 'listening', 'user_speaking', 'transcribing', 'thinking', 'acting', 'speaking', 'interrupted', 'error'].includes(next) ? next : 'idle';
+    const activity = state === 'speaking' ? 'answer' : ['transcribing', 'thinking', 'acting'].includes(state) ? 'thinking' : 'idle';
+    scene.dataset.voiceState = state;
     scene.dataset.voiceActivity = activity;
     scene.classList.toggle('voice-speaking', activity === 'answer');
+    const stateLabel = $('#solatVoiceStateLabel');
+    const displayState = state === 'user_speaking' ? 'USER SPEAKING' : state === 'speaking' ? 'SOLAT SPEAKING' : state.replace('_', ' ').toUpperCase();
+    if (stateLabel) stateLabel.textContent = `VOICE / ${displayState}`;
+    const athenaState = $('#solatAthenaState');
+    if (athenaState) athenaState.textContent = state.replace('_', ' ');
     if (timeout > 0) {
       solatVoiceActivityTimer = window.setTimeout(() => setSolatVoiceActivity('idle'), timeout);
     }
+  }
+
+  function voiceLanguageFor(value) {
+    const spokenText = text(value);
+    if (/[\u0E00-\u0E7F]/u.test(spokenText)) return 'th';
+    return navigator.language || 'auto';
   }
 
   function enterSolatVoiceMode() {
@@ -2147,10 +2408,12 @@
     const loopVideo = $('#solatVoiceLoop');
     if (!scene || !video || !loopVideo) return;
     if (video.dataset.playing === 'true') return;
+    setSolatVoicePreview(SOLAT_VOICE_INTRO);
     video.dataset.playing = 'true';
     setSolatVoiceActivity(busy ? 'thinking' : 'idle');
     document.documentElement.classList.add('solat-voice-active');
-    scene.classList.remove('video-ready', 'loop-ready');
+    scene.classList.remove('video-ready', 'loop-ready', 'exiting');
+    $('#solatExitCover')?.classList.remove('active', 'returning');
     scene.classList.add('active');
     scene.setAttribute('aria-hidden', 'false');
     let watchdog = null;
@@ -2202,6 +2465,7 @@
       scene.classList.remove('active');
       scene.setAttribute('aria-hidden', 'true');
       document.documentElement.classList.remove('solat-voice-active');
+      void Voice?.exit();
     };
     watchdog = window.setTimeout(startFinalLoop, 45000);
     scene._voiceWatchdog = watchdog;
@@ -2223,6 +2487,11 @@
     const video = $('#solatVoiceVideo');
     const loopVideo = $('#solatVoiceLoop');
     if (!scene || !video || !loopVideo) return;
+    const exitCover = $('#solatExitCover');
+    exitCover?.classList.add('active', 'returning');
+    void exitCover?.offsetWidth;
+    scene.classList.add('exiting');
+    void scene.offsetWidth;
     if (scene._voiceWatchdog) window.clearTimeout(scene._voiceWatchdog);
     if (solatVoiceActivityTimer !== null) window.clearTimeout(solatVoiceActivityTimer);
     solatVoiceActivityTimer = null;
@@ -2238,10 +2507,17 @@
     video.currentTime = 0;
     loopVideo.currentTime = 0;
     scene.classList.remove('active', 'video-ready', 'loop-ready', 'voice-speaking');
+    setSolatVoicePreview(SOLAT_VOICE_INTRO);
     scene.dataset.voiceActivity = 'idle';
+    scene.dataset.voiceState = 'idle';
     scene.setAttribute('aria-hidden', 'true');
     document.documentElement.classList.remove('solat-voice-active');
+    void Voice?.exit();
     setUiMode('classic', false);
+    window.setTimeout(() => {
+      scene.classList.remove('exiting');
+      exitCover?.classList.remove('active', 'returning');
+    }, 1900);
   }
 
   async function refreshStatus() {
@@ -2250,7 +2526,7 @@
       const state = await window.solat.status();
       const currentMode = state.modelMode || 'auto';
       const active = (state.modelModes || []).find(item => item.id === currentMode);
-      const detail = currentMode === 'auto' ? 'Auto routes simple work locally and complex work to DeepSeek.' : `${state.provider || 'provider'} / ${state.model || 'model unavailable'}`;
+      const detail = currentMode === 'auto' ? 'Qwen 3.7 Flash runs the agent; Plus supplies bounded advice only when stronger reasoning is needed.' : `${state.provider || 'provider'} / ${state.model || 'model unavailable'}`;
       // Configuration is not a live provider probe. Do not claim runtime
       // readiness until an actual request succeeds.
       setStatus(state.configured ? 'ready' : 'error', state.configured ? 'Configured' : 'Not configured', detail);
@@ -2282,6 +2558,333 @@
     })));
   }
 
+  const Spatial = {
+    active: false,
+    unsubscribe: null,
+    unsubscribeShortcut: null,
+    async open(gesture = 'lasso') {
+      if (this.active) return;
+      if (!window.solat?.spatialOpen || !State.activeId) return Toast.show('Spatial input is unavailable.', { icon: 'alert' });
+      this.active = true;
+      $('#spatialBtn')?.setAttribute('aria-pressed', 'true');
+      try {
+        await window.solat.spatialOpen({
+          sessionId: sessionFor(State.activeId),
+          contextId: Voice?.active ? Voice.voiceSessionId : uid('spatial-context'),
+          gesture,
+        });
+      } catch (error) {
+        this.active = false;
+        $('#spatialBtn')?.setAttribute('aria-pressed', 'false');
+        Toast.show(error?.message || 'Spatial input could not start.', { icon: 'alert', timeout: 5200 });
+      }
+    },
+    init() {
+      if (!window.solat?.onSpatialEvent) return;
+      this.unsubscribe = window.solat.onSpatialEvent(event => {
+        this.active = false;
+        $('#spatialBtn')?.setAttribute('aria-pressed', 'false');
+        if (event?.status === 'cancelled') return;
+        const labels = { circle: 'Circle', x: 'X mark', arrow: 'Arrow', highlight: 'Highlight', freehand: 'Freehand mark', lasso: 'Lasso', click: 'Point', drag: 'Drag path' };
+        Toast.show(`${labels[event?.gesture] || 'Spatial mark'} attached. Say “อันนี้” or “ตรงนี้” in your next message.`, { icon: 'check', timeout: 4400 });
+        Composer.focus();
+      });
+      if (window.solat?.onSpatialShortcut) this.unsubscribeShortcut = window.solat.onSpatialShortcut(payload => {
+        if (payload?.available === false) return Toast.show('Ctrl+Shift+Space is already used by another application. Use the Spatial button in SOLAT.', { icon: 'alert', timeout: 5200 });
+        void this.open('lasso');
+      });
+    },
+  };
+
+  const BrowserWorkspace = {
+    surface: null,
+    unsubscribe: null,
+    assetUnsubscribe: null,
+    async open() {
+      if (!window.solat?.browserOpen || !State.activeId) return Toast.show('Browser Workspace is unavailable.', { icon: 'alert' });
+      try {
+        this.surface = await window.solat.browserOpen({
+          sessionId: sessionFor(State.activeId),
+          url: 'https://www.pinterest.com/',
+          mode: 'focused',
+        });
+        $('#browserBtn')?.setAttribute('aria-pressed', 'true');
+      } catch (error) {
+        Toast.show(error?.message || 'Browser Workspace could not open.', { icon: 'alert', timeout: 5200 });
+      }
+    },
+    init() {
+      if (!window.solat?.onBrowserWorkspaceEvent) return;
+      this.unsubscribe = window.solat.onBrowserWorkspaceEvent(event => {
+        if (event?.surface) {
+          this.surface = event.surface;
+          if (SpatialAssets?.held) void SpatialAssets.useBrowserSurface();
+        }
+        if (event?.type === 'closed') {
+          this.surface = null;
+          $('#browserBtn')?.setAttribute('aria-pressed', 'false');
+          if (SpatialAssets?.held) void SpatialAssets.useBlueSurface({ x: innerWidth / 2, y: innerHeight / 2, display_id: 'main-window' });
+        } else if (event?.type === 'takeover') {
+          Toast.show('You control the Browser Workspace. Return control before SOLAT continues.', { icon: 'shield', timeout: 4400 });
+        }
+      });
+      if (window.solat?.onBrowserAssetSelected) this.assetUnsubscribe = window.solat.onBrowserAssetSelected(payload => {
+        void SpatialAssets.adoptBrowserSelection(payload);
+      });
+    },
+  };
+
+  const SpatialAssets = {
+    held: null,
+    currentSurface: null,
+    previewUrl: null,
+    pendingMove: null,
+    moveRunning: false,
+    selectedAssetId: null,
+    insertions: [],
+    sessionId() { return State.activeId ? sessionFor(State.activeId) : ''; },
+    heldSessionId() { return this.held?.session_id || this.sessionId(); },
+    blueSurface() {
+      return { surface_id: 'blue-workspace-main', kind: 'blue_workspace', tab_id: State.activeId || null, revision: 0 };
+    },
+    browserSurface() {
+      const surface = BrowserWorkspace.surface;
+      if (!surface?.surface_id) return null;
+      return { surface_id: surface.surface_id, kind: 'browser_workspace', tab_id: surface.tab_id || null, revision: Number(surface.navigation_revision || surface.revision || 0) };
+    },
+    pointer(event) { return { x: event.clientX, y: event.clientY, display_id: 'main-window' }; },
+    async register({ assetId, spatialCapability, spatialAssetId, label, width, height, previewUrl = null }) {
+      if (!window.solat?.spatialAssetRegister || !this.sessionId()) throw new Error('Spatial assets are unavailable.');
+      const asset = await window.solat.spatialAssetRegister({ sessionId: this.sessionId(), assetId, spatialCapability, spatialAssetId, label, width, height });
+      if (previewUrl) this.previewUrl = previewUrl;
+      return asset;
+    },
+    async beginFromAttachment(item, event) {
+      if (!item?.previewUrl || !this.sessionId()) return;
+      try {
+        const stored = await ensureStoredAttachment(item, this.sessionId());
+        if (!item.spatialAsset) {
+          const dimensions = await imagePreviewDimensions(item.previewUrl);
+          item.spatialAsset = await this.register({
+            assetId: stored.assetId, spatialCapability: stored.spatialCapability, label: item.file.name,
+            width: dimensions.width, height: dimensions.height, previewUrl: item.previewUrl,
+          });
+        }
+        await this.select(item.spatialAsset.spatial_asset_id, this.blueSurface());
+        await this.begin({
+          spatialAssetId: item.spatialAsset.spatial_asset_id,
+          pointer: this.pointer(event), inputSource: event.pointerType === 'hand' ? 'hand' : event.pointerType === 'touch' ? 'touch' : 'mouse', previewUrl: item.previewUrl,
+        });
+      } catch (error) {
+        Toast.show(error?.message || 'The image could not enter spatial mode.', { icon: 'alert', timeout: 5200 });
+      }
+    },
+    async select(spatialAssetId, surface = this.blueSurface()) {
+      const value = await window.solat.spatialAssetSelect({ sessionId: this.sessionId(), spatialAssetId, surface });
+      this.selectedAssetId = spatialAssetId;
+      return value;
+    },
+    async begin({ spatialAssetId, pointer, inputSource = 'mouse', transform, previewUrl = null, surface = this.blueSurface() }) {
+      if (this.held) await this.cancel();
+      const value = await window.solat.spatialAssetBegin({ sessionId: this.sessionId(), spatialAssetId, surface, pointer, inputSource, transform });
+      this.held = value.ghost;
+      this.currentSurface = surface;
+      if (previewUrl) this.previewUrl = previewUrl;
+      this.render(pointer);
+      return value;
+    },
+    render(pointer = this.held?.pointer) {
+      const ghost = $('#spatialAssetGhost'); const status = $('#spatialAssetStatus');
+      if (!ghost || !status) return;
+      if (!this.held) { ghost.hidden = true; status.hidden = true; return; }
+      ghost.hidden = false; status.hidden = false;
+      ghost.style.left = `${Number(pointer?.x || 0)}px`; ghost.style.top = `${Number(pointer?.y || 0)}px`;
+      const transform = this.held.transform || { scale: 1, rotation_deg: 0 };
+      ghost.style.transform = `translate(-50%, -50%) scale(${transform.scale}) rotate(${transform.rotation_deg}deg)`;
+      if (this.previewUrl) ghost.replaceChildren(make('img', { src: this.previewUrl, alt: '' }));
+      else ghost.replaceChildren(make('span', { text: 'IMAGE' }));
+      const target = this.currentSurface?.kind === 'browser_workspace' ? 'Browser Workspace' : 'Blue Workspace';
+      status.textContent = `Holding image · ${target} · release or click to insert · Esc to cancel`;
+    },
+    renderInsertions() {
+      const layer = $('#spatialInsertionLayer'); if (!layer) return;
+      layer.textContent = '';
+      for (const insertion of this.insertions.filter(item => item.sessionId === this.sessionId())) {
+        const image = make('img', { class: 'spatial-insertion-preview', src: insertion.previewUrl, alt: 'Inserted spatial reference' });
+        image.dataset.insertionId = insertion.insertionId;
+        image.style.left = `${Math.max(24, Math.min(innerWidth - 24, Number(insertion.pointer?.x || innerWidth / 2)))}px`;
+        image.style.top = `${Math.max(76, Math.min(innerHeight - 24, Number(insertion.pointer?.y || innerHeight / 2)))}px`;
+        image.style.transform = `translate(-50%, -50%) scale(${insertion.transform.scale}) rotate(${insertion.transform.rotation_deg}deg)`;
+        layer.append(image);
+      }
+    },
+    queueMove(pointer, transform = null) {
+      if (!this.held) return;
+      this.pendingMove = { pointer, transform };
+      this.render(pointer);
+      if (this.moveRunning) return;
+      this.moveRunning = true;
+      const flush = async () => {
+        while (this.held && this.pendingMove) {
+          const next = this.pendingMove; this.pendingMove = null;
+          try {
+            const value = await window.solat.spatialAssetMove({ sessionId: this.heldSessionId(), ghostId: this.held.ghost_id, pointer: next.pointer, ...(next.transform ? { transform: next.transform } : {}) });
+            if (this.held) this.held = value.ghost;
+          } catch (error) {
+            Toast.show(error?.message || 'Spatial image movement failed.', { icon: 'alert' });
+            await this.cancel();
+          }
+        }
+        this.moveRunning = false;
+      };
+      void flush();
+    },
+    async switchSurface(targetSurface, pointer = this.held?.pointer) {
+      if (!this.held || !targetSurface) return null;
+      const value = await window.solat.spatialAssetSwitch({ sessionId: this.heldSessionId(), ghostId: this.held.ghost_id, targetSurface, pointer });
+      this.held = value.ghost; this.currentSurface = targetSurface; this.render(pointer);
+      return value;
+    },
+    async drop(pointer = this.held?.pointer) {
+      if (!this.held) return null;
+      const ghostId = this.held.ghost_id; const targetSurface = this.currentSurface || this.blueSurface();
+      const previewUrl = this.previewUrl; const transform = this.held.transform || { scale: 1, rotation_deg: 0 }; const sessionId = this.heldSessionId();
+      try {
+        const value = await window.solat.spatialAssetDrop({ sessionId: this.heldSessionId(), ghostId, targetSurface, pointer });
+        if (targetSurface.kind === 'blue_workspace' && previewUrl && value?.insertion?.insertion_id) {
+          this.insertions.push({ sessionId, insertionId: value.insertion.insertion_id, previewUrl, pointer, transform });
+          while (this.insertions.length > 20) this.insertions.shift();
+          this.renderInsertions();
+        }
+        this.held = null; this.pendingMove = null; this.render();
+        Toast.show('Image inserted. You can refer to it as “รูปที่เพิ่งแปะ”.', { icon: 'check', timeout: 4200 });
+        return value;
+      } catch (error) {
+        Toast.show(error?.message || 'The image could not be inserted.', { icon: 'alert' });
+        return null;
+      }
+    },
+    async cancel() {
+      if (!this.held) return;
+      const ghostId = this.held.ghost_id; const sessionId = this.heldSessionId(); this.held = null; this.pendingMove = null; this.render();
+      try { await window.solat?.spatialAssetCancel?.({ sessionId, ghostId }); } catch {}
+    },
+    async useBlueSurface(pointer = this.held?.pointer) { return this.switchSurface(this.blueSurface(), pointer); },
+    async useBrowserSurface(pointer = this.held?.pointer) { return this.switchSurface(this.browserSurface(), pointer); },
+    async adoptBrowserSelection(payload) {
+      if (!payload?.ghost || payload.session_id !== this.sessionId() || payload.ghost.session_id !== this.sessionId()) return false;
+      const bytes = payload.preview_bytes instanceof Uint8Array ? payload.preview_bytes : new Uint8Array(payload.preview_bytes || []);
+      if (!bytes.length || bytes.length > 8 * 1024 * 1024 || payload.media_type !== 'image/png') return false;
+      if (this.held && this.held.ghost_id !== payload.ghost.ghost_id) {
+        try {
+          await window.solat.spatialAssetCancel({ sessionId: this.heldSessionId(), ghostId: this.held.ghost_id });
+        } catch (error) {
+          try { await window.solat.spatialAssetCancel({ sessionId: payload.session_id, ghostId: payload.ghost.ghost_id }); } catch {}
+          Toast.show(error?.message || 'Finish or cancel the current image before selecting another.', { icon: 'alert', timeout: 5200 });
+          return false;
+        }
+      }
+      if (this.previewUrl?.startsWith?.('blob:')) URL.revokeObjectURL(this.previewUrl);
+      this.previewUrl = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
+      this.held = payload.ghost;
+      this.currentSurface = payload.surface;
+      this.selectedAssetId = payload.asset?.spatial_asset_id || payload.ghost.spatial_asset_id;
+      this.render({ x: innerWidth / 2, y: innerHeight / 2, display_id: 'main-window' });
+      Toast.show(payload.surface?.kind === 'blue_workspace'
+        ? 'Chrome image ready. Move it in Blue and release or click to insert.'
+        : 'Browser image selected. Close the Browser Workspace to continue holding it in Blue.', { icon: 'check', timeout: 5200 });
+      return true;
+    },
+    handPoint(event) {
+      const point = event?.points?.[0] || event?.pointer;
+      if (!point) return null;
+      const bounds = event?.display?.bounds || {};
+      return {
+        x: Number(point.x || 0) + Number(bounds.x || 0) - Number(window.screenX || 0),
+        y: Number(point.y || 0) + Number(bounds.y || 0) - Number(window.screenY || 0),
+        display_id: String(event?.display?.id || 'main-window'),
+      };
+    },
+    async consumeHandEvent(event) {
+      const pointer = this.handPoint(event);
+      if (!pointer) return;
+      if (!this.held && event?.phase === 'start' && ['point', 'pinch', 'grab'].includes(event?.gesture)) {
+        const target = document.elementFromPoint(pointer.x, pointer.y)?.closest?.('.thumb');
+        const item = target?._solatSpatialAttachment;
+        if (item) await this.beginFromAttachment(item, { clientX: pointer.x, clientY: pointer.y, pointerType: 'hand' });
+        return;
+      }
+      if (!this.held) return;
+      if (event?.gesture === 'release' || event?.phase === 'end') return this.drop(pointer);
+      const transform = event?.transform ? {
+        scale: Number(event.transform.scale || this.held?.transform?.scale || 1),
+        rotation_deg: Number(event.transform.rotation_degrees ?? event.transform.rotation_deg ?? this.held?.transform?.rotation_deg ?? 0),
+      } : null;
+      this.queueMove(pointer, transform);
+    },
+    init() {
+      let activeThreadId = State.activeId;
+      globalThis.SOLATSpatialAssets = Object.freeze({
+        register: input => this.register(input), select: (...args) => this.select(...args), begin: input => this.begin(input),
+        move: (pointer, transform) => this.queueMove(pointer, transform), switchToBlue: pointer => this.useBlueSurface(pointer),
+        switchToBrowser: pointer => this.useBrowserSurface(pointer), drop: pointer => this.drop(pointer), cancel: () => this.cancel(),
+      });
+      document.addEventListener('pointermove', event => { if (this.held) this.queueMove(this.pointer(event)); }, { passive: true });
+      document.addEventListener('pointerup', event => { if (this.held) void this.drop(this.pointer(event)); }, { passive: true });
+      document.addEventListener('keydown', event => { if (event.key === 'Escape' && this.held) { event.preventDefault(); void this.cancel(); } }, true);
+      State.subscribe(() => {
+        if (activeThreadId === State.activeId) return;
+        activeThreadId = State.activeId;
+        if (this.held) void this.cancel();
+        this.renderInsertions();
+      });
+      this.renderInsertions();
+    },
+  };
+
+  const HandInput = {
+    runtime: null,
+    unsubscribe: null,
+    active: false,
+    async toggle() {
+      if (this.active) return this.stop();
+      if (!State.activeId || !window.solat?.handStart) return Toast.show('Hand tracking is unavailable.', { icon: 'alert' });
+      try {
+        if (!this.runtime) {
+          const { HandTrackingRuntime } = await import('./hand-tracking-runtime.mjs');
+          this.runtime = new HandTrackingRuntime({
+            bridge: window.solat,
+            onState: (state, error) => {
+              this.active = state === 'tracking';
+              $('#handBtn')?.setAttribute('aria-pressed', String(this.active));
+              if (state === 'error') Toast.show(error?.message || 'Hand tracking stopped because the camera or detector failed.', { icon: 'alert', timeout: 5200 });
+            },
+          });
+        }
+        await this.runtime.start(sessionFor(State.activeId));
+      } catch (error) {
+        this.active = false;
+        $('#handBtn')?.setAttribute('aria-pressed', 'false');
+        Toast.show(error?.message || 'Hand tracking could not start.', { icon: 'alert', timeout: 5200 });
+      }
+    },
+    async stop() {
+      try { await this.runtime?.stop?.(); } finally {
+        this.active = false;
+        $('#handBtn')?.setAttribute('aria-pressed', 'false');
+      }
+    },
+    init() {
+      if (window.solat?.onHandEvent) this.unsubscribe = window.solat.onHandEvent(event => { void SpatialAssets.consumeHandEvent(event); });
+      let activeThreadId = State.activeId;
+      State.subscribe(() => {
+        if (activeThreadId === State.activeId) return;
+        activeThreadId = State.activeId;
+        if (this.active) void this.stop();
+      });
+    },
+  };
+
   function wire() {
     State.subscribe(() => { Threads.render(); Projects.render(); Chat.render(); updateStorageInfo(); });
     document.addEventListener('click', event => {
@@ -2293,7 +2896,11 @@
     }, true);
     $('#newChatBtn')?.addEventListener('click', newConversation); $('#brandHomeBtn')?.addEventListener('click', () => newConversation({ animate: true })); $('#navToggle')?.addEventListener('click', () => $('#sidebar').classList.contains('open') ? closeSidebar() : openSidebar()); $('#scrim')?.addEventListener('click', () => { Menu.close(); Overlay.close(); closeSidebar(); });
     $('#omniBtn')?.addEventListener('click', () => Palette.open());
+    $('#spatialBtn')?.addEventListener('click', () => { void Spatial.open('lasso'); });
+    $('#browserBtn')?.addEventListener('click', () => { void BrowserWorkspace.open(); });
+    $('#handBtn')?.addEventListener('click', () => { void HandInput.toggle(); });
     $('#themeBtn')?.addEventListener('click', enterSolatVoiceMode);
+    $('#solatVoiceMicButton')?.addEventListener('click', () => { void toggleVoiceInput(); });
     $('#solatVoiceExitButton')?.addEventListener('click', exitSolatVoiceMode);
     document.addEventListener('solat:voice-activity', event => {
       const detail = event.detail && typeof event.detail === 'object' ? event.detail : {};
@@ -2311,7 +2918,7 @@
     $$('.set-panel [data-close], [data-close]').forEach(button => button.addEventListener('click', () => Overlay.close())); $('#confirmCancel')?.addEventListener('click', () => $('#confirm').dispatchEvent(new CustomEvent('solat:confirm', { detail: 'cancel' }))); $('#confirmOk')?.addEventListener('click', () => $('#confirm').dispatchEvent(new CustomEvent('solat:confirm', { detail: 'ok' })));
     $('#log')?.addEventListener('scroll', () => { const log = $('#log'); Chat.pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 90; Chat.updateJump(); }, { passive: true }); $('#jump')?.addEventListener('click', () => { Chat.pinned = true; $('#log').scrollTo({ top: $('#log').scrollHeight, behavior: Settings.get('motion') ? 'smooth' : 'auto' }); Chat.updateJump(); });
     document.addEventListener('pointerdown', spawnInkHit, { passive: true });
-    document.addEventListener('click', event => { if (Menu.anchor && !Menu.node.contains(event.target) && !Menu.anchor.contains(event.target)) Menu.close(); }); document.addEventListener('keydown', event => { const modifier = event.metaKey || event.ctrlKey; const typing = ['INPUT', 'TEXTAREA'].includes(event.target.tagName) || event.target.isContentEditable; if (modifier && event.key.toLowerCase() === 'k') { event.preventDefault(); Palette.open(); return; } if (modifier && event.shiftKey && event.key.toLowerCase() === 'o') { event.preventDefault(); newConversation(); return; } if (modifier && event.shiftKey && event.key.toLowerCase() === 'l') { event.preventDefault(); cycleTheme(true); return; } if (modifier && event.key.toLowerCase() === 'b') { event.preventDefault(); matchMedia('(max-width: 900px)').matches ? ($('#sidebar').classList.contains('open') ? closeSidebar() : openSidebar()) : $('#search')?.focus(); return; } if (event.key === 'Escape') { if (Menu.anchor) { Menu.close(); return; } if (Overlay.current) { Overlay.close(); return; } if ($('#sidebar').classList.contains('open')) closeSidebar(); else if (busy) Chat.stop(); return; } if (!typing && event.key === '/') { event.preventDefault(); Composer.focus(); } else if (!typing && event.key === '?') { event.preventDefault(); Overlay.open($('#shortcuts')); } else if (!typing && event.key === 'F2') { event.preventDefault(); renameActive(); } });
+    document.addEventListener('click', event => { if (Menu.anchor && !Menu.node.contains(event.target) && !Menu.anchor.contains(event.target)) Menu.close(); }); document.addEventListener('keydown', event => { const modifier = event.metaKey || event.ctrlKey; const typing = ['INPUT', 'TEXTAREA'].includes(event.target.tagName) || event.target.isContentEditable; if (modifier && event.shiftKey && event.code === 'Space') { event.preventDefault(); void Spatial.open('lasso'); return; } if (modifier && event.key.toLowerCase() === 'g') { event.preventDefault(); Palette.open(); return; } if (modifier && event.shiftKey && event.key.toLowerCase() === 'o') { event.preventDefault(); newConversation(); return; } if (modifier && event.shiftKey && event.key.toLowerCase() === 'l') { event.preventDefault(); cycleTheme(true); return; } if (modifier && event.key.toLowerCase() === 'b') { event.preventDefault(); matchMedia('(max-width: 900px)').matches ? ($('#sidebar').classList.contains('open') ? closeSidebar() : openSidebar()) : $('#search')?.focus(); return; } if (event.key === 'Escape') { if (Menu.anchor) { Menu.close(); return; } if (Overlay.current) { Overlay.close(); return; } if ($('#sidebar').classList.contains('open')) closeSidebar(); else if (busy) Chat.stop(); return; } if (!typing && event.key === '/') { event.preventDefault(); Composer.focus(); } else if (!typing && event.key === '?') { event.preventDefault(); Overlay.open($('#shortcuts')); } else if (!typing && event.key === 'F2') { event.preventDefault(); renameActive(); } });
   }
 
   function updateStorageInfo() { const node = $('#storageInfo'); if (node) node.textContent = `${State.threads.length} conversation${State.threads.length === 1 ? '' : 's'} saved locally`; }
@@ -2330,7 +2937,51 @@
     if (announce) Toast.show(alternate ? 'Alternate interface selected' : 'Classic interface selected', { icon: alternate ? 'spark' : 'check', timeout: 2200 });
   }
 
-  Settings.load(); Projects.load(); State.load(); SettingsUI.init(); Palette.init(); Composer.init(); AgentUI.init(); Music.init(); wire(); wireSolatCursor(); Threads.render(); Projects.render(); LibraryFiles.render(); Chat.render(); updateStorageInfo(); refreshStatus(); Music.restoreHistory(); State.restoreDurable();
+  if (window.SolatVoiceController) {
+    Voice = new window.SolatVoiceController({
+      bridge: window.solat,
+      onState: state => {
+        setSolatVoiceActivity(state);
+        const listening = ['listening', 'user_speaking', 'transcribing'].includes(state);
+        $('#micBtn')?.setAttribute('aria-pressed', String(listening));
+        const voiceMic = $('#solatVoiceMicButton');
+        if (voiceMic) {
+          voiceMic.setAttribute('aria-pressed', String(listening));
+          voiceMic.setAttribute('aria-label', listening ? 'Stop microphone' : 'Start microphone');
+          voiceMic.setAttribute('title', listening ? 'Stop microphone' : 'Start microphone');
+          const label = voiceMic.querySelector('.solat-voice-mic-label');
+          if (label) label.textContent = listening ? 'MIC ON' : 'MIC';
+        }
+        const labels = { idle: 'Ready', listening: 'Listening', user_speaking: 'User speaking', transcribing: 'Transcribing', thinking: 'Thinking', acting: 'Acting', speaking: 'SOLAT speaking', interrupted: 'Interrupted', error: 'Voice error' };
+        setStatus(state === 'error' ? 'error' : ['idle', 'listening'].includes(state) ? 'ready' : 'busy', labels[state] || 'Voice');
+      },
+      onPartial: transcript => {
+        // Partial transcripts are provisional UI feedback only. They render in
+        // the ephemeral voice preview, never into the Red typed composer, and
+        // never become a chat turn.
+        const value = String(transcript || '').trim();
+        if (!value) return;
+        if (isSolatVoiceSceneActive()) setSolatVoicePreview(value);
+      },
+      onFinalTranscript: async (transcript, utteranceId, metadata = {}) => {
+        if (busy) await waitForChatIdle();
+        if (!Voice?.active) return false;
+        // A finalized utterance enters SOLAT through the unified input
+        // boundary as a voice turn. It never simulates typing into the Red
+        // composer or clicking Send, so the view is not the transport.
+        await Chat.submitVoiceTurn(transcript, {
+          voiceSessionId: metadata.voiceSessionId,
+          voiceUtteranceId: utteranceId || metadata.utteranceId,
+          voiceFinalAtMs: metadata.receivedAtMs,
+        });
+        return true;
+      },
+      onError: error => Toast.show(error?.message || 'Voice mode stopped with an error.', { icon: 'alert', timeout: 5200 }),
+    });
+    window.solatVoiceController = Voice;
+    window.solat.onAssistantDelta?.(payload => handleAssistantDelta(payload));
+  }
+  Settings.load(); Projects.load(); State.load(); SettingsUI.init(); Palette.init(); ChromeControlSetup.init(); Composer.init(); AgentUI.init(); Music.init(); Spatial.init(); BrowserWorkspace.init(); SpatialAssets.init(); HandInput.init(); wire(); wireSolatCursor(); Threads.render(); Projects.render(); LibraryFiles.render(); Chat.render(); updateStorageInfo(); refreshStatus(); Music.restoreHistory(); State.restoreDurable();
   setUiMode('classic', false);
   $('#boot')?.classList.add('done'); $('#input')?.focus();
 })();

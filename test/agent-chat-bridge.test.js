@@ -72,6 +72,32 @@ test('one task authorization reuses approval only inside its bounded scope', asy
   assert.equal(executions, 1);
 });
 
+test('task authorization cannot be replayed by another renderer sharing a session id', async t => {
+  const rootDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'solat-task-owner-'));
+  t.after(() => fs.promises.rm(rootDir, { recursive: true, force: true }));
+  let executions = 0;
+  const registry = {
+    write_tool: { side_effect_level: 'write', validate_arguments: args => typeof args.value === 'string', validate_output: result => result.status === 'ready' },
+  };
+  const service = new AgentService({ rootDir, toolRegistry: registry, executeTool: async () => { executions += 1; return { status: 'ready', verified: true }; } });
+  const bridge = new AgentChatBridge({ agentService: service, toolDefinitions: definitions });
+  const authorization = bridge.issueTaskAuthorization({
+    ownerId: 'renderer:41', sessionId: 'shared-session', taskId: 'task-owner', instructionRevision: 1,
+    scope: { allowed_tools: ['write_tool'] }, maxWrites: 2,
+  });
+  const owner = await bridge.execute({
+    ownerId: 'renderer:41', sessionId: 'shared-session', requestId: 'owner-request', taskAuthorization: authorization,
+    call: { name: 'write_tool', arguments: { value: 'owner write' } },
+  });
+  assert.equal(owner.approval_reused, true);
+  const other = await bridge.execute({
+    ownerId: 'renderer:42', sessionId: 'shared-session', requestId: 'other-request', taskAuthorization: authorization,
+    call: { name: 'write_tool', arguments: { value: 'spoofed write' } },
+  });
+  assert.equal(other.model_result.status, 'confirmation_required');
+  assert.equal(executions, 1);
+});
+
 test('task authorization fails closed when an approved HWND is reused by another process', async t => {
   const rootDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'solat-target-grant-'));
   t.after(() => fs.promises.rm(rootDir, { recursive: true, force: true }));

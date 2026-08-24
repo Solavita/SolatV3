@@ -1,0 +1,27 @@
+{
+  "schema_version": "solat.packaged-hand-detector.v1",
+  "status": "PASS",
+  "package": {
+    "executable_sha256": "E77A616A02B8F2DBD800E83CF560647DD655138AC082F9FBD1F545E2C1D6AE16",
+    "app_asar_sha256": "C2E1A73C27F6CC389039D27F46E120624B9044CEE2116DD7E8FEC12609FC7020"
+  },
+  "runtime": {
+    "detector_initialized": true,
+    "camera_requested": false,
+    "baseline_external_http_requests": 1,
+    "baseline_external_origins": [
+      "https://fonts.googleapis.com"
+    ],
+    "detector_external_http_requests": 0,
+    "detector_external_origins": [],
+    "localhost_cdp_test_only": true
+  },
+  "cleanup": {
+    "main_process_stopped": true,
+    "isolated_profile_removed": true
+  },
+  "limitations": [
+    "Detector initialization only; no physical camera, landmarks, gestures, device switching, occlusion, lighting or subjective usability was tested.",
+    "Network observation covered the packaged renderer during this bounded detector initialization probe only; ordinary UI startup traffic is reported separately from detector-phase traffic."
+  ]
+}

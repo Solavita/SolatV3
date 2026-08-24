@@ -3,6 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { readConfig } = require('../src/core/config');
 const { ConversationCore } = require('../src/core/conversation-core');
+const { createProvider } = require('../src/core/provider');
+const { ModelRouter } = require('../src/core/model-router');
 const { WebSearchService } = require('../src/core/web-search');
 const { runLiveSearchSmoke } = require('../src/core/live-search-smoke');
 
@@ -22,7 +24,10 @@ async function main() {
     wikipediaFallback: config.searchWikipediaFallback,
     engines: config.searchEngines,
   });
-  const core = new ConversationCore({ config, searchService });
+  const provider = new ModelRouter({
+    flashProvider: createProvider(config.flashModel), plusProvider: createProvider(config.plusModel), mode: config.modelMode,
+  });
+  const core = new ConversationCore({ config, provider, searchService });
   const report = await runLiveSearchSmoke(core);
   const serialized = `${JSON.stringify(report, null, 2)}\n`;
   const destination = outputPath(process.argv.slice(2));

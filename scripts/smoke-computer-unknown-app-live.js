@@ -15,20 +15,21 @@ async function main() {
   if (!process.argv.includes('--execute')) throw new Error('Opt-in required: re-run with --execute.');
   const modeIndex = process.argv.indexOf('--mode');
   const mode = modeIndex >= 0 ? String(process.argv[modeIndex + 1] || '').trim() : 'auto';
-  if (!['auto', 'local', 'deepseek'].includes(mode)) throw new Error('--mode must be auto, local, or deepseek.');
+  if (mode !== 'auto') throw new Error('--mode must be auto.');
   const config = readConfig();
-  const localProvider = createProvider(config.localModel);
+  if (!config.flashModel?.apiKey || !config.plusModel?.apiKey) throw new Error('Qwen Flash and Plus are not configured.');
+  const flashProvider = createProvider(config.flashModel);
   if (process.argv.includes('--trace-steps')) {
-    const originalCompleteStructured = localProvider.completeStructured.bind(localProvider);
-    localProvider.completeStructured = async (...args) => {
+    const originalCompleteStructured = flashProvider.completeStructured.bind(flashProvider);
+    flashProvider.completeStructured = async (...args) => {
       const result = await originalCompleteStructured(...args);
-      process.stderr.write(`[qwen-controller-step] ${JSON.stringify(result.data)}\n`);
+      process.stderr.write(`[qwen-flash-controller-step] ${JSON.stringify(result.data)}\n`);
       return result;
     };
   }
   const router = new ModelRouter({
-    localProvider,
-    deepseekProvider: createProvider(config),
+    flashProvider,
+    plusProvider: createProvider(config.plusModel),
     mode,
   });
   const adapter = new WinAppComputerUseAdapter();
@@ -53,6 +54,7 @@ async function main() {
     const toolsUsed = events.filter(item => item.type === 'observation_ready').map(item => item.tool).filter(Boolean);
     const report = {
       schema_version: 'solat.computer-unknown-app-live.v1',
+      model_architecture: config.modelArchitecture,
       model_mode: mode,
       status: task.status === 'COMPLETED' && toolsUsed.includes('computer_list_windows') && toolsUsed.includes('computer_inspect') ? 'PASS' : 'FAIL',
       task_status: task.status,

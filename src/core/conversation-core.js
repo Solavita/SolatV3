@@ -9,6 +9,16 @@ const { planAgentCommand, requestedYoutubeMusicQuery } = require('./agent-comman
 const MAX_MESSAGE_LENGTH = 12000;
 const MAX_MODEL_CONTEXT_CHARS = 56000;
 const CONVERSATION_PROMPT_VERSION = 'solat.conversation-system.v4';
+
+// Renderer ownership and the user-selected conversation session are separate
+// scopes. Keep the historical session-only key when ownerId is omitted (the
+// direct-node/test path), while renderer IPC isolates identical session ids
+// across windows.
+function conversationScopeKey(ownerId, sessionId) {
+  const owner = String(ownerId || '').trim();
+  const session = String(sessionId || '').trim();
+  return owner === session ? session : `${owner}\u0000${session}`;
+}
 const REQUESTED_PLATFORM_HINTS = Object.freeze([
   { scope: 'social', label: 'Pinterest', pattern: /\bpinterest\b|\u0e1e\u0e34\u0e19\u0e40\u0e17\u0e2d\u0e40\u0e23\u0e2a\u0e15\u0e4c/iu },
   { scope: 'social', label: 'TikTok', pattern: /\btiktok\b|\u0e15\u0e34\u0e4a\u0e01\u0e15\u0e47\u0e2d\u0e01/iu },
@@ -24,6 +34,68 @@ const REQUESTED_PLATFORM_HOSTS = Object.freeze({
   Facebook: Object.freeze(['facebook.com']),
   YouTube: Object.freeze(['youtube.com', 'youtu.be']),
 });
+
+function buildSpatialContextInstruction(spatialContext) {
+  if (!spatialContext || spatialContext.schema_version !== 'solat.spatial-context.v1') return '';
+  const points = Array.isArray(spatialContext.points) ? spatialContext.points : [];
+  const stride = Math.max(1, Math.ceil(points.length / 128));
+  const sampledPoints = points.filter((_point, index) => index % stride === 0).slice(0, 128)
+    .map(point => ({ x: point.x, y: point.y, t_ms: point.t_ms }));
+  const evidence = {
+    schema_version: spatialContext.schema_version,
+    reference: spatialContext.reference,
+    event_id: spatialContext.event_id,
+    context_id: spatialContext.context_id,
+    source: spatialContext.source,
+    gesture: spatialContext.gesture,
+    occurred_at_ms: spatialContext.occurred_at_ms,
+    age_ms: spatialContext.age_ms,
+    display: spatialContext.display,
+    bounds: spatialContext.bounds,
+    sampled_points: sampledPoints,
+  };
+  return `The owner referenced a recent SOLAT spatial annotation. Treat this as owner-authored pointing evidence, not as permission or proof of screen content. Geometry is code-validated. If an action depends on what is inside the marked area, inspect the current screen through the existing Computer Use evidence path before acting. Spatial context:\n${JSON.stringify(evidence)}`;
+}
+
+function buildSpatialAssetContextInstruction(context) {
+  if (!context || context.schema_version !== 'solat.spatial-interaction-context.v1') return '';
+  const value = context.value && typeof context.value === 'object' ? context.value : {};
+  const asset = value.asset || {};
+  const insertion = value.insertion || {};
+  const surface = value.surface || insertion.target_surface || value.ghost?.current_surface || null;
+  const evidence = {
+    schema_version: context.schema_version,
+    reference: context.reference,
+    resolved_at_ms: context.resolved_at_ms,
+    event_id: value.event_id || null,
+    spatial_asset_id: asset.spatial_asset_id || insertion.spatial_asset_id || value.ghost?.spatial_asset_id || null,
+    original_asset_id: asset.original?.asset_id || insertion.provenance?.source_asset_id || null,
+    original_hash: asset.original?.hash || insertion.provenance?.source_hash || null,
+    insertion_id: insertion.insertion_id || null,
+    target_surface: surface,
+    placement: insertion.placement || null,
+  };
+  return `The owner referenced a recent SOLAT SpatialAsset interaction. Treat this bounded interaction memory as reference grounding, not as permission, current screen truth, or proof that an external application accepted a drop. Preserve the immutable original. Inspect the current target before any screen-dependent action. SpatialAsset context:\n${JSON.stringify(evidence)}`;
+}
+
+function buildMultimodalContextInstruction(context) {
+  if (!context || context.schema_version !== 'solat.multimodal-context.v1') return '';
+  if (context.status !== 'resolved') {
+    return 'The latest multimodal reference could not be resolved from current owner/session evidence. Ask one concise clarification question instead of guessing a target.';
+  }
+  const evidence = {
+    schema_version: context.schema_version,
+    reference: context.reference,
+    event_id: context.event_id,
+    source: context.source,
+    type: context.type,
+    occurred_at_ms: context.occurred_at_ms,
+    age_ms: context.age_ms,
+    payload: context.payload,
+    ordering: context.ordering,
+  };
+  return `The owner referenced a recent multimodal SOLAT interaction. This code-validated, owner/session-scoped metadata resolves the reference only; it is not permission or proof that an external action succeeded. Never infer raw audio, image content, credentials, or hidden screen state from it. Re-observe the current surface before a screen-dependent mutation. Multimodal context:\n${JSON.stringify(evidence)}`;
+}
 
 function platformCoverageForMessage(userMessage, sources) {
   const text = String(userMessage || '');
@@ -121,6 +193,14 @@ function parseDirectComputerWorkflowRequest(message) {
   return null;
 }
 
+// Computer Use is one execution capability, not the default destination. A
+// GUI verb alone ("search", "read", "continue") must not drag unrelated
+// chat, arithmetic, or web-research requests into screen automation; the
+// request must also name a concrete screen/app/window/browser target.
+function hasGuiNavigationTarget(value) {
+  return /(?:\b(?:chrome|edge|firefox|browser|window|screen|desktop|app|application|program|website|webpage|page|notepad|calculator|classroom|instagram|youtube|roblox|wikipedia|explorer)\b|\u0E40\u0E1A\u0E23\u0E32\u0E27\u0E40\u0E0B\u0E2d\u0E23\u0E4C|\u0E42\u0E04\u0E23\u0E21|\u0E40\u0E27\u0E47\u0E1A|\u0E2B\u0E19\u0E49\u0E32\u0E15\u0E48\u0E32\u0E07|\u0E2B\u0E19\u0E49\u0E32\u0E08\u0E2D|\u0E41\u0E2D\u0E1B|\u0E42\u0E1B\u0E23\u0E41\u0E01\u0E23\u0E21|\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E04\u0E34\u0E14\u0E40\u0E25\u0E02|\u0E04\u0E2D\u0E21\u0E1E\u0E34\u0E27\u0E40\u0E15\u0E2d\u0E23\u0E4C|\u0E2D\u0E34\u0E19\u0E2A\u0E15\u0E32\u0E41\u0E01\u0E23\u0E21|\u0E22\u0E39\u0E17\u0E39\u0E1A|\u0E27\u0E34\u0E01\u0E34\u0E1E\u0E35\u0E40\u0E14\u0E35\u0E22)/iu.test(value);
+}
+
 // The screen planner is for genuinely screen-driven navigation after an
 // initial action, not for every computer request. A playback request remains
 // screen-driven because the outer task must consume the verified stability
@@ -137,7 +217,7 @@ function requiresScreenDrivenComputerTask(message) {
   // inspection, scrolling, or summarisation. Detect the whole workflow before
   // applying the launch-only fast path, otherwise the remaining steps vanish.
   const requiresScreenWork = /(?:\b(?:find|locate|select|choose|click|type|inspect|read|show|screenshot|navigate|scroll|switch|return|continue|wikipedia)\b|ค้นหา|ตามหา|(?:แล้ว|เเล้ว)\s*(?:หา|กลับ|สลับ|ทำต่อ)|เลือก|คลิก|พิมพ์|ตรวจดู|อ่าน|ดู\s*(?:หน้าต่าง|หน้าจอ|โปรแกรม|แอป)|บอก\s*(?:ตัวเลข|ข้อความ|สิ่งที่)|แสดง|เข้าไปที่|เลื่อน|กลับไป|สลับไป|ทำต่อ)/iu.test(value);
-  if (requiresScreenWork) return true;
+  if (requiresScreenWork && hasGuiNavigationTarget(value)) return true;
   const ambiguousScreenReference = /(?:\b(?:it|that|previous)\b|โปรแกรมนั้น|หน้าต่างนั้น|แอปนั้น|อันนั้น|เมื่อกี้|ก่อนหน้า)/iu.test(value)
     && /(?:\b(?:open|continue|switch|return)\b|เปิด|ทำต่อ|สลับ|กลับ)/iu.test(value);
   if (ambiguousScreenReference) return true;
@@ -419,8 +499,11 @@ function comparisonRecoveryQueries(searchRuns, entities) {
 }
 
 class ConversationCore {
-  constructor({ config, provider, router = { analyze: analyzeIntent }, searchService = null, commerceService = null, fileContextProvider = null, agentBridge = null, computerTaskLoop = null } = {}) {
+  constructor({ config, provider, router = { analyze: analyzeIntent }, searchService = null, commerceService = null, fileContextProvider = null, agentBridge = null, computerTaskLoop = null, agentsRuntime = null } = {}) {
     this.config = config;
+    if (!provider && config?.modelArchitecture === 'qwen_flash_plus.v1') {
+      throw new ProviderError('invalid_config', 'The Qwen Flash/Plus role router must be injected by the composition root.');
+    }
     this.provider = provider || createProvider(config);
     this.sessions = new Map();
     this.workspace = new SessionWorkspace();
@@ -430,26 +513,36 @@ class ConversationCore {
     this.fileContextProvider = fileContextProvider;
     this.agentBridge = agentBridge;
     this.computerTaskLoop = computerTaskLoop;
+    this.agentsRuntime = agentsRuntime;
   }
 
   status() {
     return {
       ...this.provider.status(),
+      agentsRuntime: this.agentsRuntime?.status?.() || { framework: '@openai/agents', enabled: false },
       search: this.searchService?.status?.() || { provider: 'disabled', enabled: false, configured: false },
       commerce: this.commerceService?.status?.() || { provider: 'disabled', enabled: false, configured: false },
     };
   }
 
-  async send({ sessionId, content, requestId, assetIds = [], agentMode = false, agentCommand = null, onComputerTaskEvent = null }) {
+  async send({ ownerId = null, sessionId, content, requestId, assetIds = [], agentMode = false, agentCommand = null, spatialContext = null, spatialAssetContext = null, multimodalContext = null, onComputerTaskEvent = null, inputSource = 'text', onAssistantDelta = null }) {
     const normalizedSession = String(sessionId || '').trim();
+    const normalizedOwner = String(ownerId ?? normalizedSession).trim();
     const submittedContent = String(content ?? '');
     const normalizedContent = submittedContent.trim();
+    // Unified input boundary: typed text, finalized voice turns, and future
+    // spatial/hand submissions share this pipeline. The source label travels
+    // with the turn but never changes tool selection or authority.
+    const normalizedInputSource = ['text', 'voice'].includes(String(inputSource || '').trim()) ? String(inputSource).trim() : 'text';
+    const streamDelta = typeof onAssistantDelta === 'function' ? onAssistantDelta : null;
+    const streamOptions = streamDelta ? { stream: true, onDelta: streamDelta } : {};
     // Preserve the exact user turn for storage/audit, while repairing a
     // recognizable UTF-8/Windows-874 display corruption for routing and the
     // provider-facing context. This is bounded and leaves normal Thai/English
     // unchanged; it prevents encoding artifacts from becoming the model's
     // semantic input.
     const modelContent = repairWindows874Mojibake(submittedContent);
+    if (!normalizedOwner) throw new ProviderError('invalid_request', 'A renderer owner is required.');
     if (!normalizedSession) throw new ProviderError('invalid_request', 'A session id is required.');
     if (!normalizedContent) throw new ProviderError('invalid_request', 'Message cannot be empty.');
     if (submittedContent.length > MAX_MESSAGE_LENGTH) {
@@ -462,7 +555,11 @@ class ConversationCore {
     const job = this.workspace.beginJob({ sessionId: normalizedSession, requestId: normalizedRequestId });
     if (job.replay) return { ...job.response, replayed: true };
     if (assetIds.length) this.workspace.linkProject({ sessionId: normalizedSession, assetIds });
-    const history = this.sessions.get(normalizedSession) || [];
+    const scopeKey = conversationScopeKey(normalizedOwner, normalizedSession);
+    const completePlain = messages => this.agentsRuntime
+      ? this.agentsRuntime.run({ messages, onDelta: streamDelta, groupId: scopeKey, maxTurns: 2 })
+      : this.provider.complete(messages, streamOptions);
+    const history = this.sessions.get(scopeKey) || [];
     const modelHistory = history.map(turn => ({ ...turn, content: repairWindows874Mojibake(turn.content) }));
     const intentHints = this.router.analyze({ content: modelContent, history: modelHistory, attachments: assetIds });
     const resolvedReferenceInstruction = buildResolvedReferenceInstruction(intentHints, modelHistory);
@@ -470,7 +567,7 @@ class ConversationCore {
       role: 'system',
       content: buildConversationSystemPrompt({ intentHints, resolvedReferenceInstruction, assetIds, history: modelHistory }),
     };
-    const nextMessages = [...history, { role: 'user', content: submittedContent }];
+    const nextMessages = [...history, { role: 'user', content: submittedContent, input_source: normalizedInputSource }];
     // Keep every turn in the session for ownership, persistence, and routing.
     // Only the provider-facing view is bounded, newest-first, to prevent a
     // long chat from failing at the model context limit. No synthetic summary
@@ -525,10 +622,13 @@ class ConversationCore {
             ? 'SOLAT Agent mode is ON but no @ command is selected. Continue answering ordinary questions normally.'
             : 'SOLAT Agent mode is OFF. Do not claim to create, edit, export, or control files or the computer. Continue answering ordinary questions normally.'),
       } : null;
-      const modelMessages = [hintMessage, ...(agentModeMessage ? [agentModeMessage] : []), ...(fileContext ? [{ role: 'system', content: fileContext }] : []), ...contextWindow.messages];
+      const spatialInstruction = buildSpatialContextInstruction(spatialContext);
+      const spatialAssetInstruction = buildSpatialAssetContextInstruction(spatialAssetContext);
+      const multimodalInstruction = buildMultimodalContextInstruction(multimodalContext);
+      const modelMessages = [hintMessage, ...(agentModeMessage ? [agentModeMessage] : []), ...(spatialInstruction ? [{ role: 'system', content: spatialInstruction }] : []), ...(spatialAssetInstruction ? [{ role: 'system', content: spatialAssetInstruction }] : []), ...(multimodalInstruction ? [{ role: 'system', content: multimodalInstruction }] : []), ...(fileContext ? [{ role: 'system', content: fileContext }] : []), ...contextWindow.messages];
       const activeComputerTask = Boolean(this.computerTaskLoop && agentEnabled
         && typeof this.computerTaskLoop.hasActive === 'function'
-        && this.computerTaskLoop.hasActive({ ownerId: normalizedSession, sessionId: normalizedSession }));
+        && this.computerTaskLoop.hasActive({ ownerId: normalizedOwner, sessionId: normalizedSession }));
       // An active task does not make every later chat turn a steering command.
       // Only a new screen-driven instruction may revise it. File work, normal
       // chat, and a different bounded Agent request supersede the old task.
@@ -536,7 +636,7 @@ class ConversationCore {
         && requiresScreenDrivenComputerTask(modelContent);
       if (activeComputerTask && !computerTaskRequested && typeof this.computerTaskLoop.interruptActive === 'function') {
         await this.computerTaskLoop.interruptActive({
-          ownerId: normalizedSession,
+          ownerId: normalizedOwner,
           sessionId: normalizedSession,
           eventSink: onComputerTaskEvent,
           reason: 'This computer task was replaced by a newer, unrelated owner instruction.',
@@ -556,7 +656,7 @@ class ConversationCore {
       } else if (agentEnabled && computerTaskRequested && this.computerTaskLoop) {
         const directWorkflow = parseDirectComputerWorkflowRequest(modelContent);
         const taskInput = {
-          ownerId: normalizedSession,
+          ownerId: normalizedOwner,
           sessionId: normalizedSession,
           requestId: normalizedRequestId,
           eventSink: onComputerTaskEvent,
@@ -571,7 +671,7 @@ class ConversationCore {
         let task;
         try {
           task = typeof this.computerTaskLoop.hasActive === 'function'
-            && this.computerTaskLoop.hasActive({ ownerId: normalizedSession, sessionId: normalizedSession })
+            && this.computerTaskLoop.hasActive({ ownerId: normalizedOwner, sessionId: normalizedSession })
             ? await this.computerTaskLoop.revise({ ...taskInput, instruction: modelContent })
             : await this.computerTaskLoop.start({ ...taskInput, goal: modelContent });
         } catch (error) {
@@ -618,6 +718,7 @@ class ConversationCore {
           result = { content: plan.summary, provider: 'solat_agent_planner', model: 'model planned clarification', usage: null, toolRounds: 0 };
         } else {
           const outcome = await this.agentBridge.execute({
+            ownerId: normalizedOwner,
             sessionId: normalizedSession,
             requestId: normalizedRequestId,
             call: { id: `model-plan-${normalizedRequestId}`, name: plan.tool, arguments: plan.arguments },
@@ -638,17 +739,24 @@ class ConversationCore {
           if (typeof this.searchService.readPageToolDefinition === 'function') toolDefinitions.push(this.searchService.readPageToolDefinition());
         }
         if (commerceEnabled) toolDefinitions.push(this.commerceService.toolDefinition());
-        if (agentEnabled) {
+        // Capability selection follows the goal of THIS turn. Filesystem and
+        // Computer Use tools are attached only when the turn explicitly asks
+        // for that capability; an always-on Agent toggle or a still-active
+        // computer task must not expose GUI tools to unrelated questions.
+        if (agentEnabled && (normalizedAgentCommand || requestsAgentCapability(modelContent))) {
           const definitions = this.agentBridge.definitions();
           const prefix = normalizedAgentCommand === 'create-file' ? 'filesystem_' : normalizedAgentCommand === 'computer-use' ? 'computer_' : '';
           toolDefinitions.push(...(prefix ? definitions.filter(definition => String(definition?.function?.name || '').startsWith(prefix)) : definitions));
         }
-        result = await this.provider.completeWithTools(modelMessages, {
-          tools: toolDefinitions,
-          toolExecutor: executeSearchTool = async call => {
+        // First-class no-tool path: when this turn needs no capability, answer
+        // plainly instead of sending an empty tool list to the provider.
+        if (!toolDefinitions.length) {
+          result = await completePlain(modelMessages);
+        } else {
+        const toolExecutor = executeSearchTool = async call => {
             if (agentEnabled && this.agentBridge.owns(call?.name)) {
               try {
-                const outcome = await this.agentBridge.execute({ sessionId: normalizedSession, requestId: normalizedRequestId, call });
+                const outcome = await this.agentBridge.execute({ ownerId: normalizedOwner, sessionId: normalizedSession, requestId: normalizedRequestId, call });
                 if (outcome.action) agentActions.push(outcome.action);
                 return outcome.model_result;
               } catch (error) {
@@ -704,11 +812,6 @@ class ConversationCore {
             };
             const alignedCall = effectiveCall === call && queryAlignment.adjusted ? { ...call, arguments: { ...call.arguments, query: queryAlignment.query } } : effectiveCall;
             const comparisonTarget = comparisonTargetForQuery(queryAlignment.query, comparisonEntities);
-            // An explicit multi-scope request is authoritative even when the
-            // model starts with one concrete scope instead of `auto`. Run each
-            // requested scope exactly once so a partial tool choice cannot
-            // silently omit a platform the user named. With no explicit
-            // request, preserve model-first selection and run only its scope.
             const scopesToRun = requestedSourceScopes.length > 1
               ? requestedSourceScopes : [enforcedScope];
             const annotatedOutcomes = [];
@@ -737,9 +840,6 @@ class ConversationCore {
               const verifiedOutcome = filterComparisonOutcome(outcome, comparisonTarget);
               const annotatedOutcome = {
                 ...verifiedOutcome,
-                // Make the validated count explicit in the tool payload. The
-                // model must not infer a count from attempted calls or trace
-                // labels, and reviewers need the same number the UI renders.
                 source_count: Array.isArray(verifiedOutcome?.sources) ? verifiedOutcome.sources.length : (Array.isArray(verifiedOutcome?.results) ? verifiedOutcome.results.length : 0),
                 comparison_target: comparisonTarget,
                 requested_platforms: platformConstraint.requested_platforms,
@@ -750,14 +850,26 @@ class ConversationCore {
               searchRuns.push({ ...annotatedOutcome, requested_source_scopes: requestedSourceScopes, scope_adjusted: sourceScope !== requestedScope, query_adjusted: queryAlignment.adjusted || platformConstraint.adjusted || contextConstraint.adjusted, query_rejected: false });
             }
             return scopesToRun.length === 1 ? annotatedOutcomes[0] : mergeScopedOutcomes(annotatedOutcomes, queryAlignment.query);
-          },
+          };
+        const maxToolCalls = comparisonEntities.length === 2 ? 6 : 3;
+        result = this.agentsRuntime
+          ? await this.agentsRuntime.run({
+            messages: modelMessages,
+            toolDefinitions,
+            toolExecutor,
+            maxTurns: 4,
+            maxToolCalls,
+            onDelta: streamDelta,
+            groupId: scopeKey,
+          })
+          : await this.provider.completeWithTools(modelMessages, {
+          tools: toolDefinitions,
+          toolExecutor,
           maxToolRounds: 3,
-          // A comparison often needs one bounded search per named candidate
-          // in each round. Three total calls can cut the second pair in half
-          // and leave the model unable to synthesize fairly, so allow up to
-          // two calls per round only for an explicit two-entity comparison.
-          maxToolCalls: comparisonEntities.length === 2 ? 6 : 3,
+          maxToolCalls,
+          ...(streamDelta ? { onDelta: streamDelta } : {}),
         });
+        }
         // Some compatible models answer a clear business read request as
         // ordinary chat instead of selecting the commerce function. Recover
         // only when the router marked an explicit commerce intent; this is
@@ -777,7 +889,7 @@ class ConversationCore {
           const commerceOutcome = await executeSearchTool({ name: 'commerce', recovery: true, arguments: { action: commerceAction } });
           const boundedCommerce = JSON.stringify(commerceOutcome).slice(0, 14000);
           if (typeof this.provider.complete === 'function') {
-            result = await this.provider.complete([
+            result = await completePlain([
               hintMessage,
               { role: 'system', content: `SOLAT executed the explicit business read action ${commerceAction} because the model did not select the commerce tool. Use only the returned owner-scoped data; if it is unavailable or empty, say so plainly and do not ask the owner to repeat the request.\n${boundedCommerce}` },
               ...contextWindow.messages,
@@ -804,7 +916,7 @@ class ConversationCore {
               { role: 'system', content: `SOLAT performed bounded per-candidate recovery for a comparison because one or more named entities lacked usable evidence. Do not request another tool. Use only this evidence and the earlier tool results already in context; keep candidates separate, ask for clarification if evidence remains incomplete, and do not invent sources.\n${boundedEvidence}` },
               ...contextWindow.messages,
             ];
-          const synthesis = await this.provider.complete(synthesisMessages);
+          const synthesis = await completePlain(synthesisMessages);
           result = { ...synthesis, toolRounds: result.toolRounds || 0, comparisonRecoveryUsed: true };
         }
         }
@@ -831,7 +943,7 @@ class ConversationCore {
             });
           }
           const boundedEvidence = JSON.stringify(comparisonCoverage).slice(0, 14000);
-          const synthesis = await this.provider.complete([
+          const synthesis = await completePlain([
             hintMessage,
             { role: 'system', content: `SOLAT performed one bounded ${comparisonPriorityScope} corroboration pass for unresolved comparison candidates. Keep each candidate separate, use only returned evidence and earlier tool results, and state uncertainty plainly if either side remains unsupported. Do not invent facts or sources.\n${boundedEvidence}` },
             ...contextWindow.messages,
@@ -859,7 +971,7 @@ class ConversationCore {
             errors: Array.isArray(coverageOutcome?.errors) ? coverageOutcome.errors : [],
             quality: coverageOutcome?.quality || {},
           }).slice(0, 14000);
-          const synthesis = await this.provider.complete([
+          const synthesis = await completePlain([
             hintMessage,
             { role: 'system', content: `SOLAT performed one bounded encyclopedic corroboration search after the initial model-selected search. Reconcile the original answer with this evidence. Use only returned evidence, distinguish discovery from verification, and state uncertainty plainly; do not invent facts or sources.\n${boundedEvidence}` },
             ...contextWindow.messages,
@@ -910,11 +1022,11 @@ class ConversationCore {
             { role: 'system', content: `SOLAT performed one bounded recovery web search because the user's request clearly asks for source-backed information and the initial tool path was either unused or returned no usable evidence. Do not request another tool. Use only the evidence below; if it is empty or degraded, say that plainly and do not invent a source.\n${boundedEvidence}` },
             ...contextWindow.messages,
           ];
-          const recoveryResult = await this.provider.complete(recoveryMessages);
+          const recoveryResult = await completePlain(recoveryMessages);
           result = { ...recoveryResult, toolRounds: result.toolRounds || 0, searchRecoveryUsed: true };
         }
       } else {
-        result = await this.provider.complete(modelMessages);
+        result = await completePlain(modelMessages);
       }
     } catch (error) {
       this.workspace.failJob({ sessionId: normalizedSession, requestId: normalizedRequestId, error });
@@ -935,7 +1047,7 @@ class ConversationCore {
     // the conversation/UI receive usable text instead of mojibake.
     const repairedResultContent = repairWindows874Mojibake(result.content);
     const assistant = { role: 'assistant', content: repairedResultContent.trim() };
-    this.sessions.set(normalizedSession, [...nextMessages, assistant]);
+    this.sessions.set(scopeKey, [...nextMessages, assistant]);
     const sourceMap = new Map();
     for (const run of searchRuns) {
       // Keep the provider-tool contract tolerant of an older adapter that
@@ -1064,6 +1176,7 @@ class ConversationCore {
       sessionId: normalizedSession,
       requestId: normalizedRequestId,
       user: submittedContent,
+      inputSource: normalizedInputSource,
       assistant: assistant.content,
       provider: result.provider,
       model: result.model,
@@ -1085,6 +1198,39 @@ class ConversationCore {
       searchEvidence,
       searchSummary,
       grounding,
+      spatialContext: spatialContext ? {
+        schema_version: spatialContext.schema_version,
+        reference: spatialContext.reference,
+        event_id: spatialContext.event_id,
+        context_id: spatialContext.context_id,
+        source: spatialContext.source,
+        gesture: spatialContext.gesture,
+        occurred_at_ms: spatialContext.occurred_at_ms,
+        age_ms: spatialContext.age_ms,
+        display: spatialContext.display,
+        bounds: spatialContext.bounds,
+      } : null,
+      spatialAssetContext: spatialAssetContext ? {
+        schema_version: spatialAssetContext.schema_version,
+        reference: spatialAssetContext.reference,
+        resolved_at_ms: spatialAssetContext.resolved_at_ms,
+        event_id: spatialAssetContext.value?.event_id || null,
+        spatial_asset_id: spatialAssetContext.value?.asset?.spatial_asset_id
+          || spatialAssetContext.value?.insertion?.spatial_asset_id
+          || spatialAssetContext.value?.ghost?.spatial_asset_id
+          || null,
+        insertion_id: spatialAssetContext.value?.insertion?.insertion_id || null,
+      } : null,
+      multimodalContext: multimodalContext ? {
+        schema_version: multimodalContext.schema_version,
+        status: multimodalContext.status,
+        reference: multimodalContext.reference || null,
+        event_id: multimodalContext.event_id || null,
+        source: multimodalContext.source || null,
+        type: multimodalContext.type || null,
+        occurred_at_ms: multimodalContext.occurred_at_ms || null,
+        age_ms: multimodalContext.age_ms || null,
+      } : null,
       agentMode: Boolean(agentEnabled),
       agentCommand: normalizedAgentCommand,
       agentActions,
@@ -1101,4 +1247,4 @@ class ConversationCore {
   }
 }
 
-module.exports = { alignComparisonQuery, buildConversationSystemPrompt, buildResolvedReferenceInstruction, comparisonTargetForQuery, directlyIdentifiesComparisonTarget, filterComparisonOutcome, mergeScopedOutcomes, modelContextWindow, parseDirectComputerLaunchRequest, parseDirectComputerWorkflowRequest, parseDirectFileCreateRequest, preserveContextQualifierQuery, preserveRequestedPlatformQuery, requestsAgentCapability, requiresScreenDrivenComputerTask, runtimeGroundingEvidenceState, unavailableSearchOutcome, ConversationCore, CONVERSATION_PROMPT_VERSION, MAX_MESSAGE_LENGTH, MAX_MODEL_CONTEXT_CHARS };
+module.exports = { alignComparisonQuery, buildConversationSystemPrompt, buildMultimodalContextInstruction, buildResolvedReferenceInstruction, buildSpatialContextInstruction, comparisonTargetForQuery, conversationScopeKey, directlyIdentifiesComparisonTarget, filterComparisonOutcome, hasGuiNavigationTarget, mergeScopedOutcomes, modelContextWindow, parseDirectComputerLaunchRequest, parseDirectComputerWorkflowRequest, parseDirectFileCreateRequest, preserveContextQualifierQuery, preserveRequestedPlatformQuery, requestsAgentCapability, requiresScreenDrivenComputerTask, runtimeGroundingEvidenceState, unavailableSearchOutcome, ConversationCore, CONVERSATION_PROMPT_VERSION, MAX_MESSAGE_LENGTH, MAX_MODEL_CONTEXT_CHARS };

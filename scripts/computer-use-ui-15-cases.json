@@ -80,7 +80,7 @@
       "category": "state_isolation_ambiguity",
       "command": "เปิดโปรแกรมนั้นแล้วทำต่อให้หน่อย",
       "policy": "no_approval_expected",
-      "expected": { "final_contains_any": ["โปรแกรม", "ระบุ", "which", "clarif"], "no_approval": true, "requires_deepseek": true }
+      "expected": { "final_contains_any": ["โปรแกรม", "ระบุ", "which", "clarif"], "no_approval": true, "requires_plus": true }
     },
     {
       "id": "CU-UI-14",

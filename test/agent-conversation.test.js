@@ -236,6 +236,27 @@ test('Computer requests use the persistent model-guided task loop when it is ava
   assert.match(result.assistant, /Open Google Classroom first/);
 });
 
+test('ConversationCore keeps renderer owner and user session separate for Computer Tasks', async () => {
+  let received = null;
+  const loop = {
+    async start(input) {
+      received = input;
+      return {
+        task_id: 'owner-scoped-task', status: 'AWAITING_APPROVAL', planner_turns: 1,
+        summary: 'Open the verified site.',
+        pending_action: { tool: 'computer_open_website', action: { status: 'confirmation_required', idempotency_key: 'owner-k', approval_token: 'once', arguments: { site: 'google' } } },
+      };
+    },
+  };
+  const provider = { status: () => ({ configured: true, provider: 'fake', model: 'fake' }) };
+  const result = await new ConversationCore({ config: {}, provider, router: router(), agentBridge: { definitions: () => [], owns: () => false }, computerTaskLoop: loop }).send({
+    ownerId: 'renderer:91', sessionId: 'user-session-1', requestId: 'owner-session-1', content: '@computer-use open Chrome and find a page', agentMode: true, agentCommand: 'computer-use',
+  });
+  assert.equal(received.ownerId, 'renderer:91');
+  assert.equal(received.sessionId, 'user-session-1');
+  assert.equal(result.agentActions[0].computerTaskId, 'owner-scoped-task');
+});
+
 test('bounded YouTube playback stays inside the persistent task loop until verified completion', async () => {
   let loopCalls = 0;
   const provider = {

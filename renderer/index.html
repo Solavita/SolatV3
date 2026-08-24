@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-theme="system" data-density="comfortable" data-scale="m" data-motion="on"><head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="description" content="SOLAT — an AI operating system for technical work.">
@@ -8,10 +9,24 @@
 <meta name="theme-color" content="#131211" media="(prefers-color-scheme: dark)">
 <title>SOLAT — AI Operating System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2314130F'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23C9A24A' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%237A4FD0'/%3E%3Ccircle cx='14' cy='14' r='1.6' fill='%23D2BCFF'/%3E%3C/svg%3E">
 <style>
+@font-face {
+  font-family: 'Persona5Menu';
+  src: url('./assets/Persona5MenuFontPrototype-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'P5Hatty';
+  src: url('./assets/p5hatty-1.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
 /* ══════════════════════════════════════════════════════════════════
    1. TOKENS
    Gold  = SOLAT's presence.  Lavender = the person's presence.
@@ -198,9 +213,11 @@
   --i-sm: .875rem; --i-md: 1rem; --i-lg: 1.125rem;
 
   /* type */
-  --f-display: 'Playfair Display', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
-  --f-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --f-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --f-persona: 'Persona5Menu', 'Leelawadee UI', Tahoma, sans-serif;
+  --f-plain: 'P5Hatty', sans-serif;
+  --f-display: var(--f-persona);
+  --f-ui: var(--f-persona);
+  --f-mono: var(--f-persona);
   --t-xs: .688rem; --t-sm: .781rem; --t-base: .875rem; --t-md: .938rem;
   --t-lg: 1.125rem; --t-xl: 1.5rem; --t-2xl: 2.25rem;
 
@@ -802,6 +819,10 @@ kbd {
 .msg:focus, .msg:focus-visible { outline: none; }
 .msg.user { align-items: flex-end; }
 .msg.assistant { align-items: flex-start; }
+/* Voice turns are spoken input, not typed chat. Give them a small marker so
+   the owner can tell a transcribed utterance from keyboard text at a glance. */
+.msg.user.voice .who-line::before { content: '🎙'; font-size: .8em; opacity: .85; }
+.msg.user.voice .bubble { font-style: italic; }
 .msg.enter { animation: msgIn var(--d-4) var(--e-out) both; }
 @keyframes msgIn {
   from { opacity: 0; transform: translateY(12px) scale(.985); filter: blur(3px); }
@@ -1499,6 +1520,16 @@ button.agent-file-card:hover { border-color: var(--cyan); background: var(--surf
 .keyrow:last-child { border-bottom: 0; }
 .keyrow .combo { display: flex; gap: 4px; flex: none; }
 
+/* V3–V6 help uses the existing dialog language and stays readable in both themes. */
+.v36-tutorial { display: grid; gap: var(--s-4); padding-top: var(--s-3); }
+.v36-card { padding: var(--s-4); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface-2); }
+.v36-card h3 { margin: 0 0 var(--s-2); font-size: var(--t-base); color: var(--ink); }
+.v36-card p { margin: 0 0 var(--s-2); color: var(--ink-2); font-size: var(--t-sm); line-height: 1.55; }
+.v36-card ol, .v36-card ul { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: var(--t-sm); line-height: 1.55; }
+.v36-card li + li { margin-top: 5px; }
+.v36-card code { overflow-wrap: anywhere; }
+.v36-note { padding: var(--s-3); border-left: 3px solid var(--cyan); background: var(--lav-tint); color: var(--ink-2); font-size: var(--t-xs); line-height: 1.5; }
+
 /* context menu */
 .menu {
   position: fixed; z-index: 260; min-width: 196px; max-width: min(280px, calc(100vw - 16px));
@@ -1545,6 +1576,31 @@ button.agent-file-card:hover { border-color: var(--cyan); background: var(--surf
 .toast.out { animation: toastOut var(--d-2) var(--e-out) both; }
 .toast .icon { color: var(--gold); }
 .toast button { color: var(--gold); font-weight: 600; font-size: var(--t-sm); }
+
+/* V4 SpatialAsset feedback is an interaction layer, not a redesigned panel. */
+#spatialAssetGhost {
+  position: fixed; z-index: 90; width: 86px; height: 64px; padding: 5px;
+  border: 2px solid var(--gold); background: rgba(8,8,10,.78); box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  transform: translate(-50%, -50%); pointer-events: none; overflow: hidden;
+}
+#spatialAssetGhost[hidden], #spatialAssetStatus[hidden] { display: none !important; }
+#spatialAssetGhost img { width: 100%; height: 100%; object-fit: contain; display: block; }
+#spatialAssetGhost span { display: grid; width: 100%; height: 100%; place-items: center; color: white; font-size: 11px; text-align: center; }
+#spatialAssetStatus {
+  position: fixed; z-index: 91; top: 58px; left: 50%; transform: translateX(-50%);
+  max-width: min(560px, calc(100vw - 28px)); padding: 7px 12px; border: 1px solid var(--gold);
+  background: rgba(8,8,10,.9); color: white; font: 600 11px/1.35 var(--f-mono); letter-spacing: .04em;
+  pointer-events: none;
+}
+#spatialInsertionLayer { position: fixed; inset: 0; z-index: 44; pointer-events: none; overflow: hidden; }
+.spatial-insertion-preview {
+  position: absolute; width: 160px; height: 120px; padding: 5px; object-fit: contain;
+  border: 2px solid var(--gold); background: rgba(8,8,10,.84); box-shadow: 0 12px 34px rgba(0,0,0,.36);
+  transform: translate(-50%, -50%); transform-origin: center; pointer-events: none;
+}
+:root.home-mode .spatial-insertion-preview { border-color: #65e8ff; box-shadow: 0 0 24px rgba(40,211,255,.3); }
+:root.home-mode #spatialAssetGhost { border-color: #65e8ff; box-shadow: 0 0 24px rgba(40,211,255,.36); }
+:root.home-mode #spatialAssetStatus { border-color: #65e8ff; background: rgba(1,21,81,.88); }
 @keyframes toastIn  { from { opacity: 0; transform: translateY(12px) scale(.96) } to { opacity: 1; transform: none } }
 @keyframes toastOut { to   { opacity: 0; transform: translateY(6px) scale(.98) } }
 
@@ -2127,9 +2183,11 @@ html.booting #chat { opacity: 0; }
     --solat-paper-dim: #d9cfba;
     --solat-cyan: #27edee;
     --solat-cut: polygon(0 7px, 10px 0, calc(100% - 18px) 0, 100% 12px, calc(100% - 8px) 100%, 12px calc(100% - 3px), 0 calc(100% - 12px));
-    --f-display: Impact, Haettenschweiler, "Arial Narrow Bold", "Leelawadee UI", Tahoma, sans-serif;
-    --f-ui: Bahnschrift, "Bahnschrift SemiCondensed", "Leelawadee UI", Tahoma, sans-serif;
-    --f-mono: "Cascadia Mono", "Leelawadee UI", Tahoma, Consolas, monospace;
+  --f-persona: 'Persona5Menu', 'Leelawadee UI', Tahoma, sans-serif;
+    --f-plain: 'P5Hatty', sans-serif;
+    --f-display: var(--f-persona);
+    --f-ui: var(--f-persona);
+    --f-mono: var(--f-persona);
     --paper: var(--solat-black);
     --surface: #0b0b0a;
     --surface-2: #151412;
@@ -2606,7 +2664,7 @@ html.booting #chat { opacity: 0; }
     top: var(--hit-y);
     width: 12px;
     height: 12px;
-    z-index: 9999;
+    z-index: 12950;
     pointer-events: none;
     transform: translate(-50%,-50%);
   }
@@ -2627,6 +2685,8 @@ html.booting #chat { opacity: 0; }
     transform-origin: 0 50%;
     animation: inkShard .52s cubic-bezier(.1,.8,.3,1) forwards;
   }
+  :root.solat-voice-active .ink-hit::before { background: #50efff; filter: drop-shadow(0 0 9px rgba(56,231,255,.82)); }
+  :root.solat-voice-active .ink-shard { background: #efffff; box-shadow: 0 0 8px rgba(56,231,255,.72); }
   @keyframes inkCore { 0% { transform: scale(.15) rotate(0); opacity: 1; } 60% { transform: scale(1.25) rotate(16deg); opacity: 1; } 100% { transform: scale(1.7) rotate(24deg); opacity: 0; } }
   @keyframes inkShard { 0% { transform: rotate(var(--a)) translateX(2px) scaleX(.2); opacity: 1; } 100% { transform: rotate(var(--a)) translateX(var(--d)) scaleX(1); opacity: 0; } }
 
@@ -2933,47 +2993,231 @@ html.booting #chat { opacity: 0; }
     transform: scale(1.08) translateZ(0); opacity: .96;
   }
   #solatVoiceScene::after {
-    content: ""; position: absolute; z-index: 2; inset: 0; pointer-events: none;
+    content: ""; position: absolute; z-index: 1; inset: 0; pointer-events: none;
     background:
-      radial-gradient(circle at 77% 49%, rgba(42,222,255,.12), transparent 31%),
-      linear-gradient(90deg, rgba(0,15,76,.08), transparent 44%, rgba(0,10,58,.16));
+      radial-gradient(circle at 77% 49%, rgba(42,222,255,.13), transparent 31%),
+      linear-gradient(90deg, rgba(0,15,76,.28), transparent 44%, rgba(0,10,58,.34));
   }
   #solatVoiceScene.active { display: block; }
-  :root.solat-voice-active body > :not(#solatVoiceScene):not(#solatCursor) {
+  #solatVoiceScene.exiting { display: block !important; visibility: hidden !important; opacity: 0 !important; }
+  #solatExitCover {
+    position: fixed; z-index: 13000; inset: 0; overflow: hidden; background: #09090b;
+    opacity: 0; visibility: hidden; pointer-events: none; isolation: isolate;
+  }
+  #solatExitCover.active { opacity: 1; visibility: visible; }
+  #solatExitCover::before,
+  #solatExitCover::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+  #solatExitCover::before {
+    z-index: 0; background: linear-gradient(90deg, #07070a 0 13%, #e21a2c 13% 86%, #07070a 86%);
+    transform: translateX(-110%) skewX(-10deg); transform-origin: left center;
+  }
+  #solatExitCover::after {
+    display: none;
+  }
+  #solatExitCover.returning::before { animation: solatReturnCurtain 1.82s cubic-bezier(.18,.82,.2,1) both; }
+  #solatExitCover.returning::after { animation: solatReturnSlash 1.82s cubic-bezier(.2,.75,.2,1) .22s both; }
+  #solatExitCover.returning { animation: solatReturnGround 1.82s ease both; }
+  .solat-return-mark {
+    position: absolute; z-index: 2; left: 54%; top: 50%; width: min(48vw, 650px); aspect-ratio: 16 / 10;
+    transform: translate(-42%, -50%) rotate(-4deg) scale(.72); opacity: 0;
+    background: #efe8db url("./assets/solat-joker-red-transition.jpg") center / cover no-repeat;
+    border: 9px solid #050507; box-shadow: inset 0 0 0 2px #f5eee1, 18px 18px 0 #050507, -9px -9px 0 #09d7e5, 0 0 0 8px #e21a2c;
+    mix-blend-mode: normal; filter: grayscale(1) brightness(1.55) contrast(1.18) saturate(0); clip-path: polygon(4% 0, 100% 8%, 94% 100%, 0 91%);
+  }
+  .solat-return-mark::before { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, rgba(255,245,229,.12), transparent 42% 68%, rgba(226,26,44,.16)); mix-blend-mode: screen; }
+  .solat-return-mark::after { content: "JOKER // RETURN"; position: absolute; right: 18px; bottom: 14px; color: #fff6e7; font: 900 18px/1 var(--f-persona); letter-spacing: .12em; text-shadow: 3px 3px #e21a2c; }
+  .solat-return-copy { position: absolute; z-index: 4; left: 8vw; top: 50%; width: min(31vw, 430px); color: #fff5e5; transform: translateY(-46%); opacity: 0; }
+  .solat-return-kicker { display: block; color: #12d8e8; font: 900 14px/1 var(--f-mono); letter-spacing: .28em; }
+  .solat-return-title { display: block; margin: 14px 0 10px; font: 900 clamp(42px, 6vw, 92px)/.78 var(--f-persona); letter-spacing: -.06em; transform: skewX(-8deg); text-shadow: 7px 7px #e21a2c; }
+  .solat-return-sub { display: block; border-left: 4px solid #e21a2c; padding-left: 14px; color: rgba(255,245,229,.72); font: 800 13px/1.35 var(--f-mono); letter-spacing: .18em; }
+  #solatExitCover.returning .solat-return-copy { animation: solatReturnCopy 1.82s cubic-bezier(.18,.82,.2,1) both; }
+  #solatExitCover.returning .solat-return-mark { animation: solatReturnMark 1.82s cubic-bezier(.18,.82,.2,1) both; }
+  @keyframes solatReturnGround { 0%,100% { background: #09090b; } 22%,78% { background: #e21a2c; } }
+  @keyframes solatReturnCurtain { 0% { transform: translateX(-110%) skewX(-10deg); } 24% { transform: translateX(0) skewX(-10deg); } 68% { transform: translateX(0) skewX(0); } 100% { transform: translateX(110%) skewX(10deg); } }
+  @keyframes solatReturnSlash { 0%,20% { opacity: 0; transform: translateX(100%) rotate(-8deg); } 42%,66% { opacity: .82; transform: translateX(0) rotate(-8deg); } 100% { opacity: 0; transform: translateX(-100%) rotate(-8deg); } }
+  @keyframes solatReturnCopy { 0%,18% { opacity: 0; transform: translate(-55px, -46%); } 35%,74% { opacity: 1; transform: translate(0, -46%); } 100% { opacity: 0; transform: translate(35px, -46%); } }
+  @keyframes solatReturnMark { 0% { opacity: 0; transform: translate(-145%, -50%) rotate(-12deg) scale(.72); } 23% { opacity: 1; transform: translate(-42%, -50%) rotate(-4deg) scale(.72); } 54% { opacity: 1; transform: translate(-50%, -50%) rotate(2deg) scale(1); } 76% { opacity: 1; transform: translate(-50%, -50%) rotate(2deg) scale(1); } 100% { opacity: 0; transform: translate(80%, -50%) rotate(9deg) scale(1.08); } }
+  @media (max-width: 800px) { .solat-return-copy { left: 5vw; width: 36vw; } .solat-return-mark { left: 58%; width: 49vw; } }
+  :root.solat-voice-active body > :not(#solatVoiceScene):not(#solatExitCover):not(#solatCursor):not(.ink-hit) {
     visibility: hidden !important;
+  }
+  .solat-voice-viewport {
+    position: absolute; z-index: 2; left: 50%; top: 50%;
+    width: min(calc(100vw - 40px), calc((100vh - 126px) * 16 / 9));
+    aspect-ratio: 16 / 9; transform: translate(-50%, -50%); isolation: isolate;
+    background: #061b72;
+    box-shadow: 0 22px 70px rgba(0,5,55,.48), 0 0 0 1px rgba(74,232,255,.34);
+  }
+  .solat-voice-viewport::before {
+    content: ""; position: absolute; z-index: 7; inset: -8px; pointer-events: none;
+    background:
+      linear-gradient(#5cecff,#5cecff) left top / 72px 2px no-repeat,
+      linear-gradient(#5cecff,#5cecff) left top / 2px 42px no-repeat,
+      linear-gradient(#5cecff,#5cecff) right top / 72px 2px no-repeat,
+      linear-gradient(#5cecff,#5cecff) right top / 2px 42px no-repeat,
+      linear-gradient(#5cecff,#5cecff) left bottom / 72px 2px no-repeat,
+      linear-gradient(#5cecff,#5cecff) left bottom / 2px 42px no-repeat,
+      linear-gradient(#5cecff,#5cecff) right bottom / 72px 2px no-repeat,
+      linear-gradient(#5cecff,#5cecff) right bottom / 2px 42px no-repeat;
+    filter: drop-shadow(0 0 8px rgba(41,229,255,.42));
+  }
+  .solat-voice-viewport::after {
+    content: ""; position: absolute; z-index: 3; inset: 0; pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(225,251,255,.16), inset 0 -68px 90px rgba(0,11,75,.18);
   }
   #solatVoiceVideo, #solatVoiceLoop {
     position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; display: block;
-    object-fit: contain; object-position: center center; background: transparent;
+    object-fit: fill; object-position: center center; background: transparent;
     opacity: 0; transform: translateZ(0); backface-visibility: hidden; will-change: transform;
     image-rendering: auto;
   }
   #solatVoiceScene.video-ready #solatVoiceVideo { opacity: 1; }
   #solatVoiceScene.loop-ready #solatVoiceVideo { opacity: 0; }
   #solatVoiceScene.loop-ready #solatVoiceLoop { opacity: 1; }
-  .solat-voice-orb-shell {
-    position: absolute; z-index: 4; right: clamp(70px, 8vw, 156px); top: 55%;
-    width: clamp(210px, 23vw, 360px); aspect-ratio: 1; padding: 7px; border-radius: 50%;
-    border: 1px solid rgba(112,233,255,.46);
-    background: radial-gradient(circle, rgba(0,30,106,.28) 58%, rgba(10,197,240,.22) 74%, rgba(0,12,66,.58) 100%);
-    box-shadow: inset 0 0 28px rgba(62,223,255,.2), 0 24px 40px rgba(0,8,48,.4), 0 0 32px rgba(0,206,255,.18);
-    opacity: 0; transform: translateY(-50%) scale(.9); transition: opacity .55s ease, transform .7s cubic-bezier(.2,.8,.2,1);
-    will-change: transform; pointer-events: none;
+  .solat-voice-rail {
+    position: absolute; z-index: 5; left: clamp(20px, 3vw, 58px); right: clamp(20px, 3vw, 58px);
+    display: flex; align-items: center; justify-content: space-between; pointer-events: none;
+    color: #e9fcff; font: 800 11px/1.1 var(--font-ui); letter-spacing: .19em; text-transform: uppercase;
+    text-shadow: 0 2px 12px rgba(0,14,76,.75);
   }
-  .solat-voice-orb-shell::before {
-    content: ""; position: absolute; inset: -11px; border-radius: 50%; pointer-events: none;
-    border: 1px solid rgba(85,231,255,.25); box-shadow: 0 0 0 5px rgba(4,92,193,.08), 0 0 24px rgba(51,225,255,.16);
+  .solat-voice-rail::before { content: ""; width: clamp(42px, 7vw, 116px); height: 2px; margin-right: 13px; background: #47e9ff; box-shadow: 0 0 13px rgba(71,233,255,.72); }
+  .solat-voice-rail-top { top: clamp(19px, 3.1vh, 38px); justify-content: flex-start; }
+  .solat-voice-rail-bottom { bottom: clamp(18px, 2.8vh, 34px); }
+  .solat-voice-rail-bottom::after { content: "01  /  ACTIVE LINK"; color: rgba(224,251,255,.7); }
+  .solat-voice-state { color: #52eeff; margin-left: auto; }
+  .solat-persona-orb {
+    position: absolute; z-index: 4; left: 65%; top: 53%;
+    width: clamp(160px, 18vw, 240px); aspect-ratio: 1;
+    opacity: 0; transform: translate(-50%,-50%) scale(.92); clip-path: circle(0 at 50% 50%);
+    transition: opacity .38s ease, transform .62s cubic-bezier(.2,.8,.2,1), clip-path .7s cubic-bezier(.2,.8,.2,1);
+    pointer-events: none; isolation: isolate; filter: drop-shadow(0 18px 26px rgba(0,4,50,.46));
   }
-  #solatVoiceScene.loop-ready .solat-voice-orb-shell { opacity: 1; transform: translateY(-50%) scale(1); }
-  .solat-voice-orb {
-    display: block; width: 100%; height: 100%; border-radius: 50%; clip-path: circle(49.55% at 50% 50%);
-    object-fit: cover; animation: solatVoiceOrbSpin 20s linear infinite; will-change: transform;
-    filter: saturate(.9) contrast(1.08) brightness(.94);
+  .solat-persona-orb::before {
+    content: ""; position: absolute; z-index: 0; inset: 11%; border-radius: 50%;
+    background: radial-gradient(circle at 44% 38%, rgba(33,220,255,.28), rgba(4,28,98,.72) 48%, rgba(0,4,30,.9) 74%);
+    border: 1px solid rgba(111,238,255,.48); box-shadow: inset 0 0 34px rgba(43,215,255,.18), 0 0 26px rgba(40,215,255,.24), 0 0 0 12px rgba(1,24,91,.2), 0 0 0 13px rgba(74,232,255,.16);
   }
-  #solatVoiceScene.voice-speaking .solat-voice-orb-shell { animation: solatVoiceOrbTalk .9s ease-in-out infinite; }
+  .solat-persona-orb::after {
+    content: ""; position: absolute; z-index: 2; inset: 3%; border-radius: 50%;
+    background: conic-gradient(from 35deg, transparent 0 71%, rgba(85,239,255,.8) 78%, transparent 84%);
+    -webkit-mask: radial-gradient(circle, transparent 62%, #000 64% 67%, transparent 69%);
+    mask: radial-gradient(circle, transparent 62%, #000 64% 67%, transparent 69%);
+    animation: solatPersonaSweep 5.4s linear infinite;
+  }
+  .solat-persona-ornament {
+    position: absolute; z-index: 3; left: 65%; top: 53%; width: clamp(260px, 29vw, 390px); aspect-ratio: 1;
+    display: block; object-fit: contain; opacity: .82; transform: translate(-50%,-50%) rotate(-3deg) scale(.98);
+    pointer-events: none; filter: drop-shadow(0 18px 28px rgba(0,4,50,.48));
+    animation: solatPersonaOrnamentIdle 12s ease-in-out infinite;
+  }
+  .solat-persona-orb-art {
+    position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: contain;
+    opacity: 1; mix-blend-mode: normal; animation: solatPersonaHeadSpin 16s linear infinite;
+  }
+  .solat-persona-orb-pulse {
+    position: absolute; left: 50%; top: 50%; width: 53%; aspect-ratio: 1; border-radius: 50%; transform: translate(-50%,-50%);
+    background: radial-gradient(circle at 44% 38%, rgba(210,252,255,.22), rgba(33,211,255,.13) 28%, rgba(1,24,91,.08) 66%, transparent 72%);
+    box-shadow: inset 0 0 24px rgba(75,232,255,.13), 0 0 24px rgba(52,225,255,.13); animation: solatPersonaOrbIdle 4.4s ease-in-out infinite;
+  }
+  .solat-persona-orb-pulse::before {
+    content: "VOICE CORE"; position: absolute; left: 50%; top: calc(100% + 30px); transform: translateX(-50%) skewX(-12deg);
+    padding: 5px 9px 4px; color: #dffcff; background: rgba(2,19,83,.78); border-left: 3px solid #e21a2c;
+    font: 800 9px/1 var(--font-ui); letter-spacing: .2em; white-space: nowrap; text-shadow: 0 0 8px rgba(78,232,255,.75);
+    box-shadow: 5px 5px 0 rgba(36,221,255,.34); opacity: .9;
+  }
+  .solat-persona-orb-pulse::after {
+    content: ""; position: absolute; left: -66%; top: 50%; width: 232%; height: 1px; transform: rotate(-16deg);
+    background: linear-gradient(90deg, transparent, rgba(90,239,255,.7) 18%, rgba(90,239,255,.15) 72%, transparent);
+    box-shadow: 0 0 9px rgba(90,239,255,.45); opacity: .72;
+  }
+  .solat-persona-orb::before, .solat-persona-orb::after, .solat-persona-orb-pulse { display: none; }
+  #solatVoiceScene.active .solat-persona-orb { opacity: 1; transform: translate(-50%,-50%) scale(1); clip-path: none; }
+  #solatVoiceScene.voice-speaking .solat-persona-orb { animation: solatPersonaOrbTalk .82s ease-in-out infinite; }
+  #solatVoiceScene.voice-speaking .solat-persona-orb-art { animation: solatPersonaArtSpeak .82s ease-in-out infinite; }
+  #solatVoiceScene[data-voice-activity="thinking"] .solat-persona-orb-art { animation: solatPersonaOrbThink 3.8s ease-in-out infinite; }
+  .solat-voice-memento {
+    position: absolute; z-index: 3; right: 4.5%; top: 4%; width: min(20%, 250px); height: auto;
+    opacity: .88; transform: rotate(-1deg); transform-origin: 80% 20%; pointer-events: none;
+    filter: saturate(1.02) contrast(1.12) drop-shadow(0 12px 24px rgba(0,5,52,.3));
+  }
+  button.solat-voice-memento {
+    z-index: 9; padding: 0; border: 0; background: transparent; pointer-events: auto; cursor: none;
+    transition: transform .18s ease, filter .18s ease;
+  }
+  button.solat-voice-memento img { display: block; width: 100%; height: auto; }
+  button.solat-voice-memento:hover { transform: rotate(-1deg) translateY(-3px) scale(1.035); filter: saturate(1.2) contrast(1.14) drop-shadow(0 14px 28px rgba(0,5,52,.42)); }
+  button.solat-voice-memento[aria-pressed="true"] { filter: saturate(1.28) contrast(1.16) drop-shadow(0 0 18px rgba(85,237,255,.68)); }
+  button.solat-voice-memento:focus-visible { outline: 3px solid #33edff; outline-offset: 5px; }
+  .solat-persona-voice-frame {
+    position: absolute; z-index: 8; inset: -10px; width: calc(100% + 20px); height: calc(100% + 20px); display: block;
+    object-fit: fill; pointer-events: none; opacity: .94; mix-blend-mode: normal;
+    filter: drop-shadow(0 8px 18px rgba(0,5,52,.22));
+  }
+  .solat-voice-signal-anchor {
+    position: absolute; z-index: 6; left: 66%; top: 55%; width: 48px; height: 48px;
+    pointer-events: none; opacity: 0; transform: translate(-50%,-50%) scale(.72);
+    transition: opacity .2s ease, transform .28s cubic-bezier(.2,.8,.2,1);
+  }
+  #solatVoiceScene[data-voice-activity="thinking"] .solat-voice-signal-anchor,
+  #solatVoiceScene[data-voice-activity="answer"] .solat-voice-signal-anchor {
+    opacity: 1; transform: translate(-50%,-50%) scale(1);
+  }
+  .solat-voice-signal-anchor::before {
+    content: ""; position: absolute; inset: 6px; border: 1px solid rgba(85,237,255,.9);
+    border-radius: 50%; box-shadow: 0 0 0 5px rgba(226,26,44,.18), 0 0 16px rgba(85,237,255,.55);
+    animation: solatVoiceAnchorPulse 1.15s ease-in-out infinite;
+  }
+  .solat-voice-signal-anchor::after {
+    content: ""; position: absolute; left: 50%; top: -18px; width: 1px; height: 84px;
+    background: linear-gradient(180deg, transparent, #55edff 40%, rgba(226,26,44,.82) 68%, transparent);
+    transform: rotate(32deg); transform-origin: center; opacity: .72;
+  }
+  .solat-voice-preview {
+    position: absolute; z-index: 7; left: 58%; top: 69%; width: min(38%, 540px); min-height: 48px;
+    max-height: min(24vh, 190px); overflow: hidden auto;
+    padding: 12px 16px 11px; color: #fff6e2; background: rgba(2,14,48,.78);
+    border-left: 2px solid #55edff; border-bottom: 1px solid rgba(226,26,44,.78);
+    box-shadow: 5px 5px 0 rgba(7,23,79,.42); backdrop-filter: blur(4px);
+    opacity: 0; visibility: hidden; transform: translateY(8px);
+    transition: opacity .2s ease, transform .25s cubic-bezier(.2,.8,.2,1), visibility .2s;
+    pointer-events: none; font: 650 clamp(13px, 1.15vw, 18px)/1.35 'P5Hatty', sans-serif; letter-spacing: .01em;
+  }
+  #solatVoiceScene[data-voice-activity="answer"] .solat-voice-preview {
+    opacity: 1; visibility: visible; transform: translateY(0);
+  }
+  #solatVoiceScene.active .solat-voice-preview {
+    opacity: 1; visibility: visible; transform: translateY(0);
+  }
+  .solat-voice-preview::before { content: none; }
+  .solat-voice-preview-text { display: block; max-height: none; overflow: visible; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .solat-voice-preview::-webkit-scrollbar { width: 5px; }
+  .solat-voice-preview::-webkit-scrollbar-thumb { background: rgba(85,237,255,.65); border-radius: 5px; }
+  @keyframes solatVoiceAnchorPulse { 0%,100% { transform: scale(.86); opacity: .48; } 50% { transform: scale(1.12); opacity: 1; } }
+  .solat-persona-orb {
+    position: absolute; z-index: 5; left: 72%; top: 53%; width: clamp(185px, 18vw, 260px); height: clamp(235px, 33vh, 340px);
+    display: grid; place-items: center; opacity: 1; transform: translate(-50%,-50%);
+    pointer-events: none; isolation: isolate; border-radius: 2px; clip-path: none;
+    background: #f7f0e2;
+    border: 1px solid rgba(85,237,255,.88); box-shadow: 0 0 0 1px rgba(255,246,226,.68), 0 16px 30px rgba(0,5,52,.38), inset 0 0 0 5px rgba(7,23,79,.1);
+  }
+  .solat-persona-orb::before {
+    content: ""; position: absolute; z-index: 0; inset: 6px; border-radius: 0;
+    border: 1px solid rgba(255,246,226,.74); border-bottom-color: rgba(83,237,255,.72); border-right-color: rgba(226,26,44,.8);
+    box-shadow: 0 0 24px rgba(54,223,255,.24);
+    animation: solatVoiceCoreRipple 3.6s ease-in-out infinite;
+  }
+  .solat-persona-orb::after {
+    content: ""; position: absolute; z-index: 2; left: 100%; top: 22%; width: clamp(90px, 11vw, 160px); height: 1px;
+    transform-origin: left center; background: linear-gradient(90deg, #55edff, rgba(85,237,255,.18) 68%, transparent);
+    box-shadow: 0 0 10px rgba(84,237,255,.6); animation: solatVoiceCoreLink 2.4s ease-in-out infinite;
+  }
+  .solat-persona-orb-art { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 34%; border-radius: 2px; clip-path: none; mix-blend-mode: multiply; opacity: .9; filter: contrast(1.16) saturate(.72) drop-shadow(0 0 3px rgba(7,23,79,.2)); animation: solatPersonaArtIdle 4.8s ease-in-out infinite; }
+  #solatVoiceScene.voice-speaking .solat-persona-orb { animation: solatVoiceCoreSpeak .82s ease-in-out infinite; }
+  #solatVoiceScene[data-voice-activity="thinking"] .solat-persona-orb::before { animation-duration: 1.2s; }
+  #solatVoiceScene[data-voice-activity="answer"] .solat-persona-orb::after { animation: solatVoiceCoreAnswer .48s cubic-bezier(.18,.82,.24,1) both; }
   .solat-voice-status {
-    position: absolute; z-index: 5; right: clamp(56px, 7vw, 136px); top: clamp(76px, 10vh, 122px);
-    width: clamp(230px, 28vw, 430px); height: clamp(96px, 15vh, 150px);
+    position: absolute; z-index: 6; left: 80%; top: 54%; right: auto;
+    width: clamp(180px, 18vw, 270px); height: clamp(72px, 12vh, 112px);
     pointer-events: none; display: grid; place-items: center;
   }
   .solat-voice-status img {
@@ -2988,22 +3232,44 @@ html.booting #chat { opacity: 0; }
   #solatVoiceScene[data-voice-activity="thinking"] .solat-voice-status-thinking { animation: solatVoiceThinkingBeat 1.15s ease-in-out infinite; }
   #solatVoiceScene[data-voice-activity="answer"] .solat-voice-status-answer { animation: solatVoiceAnswerHit .48s cubic-bezier(.18,.82,.24,1) both; }
   .solat-voice-exit {
-    position: absolute; z-index: 6; right: clamp(20px, 2.6vw, 52px); bottom: clamp(20px, 3vw, 48px);
-    width: 74px; height: 58px; padding: 4px; pointer-events: auto; cursor: none;
-    border: 1px solid rgba(255,255,255,.7); background: #ed1c24;
-    box-shadow: 0 8px 0 rgba(104,0,12,.75), 0 15px 28px rgba(0,0,40,.38);
-    clip-path: polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);
+    position: absolute; z-index: 9; right: clamp(18px, 2.2vw, 36px); top: 14px;
+    width: 52px; height: 40px; padding: 3px; pointer-events: auto; cursor: none;
+    display: block; border: 1px solid rgba(115,238,255,.54); background: #071a5c;
+    box-shadow: 3px 3px 0 rgba(69,229,255,.72), 0 10px 22px rgba(0,0,40,.34);
+    clip-path: polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px);
     transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
   }
-  .solat-voice-exit img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; }
-  .solat-voice-exit:hover { transform: translateY(-3px); filter: saturate(1.16) brightness(1.08); box-shadow: 0 11px 0 rgba(104,0,12,.75), 0 18px 34px rgba(0,0,40,.44); }
-  .solat-voice-exit:active { transform: translateY(4px); box-shadow: 0 3px 0 rgba(104,0,12,.75), 0 8px 18px rgba(0,0,40,.34); }
+  .solat-voice-exit::after { content: ""; position: absolute; right: 3px; bottom: 3px; width: 13px; height: 3px; background: #e21a2c; transform: skewX(-24deg); box-shadow: 0 0 7px rgba(226,26,44,.58); }
+  .solat-voice-exit img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; background: var(--solat-paper); border: 1px solid rgba(255,245,223,.5); }
+  .solat-voice-exit:hover { transform: translateY(-2px) rotate(-1deg); filter: saturate(1.2) contrast(1.1); box-shadow: 4px 4px 0 #55edff, 0 13px 25px rgba(0,0,40,.38); }
+  .solat-voice-exit:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #55edff, 0 7px 16px rgba(0,0,40,.3); }
   .solat-voice-exit:focus-visible { outline: 3px solid #33edff; outline-offset: 5px; }
-  @keyframes solatVoiceOrbSpin { to { transform: rotate(360deg); } }
-  @keyframes solatVoiceOrbTalk {
-    0%,100% { transform: translateY(-50%) scale(1); filter: drop-shadow(0 26px 34px rgba(0,8,48,.42)) drop-shadow(0 0 26px rgba(0,206,255,.22)); }
-    50% { transform: translateY(-50%) scale(1.045); filter: drop-shadow(0 30px 42px rgba(0,8,48,.48)) drop-shadow(0 0 38px rgba(0,232,255,.42)); }
+  .solat-voice-mic {
+    position: absolute; z-index: 9; left: clamp(18px, 2.2vw, 36px); bottom: 14px;
+    min-width: 78px; height: 40px; padding: 0 12px; pointer-events: auto; cursor: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border: 1px solid rgba(115,238,255,.54); background: #071a5c; color: #e9fcff;
+    clip-path: polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px);
+    font: 800 10px/1 var(--font-mono); letter-spacing: .14em;
+    transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
   }
+  .solat-voice-mic .icon { width: 17px; height: 17px; }
+  .solat-voice-mic[aria-pressed="true"] { color: #06143e; background: #55edff; box-shadow: 0 0 18px rgba(85,237,255,.42); }
+  .solat-voice-mic:hover { transform: translateY(-2px); filter: saturate(1.2) contrast(1.1); box-shadow: 4px 4px 0 #e21a2c, 0 13px 25px rgba(0,0,40,.38); }
+  .solat-voice-mic:active { transform: translate(1px,1px); }
+  .solat-voice-mic:focus-visible { outline: 3px solid #33edff; outline-offset: 5px; }
+  @keyframes solatPersonaOrbIdle { 0%,100% { transform: translate(-50%,-50%) scale(.96); opacity: .72; } 50% { transform: translate(-50%,-50%) scale(1.045); opacity: 1; } }
+  @keyframes solatPersonaOrbThink { 0%,100% { transform: rotate(-1deg); filter: brightness(.94); } 50% { transform: rotate(1deg); filter: brightness(1.1) saturate(1.08); } }
+  @keyframes solatPersonaOrbTalk { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.055); } }
+  @keyframes solatPersonaSweep { to { transform: rotate(360deg); } }
+  @keyframes solatPersonaArtIdle { 0%,100% { opacity: .86; transform: scale(.98) rotate(-1deg); } 50% { opacity: 1; transform: scale(1.02) rotate(1deg); } }
+  @keyframes solatPersonaArtSpeak { 0%,100% { opacity: .9; transform: scale(1); } 45% { opacity: 1; transform: scale(1.055); } }
+  @keyframes solatPersonaHeadSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes solatVoiceCoreRipple { 0%,100% { transform: scale(.94); opacity: .38; } 50% { transform: scale(1.06); opacity: .9; } }
+  @keyframes solatVoiceCoreLink { 0%,100% { opacity: .35; transform: scaleX(.55); } 50% { opacity: 1; transform: scaleX(1); } }
+  @keyframes solatVoiceCoreSpeak { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.06); } }
+  @keyframes solatVoiceCoreAnswer { from { opacity: 0; transform: scaleX(.2); } to { opacity: 1; transform: scaleX(1); } }
+  @keyframes solatPersonaOrnamentIdle { 0%,100% { transform: translate(-50%,-50%) rotate(-3deg) scale(.98); opacity: .72; } 50% { transform: translate(-50%,-50%) rotate(2deg) scale(1.015); opacity: .9; } }
   @keyframes solatVoiceThinkingBeat {
     0%,100% { transform: translateY(0) rotate(-1.5deg) scale(1); }
     50% { transform: translateY(-5px) rotate(1deg) scale(1.025); }
@@ -3014,9 +3280,15 @@ html.booting #chat { opacity: 0; }
     100% { opacity: 1; transform: translateX(0) scale(1); }
   }
   @media (max-width: 760px) {
-    .solat-voice-orb-shell { right: 34px; width: clamp(170px, 38vw, 250px); }
-    .solat-voice-status { right: 18px; top: 72px; width: min(48vw, 330px); height: 100px; }
-    .solat-voice-exit { right: 16px; bottom: 18px; width: 64px; height: 50px; }
+    .solat-voice-viewport { width: calc(100vw - 20px); }
+    .solat-persona-orb { left: 74%; top: 53%; width: clamp(165px, 32vw, 230px); height: clamp(220px, 38vh, 300px); }
+    .solat-persona-ornament { left: 63%; top: 53%; width: min(58vw, 320px); opacity: .78; }
+    .solat-voice-memento { right: 4%; top: 6%; width: min(26%, 190px); opacity: .86; }
+    .solat-voice-status { left: 78%; top: 54%; width: min(29vw, 220px); height: 84px; }
+    .solat-voice-signal-anchor { left: 65%; top: 55%; }
+    .solat-voice-preview { left: 24%; top: 70%; width: 72%; max-width: none; padding-inline: 48px; }
+    .solat-voice-rail { left: 12px; right: 12px; font-size: 9px; }
+    .solat-voice-exit { right: 12px; top: 10px; width: 48px; height: 37px; }
   }
 
   @keyframes masterPulse {
@@ -4317,6 +4589,60 @@ html.booting #chat { opacity: 0; }
   @keyframes cardLiveHit { 0% { filter: brightness(1); } 35% { filter: brightness(1.26) drop-shadow(0 0 8px rgba(39,237,238,.32)); } 100% { filter: brightness(1); } }
   :root[data-motion="off"] #liveDecor::before, :root[data-motion="off"] #liveDecor::after { animation: none !important; }
 
+  /* Plain English copy stays readable while Persona remains the display language. */
+  .welcome p,
+  .starter .sub,
+  .inner-empty > p,
+  .inner-starter-copy span,
+  .model-chip,
+  #modelName,
+  .msg .bubble,
+  :root:not(.home-mode) #input,
+  .thread .t-title,
+  .thread-rename {
+    font-family: var(--f-plain);
+  }
+  .msg .bubble,
+  .msg .bubble * {
+    overflow-wrap: break-word; word-break: normal;
+    font-family: 'Inter', 'Leelawadee UI', Tahoma, sans-serif !important;
+  }
+  .msg .bubble {
+    font-size: clamp(1.02rem, 1.18vw, 1.16rem);
+    font-weight: 400; line-height: 1.72; letter-spacing: .018em;
+    text-shadow: none; -webkit-font-smoothing: antialiased;
+  }
+  :root:not(.home-mode) #input {
+    font-family: 'Inter', 'Leelawadee UI', Tahoma, sans-serif !important;
+  }
+  .msg.user .bubble { min-width: 88px; }
+  .msg.user .bubble .md { white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; }
+  .model-chip, #modelName, .thread .t-title, .thread-rename { letter-spacing: normal; }
+  /* Restore Persona treatment for display chrome; only the requested copy above is plain. */
+  .welcome h2, .welcome .eyebrow, .starter b,
+  .inner-empty h2, .inner-empty-signal, .inner-starter-copy b,
+  .brand-word, .newchat, .group-label, .section-toggle,
+  .who-line, #chatTitle {
+    font-family: var(--f-persona);
+  }
+  .solat-voice-preview { font-family: 'P5Hatty', sans-serif; }
+  /* Chrome Control keeps only its display title in Persona. Every piece of
+     instructional/status/action copy uses the requested readable P5Hatty. */
+  #chromeControlSetup .dlg-body,
+  #chromeControlSetup .dlg-body *,
+  #chromeControlSetup .dlg-actions button,
+  #chromeControlTitle .sub {
+    font-family: var(--f-plain) !important;
+    letter-spacing: normal;
+  }
+  #chromeControlTitle {
+    font-family: var(--f-persona) !important;
+  }
+  #chromeControlTabs { display: grid; gap: 8px; margin-top: 12px; }
+  .chrome-tab-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; }
+  .chrome-tab-copy { min-width: 0; }
+  .chrome-tab-copy b, .chrome-tab-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chrome-tab-copy span { color: var(--ink-3); font-size: .78rem; }
 </style>
 </head>
 <body>
@@ -4324,16 +4650,27 @@ html.booting #chat { opacity: 0; }
 <div id="solatCursor" aria-hidden="true" class="on" style="--cursor-x: 229.8000030517578px; --cursor-y: 470.38751220703125px;"></div>
 <div id="sendTransition" class="scene-transition" aria-hidden="true"><span>SOLAT // ENGAGE</span></div>
 <div id="newChatTransition" class="scene-transition" aria-hidden="true"><span>NEW // SIGNAL</span></div>
-<div id="solatVoiceScene" aria-hidden="true">
-  <video id="solatVoiceVideo" preload="auto" playsinline muted src="./assets/solat-voice-transition-runtime-1080p60.mp4"></video>
-  <video id="solatVoiceLoop" preload="auto" playsinline muted loop src="./assets/solat-voice-final-loop-1080p60.mp4"></video>
-  <div id="solatVoiceOrbShell" class="solat-voice-orb-shell" role="img" aria-label="SOLAT voice orb">
-    <img id="solatVoiceOrb" class="solat-voice-orb" src="./assets/makoto-yuki-cd-persona3-inspired.png" alt="">
+<div id="solatExitCover" aria-hidden="true"><div class="solat-return-copy" aria-hidden="true"><span class="solat-return-kicker">SOLAT // CLASSIC LINK</span><span class="solat-return-title">RETURN</span><span class="solat-return-sub">THE RED INTERFACE IS READY</span></div><div class="solat-return-mark" aria-hidden="true"></div></div>
+<div id="solatVoiceScene" aria-hidden="true" data-voice-state="idle" data-voice-activity="idle">
+  <div class="solat-voice-rail solat-voice-rail-top"><span>SOLAT // VOICE LINK</span></div>
+  <div id="solatVoiceViewport" class="solat-voice-viewport">
+    <video id="solatVoiceVideo" preload="auto" playsinline muted src="./assets/solat-voice-transition-runtime-1080p60.mp4"></video>
+    <video id="solatVoiceLoop" preload="auto" playsinline muted loop src="./assets/solat-voice-final-loop-1080p60.mp4"></video>
+    <img class="solat-persona-voice-frame" src="./assets/solat-persona-voice-frame-v3.png" alt="" aria-hidden="true">
+    <button id="solatVoiceMicButton" class="solat-voice-memento" type="button" aria-label="Start microphone" title="Start microphone" aria-pressed="false">
+      <img src="./assets/solat-memento-mori-decor-v3.png" alt="Microphone control" aria-hidden="true">
+    </button>
+    <div class="solat-voice-signal-anchor" aria-hidden="true"></div>
+    <div class="solat-voice-status" aria-live="polite" aria-atomic="true">
+      <img class="solat-voice-status-thinking" src="./assets/solat-voice-status-thinking.png" alt="AI is thinking: Hold up!">
+      <img class="solat-voice-status-answer" src="./assets/solat-voice-status-answer.png" alt="AI is answering">
+    </div>
+    <div id="solatVoicePreview" class="solat-voice-preview" aria-live="polite" aria-atomic="true">
+      <span id="solatVoicePreviewText" class="solat-voice-preview-text">AI–HUMAN WORKSPACE
+Voice link ready. Speak naturally to SOLAT.</span>
+    </div>
   </div>
-  <div class="solat-voice-status" aria-live="polite" aria-atomic="true">
-    <img class="solat-voice-status-thinking" src="./assets/solat-voice-status-thinking.png" alt="AI is thinking: Hold up!">
-    <img class="solat-voice-status-answer" src="./assets/solat-voice-status-answer.png" alt="AI is answering">
-  </div>
+  <div class="solat-voice-rail solat-voice-rail-bottom"><span id="solatVoiceStateLabel" class="solat-voice-state">VOICE / READY</span></div>
   <button id="solatVoiceExitButton" class="solat-voice-exit" type="button" aria-label="Return to the red SOLAT interface" title="Return to SOLAT">
     <img src="./assets/download-6.jfif" alt="" aria-hidden="true">
   </button>
@@ -4597,7 +4934,7 @@ html.booting #chat { opacity: 0; }
     <button class="omni" id="omniBtn" aria-label="Search and commands">
       <svg class="icon"><use href="#i-search"></use></svg>
       <span class="omni-label">Search or run a command</span>
-      <kbd id="omniKbd">⌘K</kbd>
+      <kbd id="omniKbd">Ctrl+G</kbd>
     </button>
       <div class="status" id="status" data-state="ready" aria-live="off">
       <span class="led" aria-hidden="true"></span><span id="statusText">Ready</span>
@@ -4748,6 +5085,15 @@ html.booting #chat { opacity: 0; }
             <button type="button" class="iconbtn" id="attachBtn" aria-label="Attach files" title="Attach files">
               <svg class="icon"><use href="#i-clip"></use></svg>
             </button>
+            <button type="button" class="iconbtn" id="spatialBtn" aria-label="Point or draw on screen" title="Point or draw on screen (Ctrl+Shift+Space)" aria-pressed="false">
+              <svg class="icon"><use href="#i-pencil"></use></svg>
+            </button>
+            <button type="button" class="iconbtn" id="browserBtn" aria-label="Open Browser Workspace" title="Open Browser Workspace" aria-pressed="false">
+              <svg class="icon"><use href="#i-search"></use></svg>
+            </button>
+            <button type="button" class="iconbtn" id="handBtn" aria-label="Toggle hand tracking" title="Toggle hand tracking" aria-pressed="false">
+              <span aria-hidden="true">✋</span>
+            </button>
             <div id="agentCommandMenu" class="agent-command-menu" role="menu" aria-label="Agent commands" hidden>
               <button type="button" role="menuitemradio" aria-checked="false" data-agent-command="create-file"><code>@create-file</code><small>Create or edit a workspace file</small></button>
               <button type="button" role="menuitemradio" aria-checked="false" data-agent-command="computer-use"><code>@computer-use</code><small>Inspect or control a computer app</small></button>
@@ -4773,6 +5119,10 @@ html.booting #chat { opacity: 0; }
 
 </div>
 
+<div id="spatialInsertionLayer" role="group" aria-label="Inserted spatial references"></div>
+<div id="spatialAssetGhost" role="presentation" aria-hidden="true" hidden><span>IMAGE</span></div>
+<div id="spatialAssetStatus" role="status" aria-live="polite" hidden></div>
+
 <!-- ═══════════ OVERLAYS ═══════════ -->
 <div class="scrim" id="scrim"></div>
 
@@ -4785,6 +5135,30 @@ html.booting #chat { opacity: 0; }
   <div class="pal-list" id="palList" role="listbox" aria-label="Results"></div>
   <div class="pal-foot">
     <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>Esc</kbd> close</span>
+  </div>
+</div>
+
+<div class="sheet dialog narrow" id="chromeControlSetup" role="dialog" aria-modal="true" aria-labelledby="chromeControlTitle" aria-describedby="chromeControlPrivacy" aria-hidden="true">
+  <div class="dlg-head">
+    <h2 id="chromeControlTitle">Chrome Control setup<span class="sub">Connect SOLAT to a Chrome tab without importing browser passwords or cookies.</span></h2>
+    <button class="iconbtn" data-close="" aria-label="Close Chrome Control setup"><svg class="icon"><use href="#i-x"></use></svg></button>
+  </div>
+  <div class="dlg-body">
+    <p id="chromeControlStatus" class="set-note" role="status" aria-live="polite">Checking Chrome Control…</p>
+    <p class="set-note"><b>Full Chrome Control:</b> SOLAT can discover and switch between every normal tab in this Chrome profile. Private and unsupported tabs remain hidden and human-only.</p>
+    <p id="chromeControlPrivacy" class="set-note"><b>Human-private boundary:</b> password, OTP, payment, CAPTCHA, and account challenge screens stay under your control. SOLAT will not read or fill them.</p>
+    <ol class="agent-steps" aria-label="Chrome Control setup steps">
+      <li>Open the extension folder, then load it once from <b>chrome://extensions</b> using Developer mode → Load unpacked.</li>
+      <li>Press Pair Chrome. Pairing opens only after this explicit click and does not expose the local token in this UI.</li>
+      <li>Open the Chrome tab you want, return here, then attach the current tab to this conversation.</li>
+    </ol>
+    <div class="dlg-actions">
+      <button class="btn" id="chromeControlRefresh" type="button">Refresh status</button>
+      <button class="btn" id="chromeControlReveal" type="button">Open extension folder</button>
+      <button class="btn" id="chromeControlPair" type="button">Pair Chrome</button>
+      <button class="btn primary" id="chromeControlAdopt" type="button" disabled>Use current Chrome tab</button>
+    </div>
+    <div id="chromeControlTabs" aria-label="Chrome tabs"></div>
   </div>
 </div>
 
@@ -4931,6 +5305,53 @@ html.booting #chat { opacity: 0; }
   <div class="dlg-body"><div class="keys" id="keysList"></div></div>
 </div>
 
+<div class="sheet dialog wide" id="tutorialV3V6" role="dialog" aria-modal="true" aria-labelledby="tutorialV3V6Title" aria-hidden="true">
+  <div class="dlg-head">
+    <h2 id="tutorialV3V6Title">คู่มือ SOLAT V3–V6<span class="sub">Browser, SpatialAsset, การควบคุมด้วยมือ และความจำการอ้างอิง</span></h2>
+    <button class="iconbtn" data-close="" aria-label="Close V3 to V6 tutorial"><svg class="icon"><use href="#i-x"></use></svg></button>
+  </div>
+  <div class="dlg-body">
+    <div class="v36-tutorial">
+      <section class="v36-card" aria-labelledby="tutorialV3Title">
+        <h3 id="tutorialV3Title">V3 · Browser Workspace</h3>
+        <ol>
+          <li>กดปุ่มรูปแว่นขยายข้างช่องพิมพ์</li>
+          <li>ใส่ URL สาธารณะแบบ <code>https://</code> หรือใช้หน้า Pinterest ที่เปิดมาให้</li>
+          <li>กด <b>Take control</b> เพื่อใช้เว็บเอง และกด <b>Return control</b> ก่อนให้ SOLAT ทำงานต่อ</li>
+        </ol>
+      </section>
+      <section class="v36-card" aria-labelledby="tutorialV4Title">
+        <h3 id="tutorialV4Title">V4 · SpatialAsset</h3>
+        <ol>
+          <li>ใน Browser Workspace กด <code>Alt</code> ค้างแล้วคลิกรูปที่มองเห็น</li>
+          <li>กด <b>Use image</b> รอให้ขึ้น <b>IMAGE HELD</b> แล้วปิดหน้าต่าง Browser</li>
+          <li>ย้าย ghost ในหน้า Blue แล้วปล่อยหรือคลิกเพื่อวาง กด <code>Esc</code> เพื่อยกเลิก</li>
+        </ol>
+        <p>ใช้รูปจากเครื่องได้เช่นกัน: แนบรูป กดค้างบน thumbnail แล้วย้ายและปล่อย จากนั้นพูดว่า “รูปที่เพิ่งแปะ” ได้</p>
+      </section>
+      <section class="v36-card" aria-labelledby="tutorialV5Title">
+        <h3 id="tutorialV5Title">V5 · Hand Tracking</h3>
+        <ol>
+          <li>กด <b>✋</b> และอนุญาตการใช้กล้อง</li>
+          <li>ชูนิ้วชี้เพื่อ point, แตะนิ้วโป้งกับนิ้วชี้เพื่อ pinch หรือพับอย่างน้อยสามนิ้วเพื่อ grab</li>
+          <li>ขยับมือขณะ grab เพื่อลาก และคลายมือเพื่อวาง หากเห็นสองมือ ให้แยกมือหรือหมุนแนวระหว่างฝ่ามือเพื่อย่อ-ขยาย/หมุนรูป</li>
+          <li>กด <b>✋</b> อีกครั้งเพื่อหยุดกล้อง</li>
+        </ol>
+      </section>
+      <section class="v36-card" aria-labelledby="tutorialV6Title">
+        <h3 id="tutorialV6Title">V6 · Fusion, memory, and Undo</h3>
+        <ul>
+          <li>หลังชี้ เลือก หรือวาง ให้พูด “อันนี้”, “ตรงนี้” หรือ “รูปที่เพิ่งแปะ” ภายในประมาณสองนาที</li>
+          <li>กด <code>Ctrl+G</code> เลือก <b>Undo last interaction reference</b> แล้วกด Enter เพื่อลบ reference ล่าสุดออกจากความจำ</li>
+          <li>ถ้าจับคู่ reference อย่างปลอดภัยไม่ได้ SOLAT จะถามให้ชัดแทนการเดา</li>
+        </ul>
+      </section>
+      <div class="v36-note"><b>ความเป็นส่วนตัว:</b> V6 interaction memory ไม่เก็บ raw camera frame, raw microphone audio, screenshot หรือ API credential คุณภาพกล้องจริง เว็บที่ต้องล็อกอิน และการวางลงแอปภายนอกยังต้องทดสอบด้วยคน</div>
+    </div>
+  </div>
+  <div class="dlg-foot"><span class="spread hint">เปิดอีกครั้ง: Ctrl+G → V3–V6 tutorial</span><button class="btn primary" data-close="">เสร็จ</button></div>
+</div>
+
 <div class="sheet dialog narrow" id="confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmBody" aria-hidden="true">
   <div class="dlg-head"><h2 id="confirmTitle">Delete this project?</h2></div>
   <div class="dlg-body"><p id="confirmBody" style="color:var(--ink-2)">“QA PROJECT” will be removed. Its conversations and files will remain on this device.</p></div>
@@ -4944,7 +5365,9 @@ html.booting #chat { opacity: 0; }
 <div id="toasts" aria-hidden="true"></div>
 <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
-<script src="./renderer.js?v=178"></script>
+<script src="./speech-chunker.js?v=1"></script>
+<script src="./voice-controller.js?v=2"></script>
+<script src="./renderer.js?v=182"></script>
 
 
 </body></html>

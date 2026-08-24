@@ -62,6 +62,8 @@ function createHarness() {
     Settings: { get: () => false },
     State,
     Toast: { show() {} },
+    Voice: null,
+    isSolatVoiceSceneActive: () => false,
     clearTimeout,
     console,
     errorText: error => String(error?.message || error),

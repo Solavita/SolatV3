@@ -3,6 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { readConfig } = require('../src/core/config');
 const { ConversationCore } = require('../src/core/conversation-core');
+const { createProvider } = require('../src/core/provider');
+const { ModelRouter } = require('../src/core/model-router');
 const { WebSearchService } = require('../src/core/web-search');
 const { captureFromExternal, captureSolat, evaluationCase, indexExternalBaselines } = require('../src/core/three-way-evaluator');
 const { validateIsolatedChatGptBaselines, validatePairedCorpus } = require('./validate-paired-corpus');
@@ -49,7 +51,10 @@ async function main() {
   if (baselinePreflight.status !== 'PASS') throw new Error(`ChatGPT zero-history preflight failed: ${JSON.stringify(baselinePreflight.issue_counts)}`);
   const baseline = indexExternalBaselines(baselineDocument);
   const searchService = new WebSearchService({ provider: config.searchProvider, baseUrl: config.searchBaseUrl, apiKey: config.searchApiKey, timeoutMs: config.searchTimeoutMs, resultLimit: config.searchResultLimit, wikipediaFallback: config.searchWikipediaFallback, engines: config.searchEngines });
-  const core = new ConversationCore({ config, searchService });
+  const provider = new ModelRouter({
+    flashProvider: createProvider(config.flashModel), plusProvider: createProvider(config.plusModel), mode: config.modelMode,
+  });
+  const core = new ConversationCore({ config, provider, searchService });
   const rows = [];
   for (const testCase of selectedCases(corpus, argument('--case-ids'))) {
     const external = baseline.get(testCase.id);

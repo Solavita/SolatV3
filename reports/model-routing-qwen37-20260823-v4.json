@@ -1,0 +1,139 @@
+{
+  "schema_version": "solat.model-routing-live.v2",
+  "architecture": "qwen_flash_plus.v1",
+  "created_at": "2026-08-23T11:24:24.438Z",
+  "status": "PASS",
+  "models": {
+    "flash": "qwen3.7-flash",
+    "plus": "qwen3.7-plus"
+  },
+  "budget": {
+    "max_provider_calls": 6,
+    "max_elapsed_ms": 180000,
+    "provider_calls": 6,
+    "elapsed_ms": 46367,
+    "within_budget": true
+  },
+  "sanitization": {
+    "response_content_omitted": true,
+    "credentials_omitted": true,
+    "error_messages_omitted": true
+  },
+  "cases": [
+    {
+      "id": "flash-primary-plain",
+      "status": "PASS",
+      "elapsed_ms": 2462,
+      "provider_calls": 1,
+      "routing": {
+        "architecture": "qwen_flash_plus.v1",
+        "route": "flash",
+        "operation": "plain",
+        "reason": "primary_agent",
+        "escalated": false,
+        "fallback_reason": null,
+        "request_total_ms": 2460,
+        "attempts": [
+          {
+            "route": "flash",
+            "operation": "plain",
+            "status": "succeeded",
+            "elapsed_ms": 2460,
+            "error_code": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "flash-primary-controller",
+      "status": "PASS",
+      "elapsed_ms": 2874,
+      "provider_calls": 1,
+      "routing": {
+        "architecture": "qwen_flash_plus.v1",
+        "route": "flash",
+        "operation": "structured",
+        "reason": "primary_agent",
+        "escalated": false,
+        "fallback_reason": null,
+        "request_total_ms": 2871,
+        "attempts": [
+          {
+            "route": "flash",
+            "operation": "structured",
+            "status": "succeeded",
+            "elapsed_ms": 2871,
+            "error_code": null
+          }
+        ]
+      },
+      "structured_evidence": {
+        "schema_version": "solat.computer-task-step.v1",
+        "status": "action",
+        "tool": "computer_open_website",
+        "site": "google"
+      }
+    },
+    {
+      "id": "plus-advice-then-flash",
+      "status": "PASS",
+      "elapsed_ms": 38674,
+      "provider_calls": 2,
+      "routing": {
+        "architecture": "qwen_flash_plus.v1",
+        "route": "flash",
+        "operation": "plain",
+        "reason": "plus_advice:difficult_coding",
+        "escalated": true,
+        "fallback_reason": null,
+        "request_total_ms": 38673,
+        "attempts": [
+          {
+            "route": "plus",
+            "operation": "advice",
+            "status": "succeeded",
+            "elapsed_ms": 22375,
+            "error_code": null
+          },
+          {
+            "route": "flash",
+            "operation": "plain",
+            "status": "succeeded",
+            "elapsed_ms": 16298,
+            "error_code": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "flash-bounded-tool-loop",
+      "status": "PASS",
+      "elapsed_ms": 2357,
+      "provider_calls": 2,
+      "routing": {
+        "architecture": "qwen_flash_plus.v1",
+        "route": "flash",
+        "operation": "tools",
+        "reason": "primary_agent",
+        "escalated": false,
+        "fallback_reason": null,
+        "request_total_ms": 2356,
+        "attempts": [
+          {
+            "route": "flash",
+            "operation": "tools",
+            "status": "succeeded",
+            "elapsed_ms": 2356,
+            "error_code": null
+          }
+        ]
+      },
+      "tool_evidence": {
+        "tool_calls_executed": 1,
+        "tool_rounds": 1,
+        "side_effect": "none_in_memory_read_fixture",
+        "final_content_present": true
+      }
+    }
+  ]
+}

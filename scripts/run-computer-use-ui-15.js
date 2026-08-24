@@ -372,12 +372,12 @@ function observedToolQueries(approvalText) {
 
 function judge(testCase, actual, prerequisites) {
   if (!actual.ui_real) return { status: 'NOT RUN', reasons: ['No real Electron renderer was executed.'] };
-  if ((testCase.expected?.requires_deepseek || testCase.expected?.requires_model_route || testCase.expected?.no_model_route_before_approval)
+  if ((testCase.expected?.requires_plus || testCase.expected?.requires_model_route || testCase.expected?.no_model_route_before_approval)
     && !prerequisites.routingLogsAvailable) {
     return { status: 'NOT VERIFIED', reasons: ['The runner attached to an existing app, so model-routing process logs were unavailable.'] };
   }
-  if (testCase.expected?.requires_deepseek && !prerequisites.deepseekConfigured) {
-    return { status: 'NOT VERIFIED', reasons: ['DeepSeek is not configured, so escalation cannot be verified.'] };
+  if (testCase.expected?.requires_plus && !prerequisites.plusConfigured) {
+    return { status: 'NOT VERIFIED', reasons: ['Qwen Plus is not configured, so advisory escalation cannot be verified.'] };
   }
   if (testCase.precondition === 'calculator' && !prerequisites.calculatorStarted) {
     return { status: 'NOT VERIFIED', reasons: ['Calculator precondition was not available.'] };
@@ -399,7 +399,7 @@ function judge(testCase, actual, prerequisites) {
   if (expected.no_model_route && actual.computer_task_terminal && actual.computer_task_terminal.providerCalls !== 0) reasons.push('The task itself made a model routing call on a deterministic read-only fast path.');
   if (expected.no_model_route && !actual.computer_task_terminal) reasons.push('The terminal task event was unavailable, so zero model calls could not be verified.');
   if (expected.requires_model_route && !actual.model_route_observed) reasons.push('No model routing evidence was observed for the model-guided case.');
-  if (expected.requires_deepseek && !actual.deepseek_route_observed) reasons.push('No DeepSeek routing evidence was observed during this case.');
+  if (expected.requires_plus && !actual.plus_advice_then_flash_observed) reasons.push('No Qwen Plus advice followed by Flash execution was observed during this case.');
   if (expected.exact_query) {
     const expectedQuery = String(expected.exact_query).trim().toLocaleLowerCase();
     const actualQueries = observedToolQueries(approvalText).map(value => value.toLocaleLowerCase());
@@ -494,7 +494,11 @@ async function runCase({ client, testCase, baseline, logs, evidenceDir, timeoutM
   const joinedLogs = caseLogs.map(entry => entry.line).join('\n');
   const firstApprovalAt = actual.timing.submitted_to_approval_ms;
   actual.model_route_observed = /\[solat:model-routing\]/u.test(joinedLogs);
-  actual.deepseek_route_observed = /route:\s*['"]deepseek['"]|"route"\s*:\s*"deepseek"/iu.test(joinedLogs);
+  const plusAdviceIndex = joinedLogs.search(/route:\s*['"]plus['"][\s\S]{0,240}operation:\s*['"]advice['"]|"route"\s*:\s*"plus"[\s\S]{0,240}"operation"\s*:\s*"advice"/iu);
+  const flashAfterAdviceIndex = plusAdviceIndex < 0 ? -1 : joinedLogs.slice(plusAdviceIndex).search(/route:\s*['"]flash['"]|"route"\s*:\s*"flash"/iu);
+  actual.plus_advice_observed = plusAdviceIndex >= 0;
+  actual.flash_route_observed = /route:\s*['"]flash['"]|"route"\s*:\s*"flash"/iu.test(joinedLogs);
+  actual.plus_advice_then_flash_observed = plusAdviceIndex >= 0 && flashAfterAdviceIndex >= 0;
   actual.model_route_before_approval = Boolean(firstApprovalAt !== null && caseLogs.some(entry => entry.at_ms - startedAt <= firstApprovalAt && /\[solat:model-routing\]/u.test(entry.line)));
   actual.process_logs = caseLogs.map(entry => entry.line).slice(-120);
   const priorTerminalIds = new Set(baseline.computerTaskState?.terminalTaskIds || []);
@@ -622,8 +626,8 @@ async function main() {
     const calculator = calculatorRequired ? await startCalculator() : { started: false, process: null };
     const prerequisites = {
       calculatorStarted: calculatorRequired ? calculator.started : null,
-      deepseekConfigured: Boolean(modelStatus?.deepseek?.configured),
-      localConfigured: Boolean(modelStatus?.local?.configured),
+      plusConfigured: Boolean(modelStatus?.plus?.configured),
+      flashConfigured: Boolean(modelStatus?.flash?.configured),
       routingLogsAvailable: !attach,
     };
     const rows = [];

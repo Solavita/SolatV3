@@ -86,3 +86,37 @@ test('grounding provider exposes bounded vision-specific provider failures', asy
     error => error.code === 'vision_timeout' && /provider timed out/u.test(error.message),
   );
 });
+
+test('grounding provider accepts an ephemeral browser capture only for its surface and navigation revision', async () => {
+  let calls = 0;
+  const bytes = Buffer.from('bounded-browser-png');
+  const provider = new GroundingProvider({
+    transport: transport(async (_messages, _schema, input) => {
+      calls += 1;
+      assert.equal(input.metadata.surface_id, 'surface-1');
+      return { data: { status: 'needs_clarification' } };
+    }),
+    now: () => NOW,
+  });
+  const capture = {
+    task_id: 'task-1', revision: 2, surface_id: 'surface-1',
+    metadata: {
+      schema_version: 'solat.browser-visual-capture.v1', media_type: 'image/png',
+      surface_id: 'surface-1', navigation_revision: 4, size_bytes: bytes.length,
+      sha256: `sha256:${crypto.createHash('sha256').update(bytes).digest('hex')}`,
+      captured_at: '2026-08-22T09:59:50.000Z',
+    },
+    bytes,
+  };
+  const result = await provider.completeStructuredVision([], {}, capture, {
+    taskId: 'task-1', revision: 2, surfaceId: 'surface-1', navigationRevision: 4,
+  });
+  assert.equal(calls, 1);
+  assert.equal(result.grounding.surface_id, 'surface-1');
+  assert.equal(result.grounding.navigation_revision, 4);
+  await assert.rejects(
+    provider.completeStructuredVision([], {}, capture, { taskId: 'task-1', revision: 2, surfaceId: 'surface-1', navigationRevision: 5 }),
+    error => error.code === 'stale_vision_input',
+  );
+  assert.equal(calls, 1);
+});

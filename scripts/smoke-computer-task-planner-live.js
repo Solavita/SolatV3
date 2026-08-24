@@ -8,11 +8,15 @@ const { composeAgentTools } = require('../src/core/agent-tool-composer');
 const { createComputerAgentTools } = require('../src/core/computer-agent-tools');
 const { ComputerTaskLoop } = require('../src/core/computer-task-loop');
 const { createProvider } = require('../src/core/provider');
+const { ModelRouter } = require('../src/core/model-router');
 
 async function main() {
   if (!process.argv.includes('--execute')) throw new Error('Live computer task planner smoke is opt-in. Re-run with --execute.');
   const config = readConfig({ cwd: process.cwd(), envFiles: [path.join(process.cwd(), 'dist', 'win-unpacked', '.env')] });
-  if (!config.apiKey) throw Object.assign(new Error('A configured model provider is required for live computer planner smoke.'), { code: 'provider_not_configured' });
+  if (!config.flashModel?.apiKey || !config.plusModel?.apiKey) throw Object.assign(new Error('Qwen Flash and Plus are required for live computer planner smoke.'), { code: 'provider_not_configured' });
+  const provider = new ModelRouter({
+    flashProvider: createProvider(config.flashModel), plusProvider: createProvider(config.plusModel), mode: config.modelMode,
+  });
   const root = await fs.promises.mkdtemp(path.join(process.env.SOLAT_TEST_TMP || os.tmpdir(), 'solat-computer-planner-live-'));
   try {
     let mutations = 0;
@@ -29,7 +33,7 @@ async function main() {
     const tools = composeAgentTools(computerTools);
     const service = new AgentService({ rootDir: path.join(root, 'plans'), toolRegistry: tools.registry, executeTool: tools.executeTool });
     const bridge = new AgentChatBridge({ agentService: service, toolDefinitions: tools.definitions });
-    const loop = new ComputerTaskLoop({ provider: createProvider(config), bridge, toolRegistry: computerTools.registry });
+    const loop = new ComputerTaskLoop({ provider, bridge, toolRegistry: computerTools.registry });
     const task = await loop.start({ ownerId: 'live-computer-smoke', sessionId: 'live-computer-smoke', requestId: 'live-computer-smoke-request', goal: 'Open Google in Chrome. Do not type, log in, or submit anything.' });
     if (task.status !== 'AWAITING_APPROVAL' || !task.pending_action?.action || !['computer_open_website', 'computer_launch_app'].includes(task.pending_action.tool)) {
       throw Object.assign(new Error(`The live model did not produce an approved safe computer action (status: ${task.status}).`), { code: 'unexpected_live_computer_plan' });
@@ -52,7 +56,8 @@ async function main() {
       throw Object.assign(new Error('The granted scope must equal the approved app only.'), { code: 'unexpected_granted_scope' });
     }
     process.stdout.write(`${JSON.stringify({
-      schema_version: 'solat.live-computer-task-planner-smoke.v1', status: 'PASS', provider: config.provider, model: config.model,
+      schema_version: 'solat.live-computer-task-planner-smoke.v1', status: 'PASS', architecture: config.modelArchitecture,
+      models: { flash: config.flashModel.model, plus: config.plusModel.model },
       planned_tool: task.pending_action.tool, approval_required: true, computer_mutations_before_approval: 0,
       granted_scope: { allowed_apps: grantedScope.allowed_apps, allowed_sites: grantedScope.allowed_sites, allowed_hwnds: grantedScope.allowed_hwnds },
     }, null, 2)}\n`);

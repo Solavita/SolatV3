@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>SOLAT Spatial Input</title>
+  <style>
+    :root { color-scheme: dark; font-family: "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; user-select: none; }
+    body { cursor: crosshair; }
+    canvas { position: fixed; inset: 0; width: 100%; height: 100%; background: rgba(2,7,20,.12); touch-action: none; }
+    .toolbar {
+      position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 2;
+      display: flex; align-items: center; gap: 6px; padding: 7px;
+      background: rgba(4,10,24,.94); border: 1px solid rgba(67,226,255,.62);
+      box-shadow: 0 12px 40px rgba(0,0,0,.42); border-radius: 12px; cursor: default;
+    }
+    button { border: 1px solid rgba(255,255,255,.15); color: #ecfbff; background: rgba(255,255,255,.05); padding: 8px 11px; border-radius: 8px; font: 600 12px/1 "Segoe UI",sans-serif; cursor: pointer; }
+    button:hover, button[aria-pressed="true"] { color: #031018; background: #43e2ff; border-color: #43e2ff; }
+    .cancel:hover { color: white; background: #e63b49; border-color: #e63b49; }
+    .hint { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 2; padding: 7px 12px; border-radius: 999px; color: #e6faff; background: rgba(4,10,24,.82); font-size: 12px; letter-spacing: .03em; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <canvas id="stage" aria-label="SOLAT spatial drawing surface"></canvas>
+  <div class="toolbar" id="toolbar" role="toolbar" aria-label="Spatial tools">
+    <button type="button" data-gesture="circle">Circle</button>
+    <button type="button" data-gesture="x">X</button>
+    <button type="button" data-gesture="arrow">Arrow</button>
+    <button type="button" data-gesture="highlight">Highlight</button>
+    <button type="button" data-gesture="freehand">Freehand</button>
+    <button type="button" data-gesture="lasso">Lasso</button>
+    <button type="button" data-gesture="click">Point</button>
+    <button type="button" data-gesture="drag">Drag</button>
+    <button type="button" class="cancel" id="cancel">Cancel</button>
+  </div>
+  <div class="hint">Draw once to attach this location · Esc cancels</div>
+  <script src="./spatial-overlay.js"></script>
+</body>
+</html>

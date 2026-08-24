@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'none'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>SOLAT Browser Workspace</title>
+  <style>
+    :root { color-scheme:dark; font:600 13px/1.2 "Segoe UI Variable","Segoe UI",sans-serif; background:#031127; color:#f4fbff; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; width:100%; height:82px; overflow:hidden; background:#031127; }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; background:linear-gradient(112deg,rgba(17,203,255,.14),transparent 34%),repeating-linear-gradient(115deg,transparent 0 38px,rgba(98,220,255,.045) 39px 40px); }
+    .frame { position:relative; height:82px; padding:7px 12px 9px; border-bottom:2px solid #59e4ff; background:linear-gradient(98deg,#020b19 0%,#072d61 53%,#07579b 100%); box-shadow:0 5px 22px rgba(0,185,255,.24); }
+    .frame::before { content:""; position:absolute; inset:0 auto 0 0; width:23%; background:linear-gradient(105deg,#eefbff 0 11%,#27c6ff 11% 14%,transparent 14%); clip-path:polygon(0 0,100% 0,82% 28%,100% 52%,77% 100%,0 100%); opacity:.94; pointer-events:none; }
+    .frame::after { content:""; position:absolute; right:0; top:0; width:170px; height:8px; background:#ff3152; clip-path:polygon(12% 0,100% 0,100% 100%,0 100%); }
+    .identity { position:absolute; z-index:2; left:18px; top:8px; width:120px; color:#00142e; font-size:10px; font-weight:900; letter-spacing:.15em; text-transform:uppercase; transform:skewX(-8deg); }
+    .identity b { display:block; font-size:14px; letter-spacing:.08em; }
+    .bar { position:relative; z-index:3; height:66px; margin-left:130px; display:grid; grid-template-columns:38px 38px 38px minmax(220px,1fr) auto auto auto auto; grid-template-rows:38px 18px; align-items:center; gap:4px 6px; }
+    button,input { min-width:0; height:36px; border:1px solid rgba(121,224,255,.48); color:#f4fbff; background:rgba(2,16,39,.82); outline:none; }
+    button { padding:0 11px; cursor:pointer; font:800 11px/1 "Segoe UI Variable","Segoe UI",sans-serif; letter-spacing:.035em; text-transform:uppercase; clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px); }
+    button:hover,button:focus-visible { border-color:#fff; background:#0f78b8; box-shadow:0 0 0 2px rgba(78,221,255,.22); }
+    .nav { padding:0; font-size:18px; letter-spacing:0; }
+    .address-wrap { position:relative; min-width:0; }
+    .address-wrap::before { content:"◈"; position:absolute; z-index:2; left:12px; top:10px; color:#4ee1ff; }
+    input { width:100%; padding:0 38px 0 34px; border-radius:2px; font:500 14px/1.2 "Segoe UI Variable","Segoe UI",sans-serif; background:rgba(247,253,255,.96); color:#071426; box-shadow:inset 0 -2px #2acbff; }
+    input:focus { border-color:#fff; box-shadow:inset 0 -3px #168fd6,0 0 0 2px rgba(255,255,255,.24); }
+    .takeover { background:#ff3152; border-color:#ff8297; min-width:118px; }
+    .takeover.user { background:#eafaff; color:#05234c; border-color:#fff; }
+    .chrome { background:#0d639e; border-color:#75e8ff; min-width:94px; }
+    .close { width:72px; }
+    .meta { grid-column:1 / -1; display:flex; align-items:center; gap:9px; min-width:0; color:rgba(231,249,255,.7); font-size:10px; letter-spacing:.09em; text-transform:uppercase; }
+    .state { color:#6eeaff; font-weight:900; }
+    .profile { margin-left:auto; color:#a7ddff; }
+    .privacy { display:none; align-items:center; gap:5px; padding:2px 7px; color:#02132a; background:#8ff4ff; clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%); font-weight:900; }
+    .privacy.on { display:inline-flex; }
+    .hint { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    @media (max-width:850px) { .frame::before,.identity { display:none; } .bar { margin-left:0; } #selectAsset { display:none; } }
+  </style>
+</head>
+<body>
+  <header class="frame">
+    <div class="identity"><b>SOLAT // WEB</b>Human browser lane</div>
+    <div class="bar">
+      <button class="nav" id="back" type="button" aria-label="Back">←</button>
+      <button class="nav" id="forward" type="button" aria-label="Forward">→</button>
+      <button class="nav" id="reload" type="button" aria-label="Reload">↻</button>
+      <label class="address-wrap"><span hidden>Search or address</span><input id="address" aria-label="Search Google or enter address" autocomplete="off" spellcheck="false" placeholder="Search Google or enter address"></label>
+      <button id="selectAsset" type="button" title="Alt-click an image on the page, then use it">Use image</button>
+      <button class="takeover" id="takeover" type="button">Take control</button>
+      <button class="chrome" id="openChrome" type="button" title="Open this page in installed Google Chrome">Chrome</button>
+      <button class="close" id="close" type="button">Close</button>
+      <div class="meta"><span id="state" class="state">LOADING</span><span id="privacy" class="privacy">PRIVATE INPUT · SOLAT BLIND</span><span id="hint" class="hint">Public web · persistent login profile</span><span class="profile">LOCAL PROFILE</span></div>
+    </div>
+  </header>
+  <script src="./browser-workspace.js?v=2"></script>
+</body>
+</html>

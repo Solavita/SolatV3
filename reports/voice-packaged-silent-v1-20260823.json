@@ -1,0 +1,104 @@
+{
+  "schema_version": "solat.voice-packaged-silent-runtime.v1",
+  "created_at": "2026-08-23T10:14:18.2984106Z",
+  "outcome": "PASS",
+  "package": {
+    "executable": "D:\\SOLAT_V3\\dist-verified-20260823-voice-v1-final\\win-unpacked\\SOLAT.exe",
+    "executable_sha256": "767BB75439291345F346CF9411AA94CD9406845985D1CD082EF494271C9832DA",
+    "asar_sha256": "5D680C99A6B58A82CAE87E5AC588CC3D6497B62B4F0F5BEA9A7A6E35C2A91879",
+    "pid": 19604,
+    "main_window_handle": 6359178,
+    "title": "SOLAT — AI Operating System",
+    "renderer_url": "file:///D:/SOLAT_V3/dist-verified-20260823-voice-v1-final/win-unpacked/resources/app.asar/renderer/index.html",
+    "isolated_user_data": true,
+    "runtime_cdp": {
+      "address": "127.0.0.1",
+      "port": 9223,
+      "production_source_contains_cdp_flag": false,
+      "packaged_asar_contains_cdp_flag": false,
+      "fake_media_device_flags": false
+    }
+  },
+  "permission": {
+    "method": "Existing Electron/OS permission state; getUserMedia resolved without an observed dialog.",
+    "dialog_automated": false,
+    "permission_ux_verified": false
+  },
+  "microphone_capture": {
+    "status": "PASS",
+    "claim": "The packaged Chromium renderer captured non-zero samples from the OS-selected audio input and streamed bounded PCM chunks through the secure preload bridge to live Cartesia STT.",
+    "track": {
+      "ready_state": "live",
+      "enabled": true,
+      "muted": false,
+      "device": "default",
+      "channel_count": 1,
+      "sample_rate_hz": 48000,
+      "sample_size_bits": 16,
+      "latency_seconds": 0.01,
+      "echo_cancellation_requested": true,
+      "noise_suppression_requested": true,
+      "auto_gain_control_requested": true,
+      "voice_isolation": false
+    },
+    "audio_context_state": "running",
+    "observed_window_ms": 1600,
+    "processor_frames": 18,
+    "non_zero_frames": 18,
+    "maximum_rms": 0.0508064009393662,
+    "secure_ipc_stt_pushes": 15,
+    "secure_ipc_pcm_bytes": 288000,
+    "provider": "cartesia",
+    "provider_errors": []
+  },
+  "automatic_barge_in": {
+    "status": "PASS",
+    "claim": "Two qualifying RMS frames entered the production capture callback while packaged live Cartesia TTS generation was pending; SOLAT cancelled TTS once, rotated the STT session and resumed listening while preserving the conversation.",
+    "tts_provider": "cartesia",
+    "tts_transport": "live packaged renderer-to-preload-to-main-process IPC",
+    "tts_text": "Hello. This is the silent packaged barge-in verification.",
+    "rms_threshold": 0.08,
+    "injected_rms": 0.2,
+    "qualifying_frames": 2,
+    "state_timeline_ms_from_speaking": [
+      { "state": "speaking", "detail": { "pendingAudio": true }, "at_ms": 0.0 },
+      { "state": "interrupted", "detail": {}, "at_ms": 0.5 },
+      { "state": "listening", "detail": {}, "at_ms": 158.2 },
+      { "state": "user_speaking", "detail": {}, "at_ms": 170.1 }
+    ],
+    "calls": {
+      "stt_start": 2,
+      "stt_cancel": 1,
+      "tts_speak": 1,
+      "tts_cancel": 1
+    },
+    "conversation_preserved": true,
+    "voice_session_rotated": true,
+    "tts_result_after_cancel": false,
+    "audio_constructor_calls": 0,
+    "audio_play_calls": 0,
+    "errors": []
+  },
+  "cleanup": {
+    "status": "PASS",
+    "controller_active": false,
+    "controller_state": "idle",
+    "stt_active": false,
+    "voice_session_cleared": true,
+    "stream_released": true,
+    "audio_context_released": true,
+    "track_ready_state": "ended",
+    "audio_context_state": "closed",
+    "processor_released": true,
+    "source_released": true,
+    "gain_released": true,
+    "secure_bridge_restored": true
+  },
+  "limitations": [
+    "No audio was played through the physical speakers.",
+    "The barge-in energy frames were injected into the real production audio processor after the OS-selected microphone capture path was independently proven.",
+    "Acoustic echo-cancellation effectiveness, room noise behavior and barge-in over audible speaker output remain NOT VERIFIED.",
+    "Subjective Elias voice quality, device switching and a fully physical multi-turn conversation remain NOT VERIFIED.",
+    "The microphone permission dialog UX was not exercised because getUserMedia resolved without an observed prompt."
+  ]
+}

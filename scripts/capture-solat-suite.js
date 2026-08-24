@@ -35,9 +35,9 @@ async function main() {
   const cases = requestedIds.size ? allCases.filter(testCase => requestedIds.has(String(testCase.id))) : allCases;
   if (requestedIds.size && cases.length !== requestedIds.size) throw new Error('One or more --case-ids were not found in the corpus.');
   const config = readConfig();
-  if (!config.apiKey && !config.localModel?.apiKey) throw new Error('No model provider is configured.');
+  if (!config.flashModel?.apiKey || !config.plusModel?.apiKey) throw new Error('Qwen Flash and Plus are not configured.');
   const provider = new ModelRouter({
-    localProvider: createProvider(config.localModel), deepseekProvider: createProvider(config), mode: config.modelMode,
+    flashProvider: createProvider(config.flashModel), plusProvider: createProvider(config.plusModel), mode: config.modelMode,
   });
   const searchService = new WebSearchService({
     provider: config.searchProvider,

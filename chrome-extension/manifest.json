@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "SOLAT Browser Control",
+  "version": "1.0.0",
+  "description": "Owner-paired Chrome control for SOLAT with private authentication handoff.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArxdPYGX91kBs/Iox9ZDAjzWZlTdDRsNn0Jpd+A3lx74De8+RDAlrtzAKHLQFVwEJBUxY9WZZrtcm2j6JlF8D2IkfETmzJZ7VWRMf8r20w6KOJnBOb6fQhZIzzUELSKev/9+7g7hRyBNautJEU5/GIYMAYTSNI1gBuOWsmpbsYh1LPURCwGbZBGVS6/X2r+y6qc+i2sgaPb3kA2Ao6RS1z5hXvJuVQMt3klI7k1npnpDE+dHCQMJxWD1K1UFWm/LUXq9A/I2iSh/7aQrfLq8yHYdrJXcK8qDMrbgt6Ti4EOAUmMSu/1w1wbcbnCAE3wP9PMkOZp7DuD2FnTXb8tXQ+wIDAQAB",
+  "permissions": ["activeTab", "alarms", "scripting", "storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'" },
+  "action": {
+    "default_title": "SOLAT Browser Control",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [{
+    "matches": ["http://*/*", "https://*/*"],
+    "js": ["content.js"],
+    "run_at": "document_idle",
+    "all_frames": false
+  }]
+}

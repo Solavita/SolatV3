@@ -1,0 +1,24 @@
+{
+  "schema_version": "solat.model-packaged-startup.v2",
+  "status": "PASS",
+  "package": {
+    "executable_sha256": "3D234C7A20020BFB786006F691CBFE794F7FE8F8665255E67B7F49171CA05B55",
+    "app_asar_sha256": "8AB3AF643B783412140A08A079F9AC3C0B3657F4AEA619677CBBF7D9FD1634D2"
+  },
+  "runtime": {
+    "observation_ms": 6000,
+    "main_process_alive_after_observation": true,
+    "provider_request_initiated_by_harness": false,
+    "solat_provider_credential_environment_injected": false,
+    "isolated_profile": true
+  },
+  "cleanup": {
+    "main_process_stopped": true,
+    "isolated_profile_removed": true
+  },
+  "limitations": [
+    "Startup and process lifetime only; packaged provider responses and semantic quality are covered separately.",
+    "SOLAT-consumed provider credential environment variables were removed before launch; the harness initiated no provider request.",
+    "Network-zero evidence was not captured; source parity shows startup itself does not initiate a model request."
+  ]
+}

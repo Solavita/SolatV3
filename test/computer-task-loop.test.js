@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { ComputerTaskLoop, ComputerTaskLoopError, compactObservationForModel, uiaNeedsVision } = require('../src/core/computer-task-loop');
+const { ComputerTaskLoop, ComputerTaskLoopError, compactObservationForModel, uiaNeedsVision, validateVisualFallbackStep } = require('../src/core/computer-task-loop');
+const { ModelRouter } = require('../src/core/model-router');
 
 test('vision fallback is needed only when UI Automation has no meaningful content', () => {
   assert.equal(uiaNeedsVision({ selector: 'root', type: 'Pane', children: [{ type: 'Canvas' }] }), true);
@@ -20,6 +21,44 @@ test('computer observations sent to the planner omit geometry but preserve seman
   assert.doesNotMatch(serialized, /className|width|"x"|"y"/u);
 });
 
+test('browser workspace observations preserve opaque semantic targets but omit geometry', () => {
+  const compact = compactObservationForModel({
+    source: 'verified_read_result', tool: 'browser_workspace_observe',
+    data: { schema_version: 'solat.browser-observation.v1', surface_id: 'surface-1', navigation_revision: 2, items: [{ target_id: 'e1', role: 'button', name: 'Continue', disabled: false, editable: false, bounds: { x: 10, y: 20, width: 100, height: 30 } }] },
+  });
+  const serialized = JSON.stringify(compact);
+  assert.match(serialized, /surface-1|navigation_revision|target_id|Continue/u);
+  assert.doesNotMatch(serialized, /"x"|"y"|"width"|"height"/u);
+});
+
+test('browser mutation is replaced by a current semantic observation before approval', async () => {
+  const browserRegistry = {
+    browser_workspace_observe: { side_effect_level: 'read', validate_arguments: value => typeof value.surface_id === 'string', validate_output: value => value?.schema_version === 'solat.browser-observation.v1' },
+    browser_workspace_click: { side_effect_level: 'write', task_grant_eligible: false, validate_arguments: value => typeof value.surface_id === 'string' && Number.isInteger(value.navigation_revision) && typeof value.target_id === 'string' && value.verify === 'navigation', validate_output: value => value?.verified === true },
+  };
+  const outputs = [
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Click the observed result.', tool: 'browser_workspace_click', arguments: { surface_id: 'surface-1', navigation_revision: 1, target_id: 'e1', verify: 'navigation' } } },
+    { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Click the current result.', tool: 'browser_workspace_click', arguments: { surface_id: 'surface-1', navigation_revision: 1, target_id: 'e1', verify: 'navigation' } } },
+  ];
+  const calls = [];
+  const loop = new ComputerTaskLoop({
+    provider: { async completeStructured() { return outputs.shift(); } },
+    bridge: {
+      owns: () => true,
+      async execute({ call }) {
+        calls.push(call.name);
+        if (call.name === 'browser_workspace_observe') return { model_result: { schema_version: 'solat.browser-observation.v1', status: 'ready', verified: true, surface_id: 'surface-1', navigation_revision: 1, items: [{ target_id: 'e1', role: 'link', name: 'Open' }] } };
+        return { action: { status: 'confirmation_required', idempotency_key: 'browser-click', approval_token: 'once', arguments: call.arguments } };
+      },
+    },
+    toolRegistry: browserRegistry, idFactory: () => 'browser-prerequisite',
+  });
+  const result = await loop.start({ ownerId: 'renderer:7', sessionId: 'thread-a', requestId: 'browser-request', goal: 'Open the result in the browser workspace.' });
+  assert.equal(result.status, 'AWAITING_APPROVAL', JSON.stringify(result));
+  assert.equal(result.pending_action.tool, 'browser_workspace_click');
+  assert.deepEqual(calls, ['browser_workspace_observe', 'browser_workspace_click']);
+});
+
 function registry() {
   return {
     computer_list_windows: { side_effect_level: 'read', validate_arguments: value => Object.keys(value).length === 0, validate_output: value => value?.status === 'ready' },
@@ -29,6 +68,111 @@ function registry() {
     computer_open_website: { side_effect_level: 'write', validate_arguments: value => ['google', 'roblox'].includes(value?.site), validate_output: value => value?.status === 'ready' && value.verified === true },
   };
 }
+
+function routedComputerProvider(outputs, physicalCalls) {
+  const status = model => () => ({ provider: 'qwencloud_text', model, configured: true, baseHost: 'dashscope.example' });
+  return new ModelRouter({
+    flashProvider: {
+      status: status('qwen3.7-flash'),
+      async completeStructured() {
+        physicalCalls.push('flash');
+        return { data: outputs.shift(), provider: 'qwencloud_text', model: 'qwen3.7-flash' };
+      },
+    },
+    plusProvider: {
+      status: status('qwen3.7-plus'),
+      async complete() {
+        physicalCalls.push('plus');
+        return { content: 'Use verified observations one step at a time.', provider: 'qwencloud_text', model: 'qwen3.7-plus' };
+      },
+    },
+    logger: null,
+  });
+}
+
+test('computer task counts physical Plus and Flash attempts while reusing task-scoped advice', async () => {
+  const physicalCalls = [];
+  const outputs = [
+    { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'List windows.', tool: 'computer_list_windows', arguments: {} },
+    { schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification', summary: 'More detail is required.', tool: 'none', arguments: {} },
+  ];
+  const loop = new ComputerTaskLoop({
+    provider: routedComputerProvider(outputs, physicalCalls),
+    bridge: {
+      owns: () => true,
+      async execute() { return { model_result: { status: 'ready', windows: [{ hwnd: 7, title: 'Chrome' }] } }; },
+    },
+    toolRegistry: registry(), idFactory: () => 'physical-count',
+  });
+  const result = await loop.start({ ownerId: 'owner', requestId: 'request', goal: 'Open Chrome, inspect it, then switch to Notepad and report the result.' });
+  assert.equal(result.status, 'NEEDS_CLARIFICATION');
+  assert.equal(result.provider_calls, 3);
+  assert.deepEqual(physicalCalls, ['plus', 'flash', 'flash']);
+  assert.doesNotMatch(JSON.stringify(result), /advisory|advice|entries|instruction_revision.*Map/iu);
+});
+
+test('computer task enforces the physical provider cap before the next adapter call', async () => {
+  const physicalCalls = [];
+  const outputs = [
+    { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'List windows.', tool: 'computer_list_windows', arguments: {} },
+    { schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification', summary: 'Stop.', tool: 'none', arguments: {} },
+  ];
+  const loop = new ComputerTaskLoop({
+    provider: routedComputerProvider(outputs, physicalCalls),
+    bridge: {
+      owns: () => true,
+      async execute() { return { model_result: { status: 'ready', windows: [{ hwnd: 7, title: 'Chrome' }] } }; },
+    },
+    toolRegistry: registry(), idFactory: () => 'physical-cap', limits: { maxProviderCalls: 2 },
+  });
+  await assert.rejects(
+    loop.start({ ownerId: 'owner', requestId: 'request', goal: 'Open Chrome, inspect it, then switch to Notepad and report the result.' }),
+    error => error.code === 'provider_budget_exceeded'
+      && error.computer_task_terminal?.provider_calls === 2,
+  );
+  assert.deepEqual(physicalCalls, ['plus', 'flash']);
+});
+
+test('structured repair reuses cached Plus advice and counts every Flash attempt', async () => {
+  const physicalCalls = [];
+  const outputs = [
+    { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Invalid.', tool: 'computer_shell', arguments: {} },
+    { schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification', summary: 'Need a safe target.', tool: 'none', arguments: {} },
+  ];
+  const loop = new ComputerTaskLoop({
+    provider: routedComputerProvider(outputs, physicalCalls),
+    bridge: { owns: () => true, async execute() { throw new Error('An invalid model step must not execute.'); } },
+    toolRegistry: registry(), idFactory: () => 'structured-repair',
+  });
+  const result = await loop.start({ ownerId: 'owner', requestId: 'request', goal: 'Open Chrome, inspect it, then switch to Notepad and report the result.' });
+  assert.equal(result.status, 'NEEDS_CLARIFICATION');
+  assert.equal(result.provider_calls, 3);
+  assert.deepEqual(physicalCalls, ['plus', 'flash', 'flash']);
+});
+
+test('revising a computer task rotates its advisory cache', async () => {
+  const physicalCalls = [];
+  const outputs = [
+    { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Open Google.', tool: 'computer_open_website', arguments: { site: 'google' } },
+    { schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification', summary: 'Need a new target.', tool: 'none', arguments: {} },
+  ];
+  const loop = new ComputerTaskLoop({
+    provider: routedComputerProvider(outputs, physicalCalls),
+    bridge: {
+      owns: () => true,
+      async execute() { return { action: { status: 'confirmation_required', idempotency_key: 'pending-key', approval_token: 'once' } }; },
+      async cancelAction() {},
+    },
+    toolRegistry: registry(), idFactory: () => 'cache-revision',
+  });
+  const waiting = await loop.start({ ownerId: 'owner', sessionId: 'session', requestId: 'one', goal: 'Open Chrome, then switch to Notepad and inspect it.' });
+  assert.equal(waiting.status, 'AWAITING_APPROVAL');
+  const revised = await loop.revise({ ownerId: 'owner', sessionId: 'session', requestId: 'two', instruction: 'Open Chrome, then switch to Notepad and report it.' });
+  assert.equal(revised.status, 'NEEDS_CLARIFICATION');
+  assert.equal(revised.instruction_revision, 2);
+  assert.equal(revised.provider_calls, 4);
+  assert.deepEqual(physicalCalls, ['plus', 'flash', 'plus', 'flash']);
+});
 
 test('computer planner receives the full registered capability catalog', async () => {
   let plannerMessages;
@@ -479,7 +623,7 @@ test('task authorization never auto-runs a structurally sensitive control withou
   assert.equal(confirmations, 2);
 });
 
-test('computer task loop rejects untrusted tools, unverified continuation, and cross-session reads', async () => {
+test('computer task loop rejects untrusted tools, unverified continuation, and cross-owner reads', async () => {
   const loop = new ComputerTaskLoop({
     provider: { async completeStructured() { return { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'bad', tool: 'computer_shell', arguments: {} } }; } },
     bridge: { owns: () => true, async execute() { throw new Error('must not run'); } }, toolRegistry: registry(), idFactory: () => 'task-2',
@@ -502,10 +646,26 @@ test('computer task loop rejects untrusted tools, unverified continuation, and c
       },
     }, toolRegistry: registry(), idFactory: () => 'task-3',
   });
-  const waiting = await waitingLoop.start({ ownerId: 'owner', requestId: 'r3', goal: 'Click.' });
-  await assert.rejects(() => waitingLoop.continue({ ownerId: 'other', taskId: waiting.task_id, actionIdempotencyKey: 'k', verifiedObservation: { status: 'ready' } }), error => error.code === 'ownership_mismatch');
-  await assert.rejects(() => waitingLoop.continue({ ownerId: 'owner', taskId: waiting.task_id, actionIdempotencyKey: 'wrong', verifiedObservation: { status: 'ready' } }), error => error.code === 'action_mismatch');
-  await assert.rejects(() => waitingLoop.continue({ ownerId: 'owner', taskId: waiting.task_id, actionIdempotencyKey: 'k', verifiedObservation: { status: 'failed' } }), error => error.code === 'unverified_observation');
+  const waiting = await waitingLoop.start({ ownerId: 'renderer:1', sessionId: 'shared-session', requestId: 'r3', goal: 'Click.' });
+  await assert.rejects(() => waitingLoop.continue({ ownerId: 'renderer:2', sessionId: 'shared-session', taskId: waiting.task_id, actionIdempotencyKey: 'k', verifiedObservation: { status: 'ready' } }), error => error.code === 'ownership_mismatch');
+  await assert.rejects(() => waitingLoop.continue({ ownerId: 'renderer:1', sessionId: 'shared-session', taskId: waiting.task_id, actionIdempotencyKey: 'wrong', verifiedObservation: { status: 'ready' } }), error => error.code === 'action_mismatch');
+  await assert.rejects(() => waitingLoop.continue({ ownerId: 'renderer:1', sessionId: 'shared-session', taskId: waiting.task_id, actionIdempotencyKey: 'k', verifiedObservation: { status: 'failed' } }), error => error.code === 'unverified_observation');
+});
+
+test('computer task loop carries the trusted owner into every Agent bridge action', async () => {
+  let bridgeInput = null;
+  const loop = new ComputerTaskLoop({
+    provider: { async completeStructured() { return { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Open Google.', tool: 'computer_open_website', arguments: { site: 'google' } } }; } },
+    bridge: {
+      owns: () => true,
+      async execute(input) { bridgeInput = input; return { action: { status: 'confirmation_required', idempotency_key: 'owner-action', approval_token: 'once' } }; },
+    },
+    toolRegistry: registry(), idFactory: () => 'owner-task',
+  });
+  const result = await loop.start({ ownerId: 'renderer:73', sessionId: 'shared-session', requestId: 'owner-request', goal: 'Open Google.' });
+  assert.equal(result.status, 'AWAITING_APPROVAL');
+  assert.equal(bridgeInput.ownerId, 'renderer:73');
+  assert.equal(bridgeInput.sessionId, 'shared-session');
 });
 
 test('a newer owner instruction cancels the older pending approval before replanning', async () => {
@@ -987,4 +1147,87 @@ test('revising a computer task replaces the old goal and workflow instead of car
   assert.equal(revised.status, 'AWAITING_APPROVAL');
   assert.equal(revised.pending_action.action.arguments.query, 'New Song');
   assert.doesNotMatch(JSON.stringify(revised), /Lllies/);
+});
+
+test('browser visual fallback captures only after an empty semantic observation and uses surface binding', async () => {
+  const calls = [];
+  const provider = {
+    async completeStructured() {
+      calls.push('text');
+      return { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Observe the browser surface.', tool: 'browser_workspace_observe', arguments: { surface_id: 'surface-1' } } };
+    },
+    async completeStructuredVision(_messages, _schema, capture, context) {
+      calls.push('vision');
+      assert.equal(capture.browser_visual, true);
+      assert.equal(capture.metadata.surface_id, 'surface-1');
+      assert.equal(context.surfaceId, 'surface-1');
+      assert.equal(context.navigationRevision, 1);
+      return { data: { schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification', summary: 'The canvas needs a semantic target.', tool: 'none', arguments: {} } };
+    },
+  };
+  const browserRegistry = {
+    browser_workspace_observe: { side_effect_level: 'read', validate_arguments: value => Object.keys(value).length === 1 && value.surface_id === 'surface-1', validate_output: value => value?.status === 'ready' && Array.isArray(value.items) },
+    browser_workspace_visual_observe: { side_effect_level: 'read', validate_arguments: value => value?.surface_id === 'surface-1' && value.navigation_revision === 1, validate_output: value => value?.status === 'ready' && value.verified === true },
+  };
+  const bridge = {
+    owns: () => true,
+    async execute({ call }) {
+      assert.equal(call.name, 'browser_workspace_observe');
+      return { model_result: {
+        schema_version: 'solat.browser-observation.v1', status: 'ready', verified: true,
+        surface_id: 'surface-1', navigation_revision: 1, observation_revision: 2,
+        item_count: 0, items: [], semantic_empty: true, canvas_only: true, visual_fallback_required: true,
+      } };
+    },
+  };
+  let visualRequests = 0;
+  const browserWorkspacePort = {
+    visualObserve(value) {
+      visualRequests += 1;
+      assert.deepEqual(value, { ownerId: 'owner', request: { sessionId: 'session', surfaceId: 'surface-1', navigationRevision: 1 } });
+      return { schema_version: 'solat.browser-visual-observation.v1', status: 'ready', verified: true, surface_id: 'surface-1', navigation_revision: 1, observation_revision: 3, capture_id: 'capture-1', sha256: `sha256:${'b'.repeat(64)}` };
+    },
+    getVisualCapture() {
+      const bytes = Buffer.from('bounded-browser-png');
+      return { metadata: {
+        schema_version: 'solat.browser-visual-capture.v1', media_type: 'image/png',
+        surface_id: 'surface-1', session_id: 'session', navigation_revision: 1, capture_id: 'capture-1',
+        size_bytes: bytes.length, sha256: `sha256:${require('node:crypto').createHash('sha256').update(bytes).digest('hex')}`,
+        captured_at: new Date().toISOString(),
+      }, bytes };
+    },
+  };
+  const loop = new ComputerTaskLoop({
+    provider, bridge, toolRegistry: browserRegistry, browserWorkspacePort,
+    idFactory: () => 'browser-visual-fallback',
+  });
+  const result = await loop.start({ ownerId: 'owner', sessionId: 'session', requestId: 'browser-visual', goal: 'Inspect the canvas browser surface.' });
+  assert.equal(result.status, 'NEEDS_CLARIFICATION');
+  assert.equal(visualRequests, 1);
+  assert.deepEqual(calls, ['text', 'vision']);
+});
+
+test('browser visual fallback does not run for meaningful semantic DOM', async () => {
+  let visionCalls = 0;
+  const provider = {
+    async completeStructured() {
+      return { data: { schema_version: 'solat.computer-task-step.v1', status: 'action', summary: 'Observe the browser surface.', tool: 'browser_workspace_observe', arguments: { surface_id: 'surface-1' } } };
+    },
+    async completeStructuredVision() { visionCalls += 1; throw new Error('visual provider must not run'); },
+  };
+  const bridge = {
+    owns: () => true,
+    async execute() { return { model_result: { schema_version: 'solat.browser-observation.v1', status: 'ready', verified: true, surface_id: 'surface-1', navigation_revision: 1, observation_revision: 1, item_count: 1, items: [{ target_id: 'e1', role: 'button', name: 'Continue' }] } }; },
+  };
+  const browserWorkspacePort = { visualObserve() { throw new Error('visual fallback must not run'); }, getVisualCapture() { throw new Error('visual fallback must not run'); } };
+  const steps = [{ data: { schema_version: 'solat.computer-task-step.v1', status: 'needs_clarification', summary: 'Need more context.', tool: 'none', arguments: {} } }];
+  provider.completeStructured = async () => steps.shift();
+  const loop = new ComputerTaskLoop({ provider, bridge, toolRegistry: { browser_workspace_observe: { side_effect_level: 'read', validate_arguments: value => value?.surface_id === 'surface-1', validate_output: value => value?.status === 'ready' } }, browserWorkspacePort, idFactory: () => 'browser-visual-not-needed' });
+  const result = await loop.start({ ownerId: 'owner', sessionId: 'session', requestId: 'browser-visual-none', goal: 'Read the browser surface.' });
+  assert.equal(result.status, 'NEEDS_CLARIFICATION');
+  assert.equal(visionCalls, 0);
+});
+
+test('browser visual evidence cannot issue raw desktop actions', () => {
+  assert.throws(() => validateVisualFallbackStep({ status: 'action', tool: 'computer_invoke', arguments: { hwnd: 42, selector: 'button' } }, { metadata: { surface_id: 'surface-1' } }), error => error.code === 'visual_action_not_allowed');
 });

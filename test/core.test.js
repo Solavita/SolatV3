@@ -103,12 +103,12 @@ const idFactory = (() => {
 test('parseDotEnv accepts comments, quotes, and ignores malformed lines', () => {
   assert.deepEqual(parseDotEnv(`
     # comment
-    SOLAT_MODEL_NAME="deepseek-chat"
-    SOLAT_MODEL_TIMEOUT_MS=1234
+    SOLAT_QWEN_FLASH_MODEL="qwen3.7-flash"
+    SOLAT_QWEN_FLASH_TIMEOUT_MS=1234
     malformed
   `), {
-    SOLAT_MODEL_NAME: 'deepseek-chat',
-    SOLAT_MODEL_TIMEOUT_MS: '1234',
+    SOLAT_QWEN_FLASH_MODEL: 'qwen3.7-flash',
+    SOLAT_QWEN_FLASH_TIMEOUT_MS: '1234',
   });
 });
 
@@ -116,54 +116,25 @@ test('readConfig prefers explicit environment values and never exposes a key in 
   const config = readConfig({
     cwd: 'C:\\path-that-does-not-exist',
     env: {
-      SOLAT_MODEL_BASE_URL: 'https://example.test/v1/',
-      SOLAT_MODEL_API_KEY: 'secret-value',
-      SOLAT_MODEL_NAME: 'test-model',
-      SOLAT_MODEL_TIMEOUT_MS: '8000',
+      SOLAT_QWEN_BASE_URL: 'https://example.test/v1/',
+      SOLAT_QWEN_API_KEY: 'secret-value',
+      SOLAT_QWEN_FLASH_MODEL: 'test-flash',
+      SOLAT_QWEN_PLUS_MODEL: 'test-plus',
+      SOLAT_QWEN_FLASH_TIMEOUT_MS: '8000',
+      SOLAT_QWEN_PLUS_TIMEOUT_MS: '16000',
     },
   });
-  assert.deepEqual(config, {
-    modelMode: 'auto',
-    provider: 'deepseek_api',
-    baseUrl: 'https://example.test/v1',
-    apiKey: 'secret-value',
-    model: 'test-model',
-    thinkingMode: 'disabled',
-    timeoutMs: 8000,
-    localModel: {
-      provider: 'ollama_local',
-      baseUrl: 'http://127.0.0.1:11434/v1',
-      apiKey: 'ollama',
-      model: 'hf.co/empero-ai/Qwen3.8-2B-GGUF:Q4_K_M',
-      thinkingMode: 'disabled',
-      maxTokens: 256,
-      keepAlive: '2m',
-      timeoutMs: 120000,
-    },
-    visionModel: {
-      enabled: false,
-      provider: 'qwencloud_vision',
-      baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
-      apiKey: '',
-      model: 'qwen3-vl-flash',
-      thinkingMode: 'disabled',
-      maxTokens: 128,
-      keepAlive: '0s',
-      timeoutMs: 60000,
-    },
-    searchProvider: 'ddg',
-    searchBaseUrl: '',
-    searchApiKey: '',
-    searchTimeoutMs: 8000,
-    searchResultLimit: 5,
-    searchWikipediaFallback: true,
-    searchEngines: '',
-    commerceBaseUrl: '',
-    commerceUserId: '',
-    commerceToken: '',
-    commerceTimeoutMs: 12000,
+  assert.equal(config.modelArchitecture, 'qwen_flash_plus.v1');
+  assert.equal(config.modelMode, 'auto');
+  assert.deepEqual(config.flashModel, {
+    provider: 'qwencloud_text', baseUrl: 'https://example.test/v1', apiKey: 'secret-value',
+    model: 'test-flash', thinkingMode: 'disabled', timeoutMs: 8000,
   });
-  const status = new OpenAICompatibleProvider(config).status();
+  assert.deepEqual(config.plusModel, {
+    provider: 'qwencloud_text', baseUrl: 'https://example.test/v1', apiKey: 'secret-value',
+    model: 'test-plus', thinkingMode: 'enabled', timeoutMs: 16000,
+  });
+  const status = new OpenAICompatibleProvider(config.flashModel).status();
   assert.equal(status.configured, true);
   assert.equal('apiKey' in status, false);
   assert.equal(status.baseHost, 'example.test');
@@ -301,43 +272,64 @@ test('readConfig can load a packaged-app env file without requiring a writable a
     envFiles: [require('node:path').join(__dirname, 'fixtures', 'packaged.env')],
     env: {},
   });
-  assert.equal(config.baseUrl, 'https://packaged.example/v1');
-  assert.equal(config.model, 'packaged-model');
+  assert.equal(config.flashModel.baseUrl, 'https://packaged.example/v1');
+  assert.equal(config.flashModel.model, 'packaged-flash');
+  assert.equal(config.flashModel.timeoutMs, 9000);
+  assert.equal(config.plusModel.model, 'packaged-plus');
+  assert.equal(config.plusModel.timeoutMs, 12000);
 });
 
-test('readConfig defaults to the DeepSeek provider', () => {
+test('readConfig defaults to Qwen Cloud Flash agent and Plus brain roles', () => {
   const config = readConfig({ cwd: 'C:\\path-that-does-not-exist', env: {} });
-  assert.equal(config.provider, 'deepseek_api');
-  assert.equal(config.baseUrl, 'https://api.deepseek.com');
-  assert.equal(config.model, 'deepseek-v4-flash');
-  assert.equal(config.thinkingMode, 'disabled');
+  assert.equal(config.modelArchitecture, 'qwen_flash_plus.v1');
+  assert.equal(config.flashModel.provider, 'qwencloud_text');
+  assert.equal(config.flashModel.model, 'qwen3.7-flash');
+  assert.equal(config.flashModel.thinkingMode, 'disabled');
+  assert.equal(config.flashModel.timeoutMs, 45000);
+  assert.equal(config.plusModel.provider, 'qwencloud_text');
+  assert.equal(config.plusModel.model, 'qwen3.7-plus');
+  assert.equal(config.plusModel.thinkingMode, 'enabled');
+  assert.equal(config.plusModel.timeoutMs, 90000);
   assert.equal(config.searchProvider, 'ddg');
-  assert.equal(config.apiKey, '');
-  assert.equal(config.timeoutMs, 45000);
+  assert.equal(config.flashModel.apiKey, '');
 });
 
-test('readConfig converts a RunPod runsync URL to the vLLM OpenAI base URL', () => {
+test('readConfig ignores retired DeepSeek and local Qwen route configuration', () => {
   const config = readConfig({
     cwd: 'C:\\path-that-does-not-exist',
     env: {
-      SOLAT_MODEL_PROVIDER: 'runpod_vllm',
-      SOLAT_MODEL_BASE_URL: 'https://api.runpod.ai/v2/endpoint-id/runsync',
-      SOLAT_MODEL_API_KEY: 'key',
-    },
-  });
-  assert.equal(config.baseUrl, 'https://api.runpod.ai/v2/endpoint-id/openai/v1');
-});
-
-test('readConfig accepts the existing seconds-based provider timeout without exposing it', () => {
-  const config = readConfig({
-    cwd: 'C:\\path-that-does-not-exist',
-    env: {
+      SOLAT_MODEL_MODE: 'deepseek',
       SOLAT_MODEL_PROVIDER: 'deepseek_api',
-      SOLAT_MODEL_TIMEOUT_SECONDS: '120',
+      SOLAT_MODEL_BASE_URL: 'https://api.deepseek.com',
+      SOLAT_MODEL_API_KEY: 'retired-key',
+      SOLAT_LOCAL_MODEL_BASE_URL: 'http://127.0.0.1:11434/v1',
     },
   });
-  assert.equal(config.provider, 'deepseek_api');
-  assert.equal(config.timeoutMs, 120000);
+  assert.equal(config.modelMode, 'auto');
+  assert.equal(config.flashModel.provider, 'qwencloud_text');
+  assert.equal(config.flashModel.baseUrl, 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1');
+  assert.equal('provider' in config, false);
+  assert.equal('localModel' in config, false);
+});
+
+test('readConfig accepts separate bounded Flash and Plus timeouts', () => {
+  const config = readConfig({
+    cwd: 'C:\\path-that-does-not-exist',
+    env: {
+      SOLAT_QWEN_FLASH_TIMEOUT_MS: '12000',
+      SOLAT_QWEN_PLUS_TIMEOUT_MS: '34000',
+    },
+  });
+  assert.equal(config.flashModel.timeoutMs, 12000);
+  assert.equal(config.plusModel.timeoutMs, 34000);
+});
+
+test('conversation core refuses to bypass the Qwen role router', () => {
+  const config = readConfig({ cwd: 'C:\\path-that-does-not-exist', env: {} });
+  assert.throws(
+    () => new ConversationCore({ config }),
+    error => error?.code === 'invalid_config' && /Flash\/Plus role router/u.test(error.message),
+  );
 });
 
 test('completionUrl and extractContent validate provider response shapes', () => {

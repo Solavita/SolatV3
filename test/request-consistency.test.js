@@ -31,10 +31,32 @@ test('production request builder preserves message and tool order deterministica
   assert.match(first.scope, /semantic answer consistency remains NOT VERIFIED/iu);
 });
 
-test('production request builder keeps provider-specific fields local and rejects invalid tools', () => {
+test('Qwen Cloud text requests keep Flash non-thinking, Plus thinking, and tools sequential', () => {
   const messages = [{ role: 'user', content: 'hello' }];
-  const deepSeek = buildCompletionRequestBody({ baseUrl: 'https://api.deepseek.com', model: 'm', thinkingMode: 'disabled' }, messages);
-  assert.deepEqual(deepSeek, { model: 'm', messages, stream: false, thinking: { type: 'disabled' } });
+  const tools = [{ type: 'function', function: { name: 'lookup', parameters: { type: 'object', properties: {}, additionalProperties: false } } }];
+  const flash = buildCompletionRequestBody({
+    provider: 'qwencloud_text', model: 'qwen3.7-flash', thinkingMode: 'disabled',
+  }, messages, { tools, toolChoice: 'auto' });
+  assert.deepEqual(flash, {
+    model: 'qwen3.7-flash',
+    messages,
+    stream: false,
+    extra_body: { enable_thinking: false },
+    tools,
+    tool_choice: 'auto',
+    parallel_tool_calls: false,
+  });
+
+  const plus = buildCompletionRequestBody({
+    provider: 'qwencloud_text', model: 'qwen3.7-plus', thinkingMode: 'enabled',
+  }, messages);
+  assert.deepEqual(plus, {
+    model: 'qwen3.7-plus',
+    messages,
+    stream: false,
+    extra_body: { enable_thinking: true },
+  });
+
   const compatible = buildCompletionRequestBody({ baseUrl: 'https://example.test/v1', model: 'm' }, messages);
   assert.deepEqual(compatible, { model: 'm', messages, stream: false });
   assert.throws(
@@ -45,9 +67,10 @@ test('production request builder keeps provider-specific fields local and reject
 
 test('provider complete sends the same body produced by the deterministic request builder', async () => {
   const config = {
-    baseUrl: 'https://api.deepseek.com',
+    provider: 'qwencloud_text',
+    baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
     apiKey: 'local-test-key',
-    model: 'local-contract-model',
+    model: 'qwen3.7-flash',
     thinkingMode: 'disabled',
     timeoutMs: 1000,
   };
@@ -65,4 +88,6 @@ test('provider complete sends the same body produced by the deterministic reques
   await provider.complete(messages, { tools, toolChoice: 'auto' });
   assert.deepEqual(actualBody, buildCompletionRequestBody(config, messages, { tools, toolChoice: 'auto' }));
   assert.equal(Object.hasOwn(actualBody, 'apiKey'), false);
+  assert.deepEqual(actualBody.extra_body, { enable_thinking: false });
+  assert.equal(actualBody.parallel_tool_calls, false);
 });

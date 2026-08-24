@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { readConfig } = require('../src/core/config');
 const { createProvider } = require('../src/core/provider');
+const { ModelRouter } = require('../src/core/model-router');
 
 const REPORT_SCHEMA_VERSION = 'solat.model-foundation-live-report.v1';
 const RESPONSE_SCHEMA = Object.freeze({
@@ -174,7 +175,9 @@ async function main() {
     return;
   }
   const config = readConfig({ envFiles: envFile ? [path.resolve(envFile)] : [] });
-  const provider = createProvider(config);
+  const provider = new ModelRouter({
+    flashProvider: createProvider(config.flashModel), plusProvider: createProvider(config.plusModel), mode: config.modelMode,
+  });
   const providerStatus = provider.status();
   if (!providerStatus.configured) throw new Error('Model provider is not configured.');
   const rows = [];
